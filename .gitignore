@@ -1,0 +1,29 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Secrets (на всякий случай — репо публичный, ничего секретного сюда!)
+.env
+*.env
+secrets.json
+*api_key*
+*.pem
+*.key
+*.token
+
+# Big binary artifacts (если случайно положишь)
+*.zip
+*.7z
+*.rar
+
+# Build output (если перейдёшь на сборщик)
+node_modules/
+dist/
+.cache/

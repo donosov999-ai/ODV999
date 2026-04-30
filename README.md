@@ -1,2 +1,49 @@
-# ODV999
-Public dashboards &amp; artifacts
+# ODV999 — Public Dashboards & Artifacts
+
+Публичный репозиторий для дашбордов, отчётов и HTML-артефактов.
+
+## 🌐 Опубликованные страницы
+
+После включения GitHub Pages всё в этом репо доступно по адресу:
+
+**https://donosov999-ai.github.io/ODV999/**
+
+## 📁 Структура
+
+```
+ODV999/
+├── index.html              ← главная страница со списком дашбордов
+├── dashboards/             ← сюда кладутся HTML-дашборды
+│   └── *.html
+├── data/                   ← json/csv для дашбордов (при необходимости)
+├── assets/
+│   ├── css/                ← общие стили
+│   └── js/                 ← общие скрипты
+└── README.md
+```
+
+## 🚀 Как добавить новый дашборд
+
+1. Создать `dashboards/<имя>.html` (любой одностраничный HTML)
+2. Добавить запись в `index.html` (раздел `<!-- DASHBOARDS LIST -->`)
+3. `git add . && git commit -m "Add <имя> dashboard" && git push`
+4. Через 1-2 минуты доступно по `https://donosov999-ai.github.io/ODV999/dashboards/<имя>.html`
+
+## 🔧 Включение GitHub Pages
+
+**Один раз после первого push:**
+
+1. Settings → Pages
+2. **Source:** Deploy from a branch
+3. **Branch:** `main` / `(root)`
+4. Save
+5. Через 1-2 минуты сайт онлайн по адресу выше
+
+## ⚠️ Что НЕ кладём сюда (репо публичный!)
+
+- API-ключи, токены, пароли
+- Чувствительные данные клиентов
+- Внутренние SQL-запросы / промпты бота
+- Закупочные цены поставщиков (внутренняя инфа)
+
+Всё внутреннее остаётся в приватном репо `donosov999-ai/gidromash`.

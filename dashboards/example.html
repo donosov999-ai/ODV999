@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Example Dashboard — ODV999</title>
+<link rel="stylesheet" href="../assets/css/main.css">
+<style>
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+  }
+  .stat {
+    background: #fff;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat .num {
+    display: block;
+    font-size: 32px;
+    font-weight: 700;
+    color: #0969da;
+    margin-bottom: 4px;
+  }
+  .stat .label {
+    font-size: 13px;
+    color: #57606a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .breadcrumb {
+    font-size: 13px;
+    color: #57606a;
+    margin: 8px 0 0;
+  }
+  .demo-block {
+    background: #fff;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    padding: 24px;
+    margin: 16px 0;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <h1>Example Dashboard</h1>
+    <p class="subtitle">Демо-страница для проверки что GitHub Pages работает</p>
+    <p class="breadcrumb"><a href="../index.html" style="color:#fff;opacity:0.85">← Назад к списку</a></p>
+  </div>
+</header>
+
+<main class="container">
+
+  <section>
+    <h2>Что это</h2>
+    <p>Это шаблон дашборда. Если ты видишь эту страницу по адресу
+    <code>https://donosov999-ai.github.io/ODV999/dashboards/example.html</code> —
+    значит GitHub Pages включён и всё работает.</p>
+  </section>
+
+  <section>
+    <h2>Пример блока со статистикой</h2>
+    <div class="stat-grid">
+      <div class="stat"><span class="num">41,000+</span><span class="label">Позиций в прайсе</span></div>
+      <div class="stat"><span class="num">20</span><span class="label">Поставщиков</span></div>
+      <div class="stat"><span class="num">1,316</span><span class="label">Гидрораспределителей</span></div>
+      <div class="stat"><span class="num">500</span><span class="label">Пластинчатых насосов</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Что сюда можно добавить</h2>
+    <div class="demo-block">
+      <ul>
+        <li>📊 <strong>Графики</strong> — Chart.js / D3 / ECharts (через CDN)</li>
+        <li>📋 <strong>Таблицы</strong> — DataTables или нативный HTML с поиском</li>
+        <li>🔍 <strong>Фильтры</strong> — обычный JS (не нужен бэкенд)</li>
+        <li>📦 <strong>Данные</strong> — статичный JSON в <code>data/</code></li>
+        <li>🌐 <strong>Внешние API</strong> — fetch к публичным эндпоинтам</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Как сделать новый дашборд</h2>
+    <ol>
+      <li>Скопируй этот файл: <code>cp dashboards/example.html dashboards/my-new.html</code></li>
+      <li>Поправь содержимое</li>
+      <li>Добавь карточку в <code>index.html</code> (раздел <code>&lt;!-- DASHBOARDS LIST --&gt;</code>)</li>
+      <li><code>git add . && git commit -m "Add my-new dashboard" && git push</code></li>
+      <li>Жди 1-2 минуты — обновится автоматически</li>
+    </ol>
+  </section>
+
+</main>
+
+<footer>
+  <div class="container">
+    <small><a href="../index.html">← Главная</a> &middot; <a href="https://github.com/donosov999-ai/ODV999">GitHub</a></small>
+  </div>
+</footer>
+
+</body>
+</html>
