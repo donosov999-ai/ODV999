@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RELATION OS — Гайд по отношениям</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;700&display=swap');
+:root{
+  --bg:#FAFAF7;--bg2:#F2F0EB;--bg3:#E8E5DF;
+  --text:#1A1714;--text2:#5C5650;--text3:#9C9590;
+  --border:#DAD5CE;--accent:#C05621;--accent2:#9C4221;--accent-light:#FED7AA;
+  --ok:#0E7C5F;--ok-bg:#D1FAE5;--danger:#C42B2B;--danger-bg:#FEE2E2;
+  --warn:#B45309;--warn-bg:#FEF3C7;--info:#1D5EBB;--info-bg:#DBEAFE;
+  --purple:#6D28D9;--purple-bg:#EDE9FE;--teal:#0D7377;--teal-bg:#CCFBF1;
+  --card:#FFFFFF;--radius:12px;
+  --font-h:'DM Serif Display',Georgia,serif;
+  --font:'DM Sans',-apple-system,sans-serif;
+  --shadow:0 1px 2px rgba(0,0,0,.05);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#151210;--bg2:#1E1B18;--bg3:#2A2622;
+  --text:#F0ECE6;--text2:#A09890;--text3:#6B6460;
+  --border:#3A352F;--card:#1C1916;--accent-light:#7C2D12;
+  --ok-bg:#052e16;--danger-bg:#350a0a;--warn-bg:#2a1a00;--info-bg:#0c1a3a;--purple-bg:#1e0a3e;--teal-bg:#042f2e;
+  --shadow:0 1px 3px rgba(0,0,0,.3);
+}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+
+/* HEADER */
+.hero{padding:36px 0 0;text-align:center}
+.hero h1{font-family:var(--font-h);font-size:clamp(26px,5vw,40px);color:var(--accent);letter-spacing:-.01em}
+.hero p{color:var(--text2);font-size:14px;margin-top:4px;max-width:500px;margin-left:auto;margin-right:auto}
+
+/* TABS */
+.tabs{display:flex;gap:3px;padding:20px 0 0;overflow-x:auto;scrollbar-width:none;justify-content:center;flex-wrap:wrap}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:9px 14px;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--text2);background:var(--bg2);border:1px solid transparent;transition:.2s;user-select:none;white-space:nowrap}
+.tab:hover{color:var(--text);background:var(--bg3)}
+.tab.on{color:#fff;background:var(--accent);border-color:var(--accent2)}
+
+/* CONTENT */
+.panels{padding-bottom:48px}
+.pnl{display:none;animation:fi .3s}
+.pnl.on{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.sec{font-family:var(--font-h);font-size:21px;margin:28px 0 6px;color:var(--text)}
+.sub{font-size:13.5px;color:var(--text2);margin-bottom:16px;line-height:1.5}
+
+/* GRID */
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:20px}
+.c{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:.2s;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.c:hover{border-color:var(--accent);transform:translateY(-1px)}
+.c-top{display:flex;gap:10px;align-items:flex-start}
+.c-ico{font-size:24px;line-height:1;flex-shrink:0}
+.c-t{font-weight:700;font-size:14.5px;line-height:1.3}
+.c-d{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.55}
+.c-x{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:13px;color:var(--text2);line-height:1.65}
+.c.open .c-x{display:block;animation:fi .2s}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tg{padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600}
+.tg-g{background:var(--ok-bg);color:var(--ok)}.tg-r{background:var(--danger-bg);color:var(--danger)}
+.tg-a{background:var(--warn-bg);color:var(--warn)}.tg-b{background:var(--info-bg);color:var(--info)}
+.tg-p{background:var(--purple-bg);color:var(--purple)}.tg-t{background:var(--teal-bg);color:var(--teal)}
+.bdg{position:absolute;top:10px;right:12px;font-size:13px}
+
+/* CALLOUT */
+.call{border-radius:var(--radius);padding:14px 18px;margin:14px 0;font-size:13.5px;line-height:1.6;border-left:4px solid var(--accent);background:var(--bg2)}
+.call b{color:var(--text)}
+.call.red{border-left-color:var(--danger);background:var(--danger-bg)}
+.call.green{border-left-color:var(--ok);background:var(--ok-bg)}
+.call.blue{border-left-color:var(--info);background:var(--info-bg)}
+
+/* TABLE */
+.tb{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+.tb th,.tb td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.tb th{font-weight:700;background:var(--bg2);position:sticky;top:0}
+.tb tr:hover td{background:var(--bg2)}
+
+/* HISTOGRAM */
+.h{margin:16px 0 28px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.h-t{font-weight:700;font-size:14px;margin-bottom:12px}
+.hr{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12.5px}
+.hl{width:120px;flex-shrink:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbw{flex:1;height:22px;background:var(--bg2);border-radius:5px;overflow:hidden}
+.hb{height:100%;border-radius:5px;transition:width .5s;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:10.5px;font-weight:700;color:#fff;min-width:26px}
+.hm{width:20px;text-align:center;flex-shrink:0;font-size:13px}
+
+/* LIST */
+.al{list-style:none;margin:10px 0}
+.al li{padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:7px;font-size:13.5px;display:flex;gap:10px;box-shadow:var(--shadow)}
+.al .ai{font-size:18px;flex-shrink:0;padding-top:1px}
+.al .at{flex:1}.al .at b{display:block;color:var(--text);margin-bottom:2px;font-size:14px}
+.al .at span{color:var(--text2);font-size:13px}
+
+.foot{text-align:center;padding:20px;font-size:11px;color:var(--text3)}
+@media(max-width:600px){.g{grid-template-columns:1fr}.hl{width:80px;font-size:11.5px}.tabs{justify-content:flex-start}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <h1>Отношения мужчины и женщины</h1>
+  <p>Практический гайд: что реально работает. Без воды — только инструменты</p>
+</div>
+
+<div class="tabs" id="tabs"></div>
+<div class="panels" id="P"></div>
+
+</div>
+<div class="foot">RELATION OS · Denis Onosov (ODV999) · Конфиденциально</div>
+
+<script>
+const T=[
+{id:'fund',ic:'🧠',lb:'Фундамент'},
+{id:'comm',ic:'💬',lb:'Коммуникация'},
+{id:'conf',ic:'⚡',lb:'Конфликты'},
+{id:'sex',ic:'🔥',lb:'Секс и желание'},
+{id:'fam',ic:'🏠',lb:'Семья и дети'},
+{id:'bound',ic:'🚧',lb:'Границы'},
+{id:'crisis',ic:'🆘',lb:'Кризисы'},
+{id:'daily',ic:'📋',lb:'Ежедневно'},
+{id:'kpi',ic:'📊',lb:'KPI'},
+{id:'plan',ic:'🗺️',lb:'План'}
+];
+
+const tabsEl=document.getElementById('tabs'),P=document.getElementById('P');
+T.forEach((t,i)=>{
+  const d=document.createElement('div');
+  d.className='tab'+(i===0?' on':'');
+  d.textContent=t.ic+' '+t.lb;
+  d.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+    d.classList.add('on');
+    document.querySelectorAll('.pnl').forEach(x=>x.classList.remove('on'));
+    document.getElementById('p-'+t.id).classList.add('on');
+    animBars();
+  };
+  tabsEl.appendChild(d);
+});
+
+function animBars(){
+  document.querySelectorAll('.pnl.on .hb').forEach(b=>{
+    const w=b.style.width;b.style.width='0';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>b.style.width=w));
+  });
+}
+
+function card(ico,title,desc,detail,tags,badge){
+  return `<div class="c" onclick="this.classList.toggle('open')">
+    ${badge?'<div class="bdg">'+badge+'</div>':''}
+    <div class="c-top"><div class="c-ico">${ico}</div><div class="c-t">${title}</div></div>
+    <div class="c-d">${desc}</div>
+    ${tags?'<div class="tags">'+tags+'</div>':''}
+    ${detail?'<div class="c-x">'+detail+'</div>':''}
+  </div>`;
+}
+
+function histo(title,items){
+  const s=[...items].sort((a,b)=>b.s-a.s);
+  let h=`<div class="h"><div class="h-t">${title}</div>`;
+  s.forEach((it,i)=>{
+    h+=`<div class="hr"><div class="hm">${i<3?['🥇','🥈','🥉'][i]:''}</div><div class="hl">${it.n}</div><div class="hbw"><div class="hb" style="width:${it.s}%;background:${it.c||'#C05621'}">${it.s}</div></div></div>`;
+  });
+  return h+'</div>';
+}
+
+// ===== FUND =====
+const fund=document.createElement('div');fund.id='p-fund';fund.className='pnl on';
+fund.innerHTML=`
+<div class="sec">Фундамент: что нужно понять до всего</div>
+<div class="sub">Три вещи, которые меняют всё</div>
+<div class="g">
+  ${card('💡','Любовь — навык, не везение','Влюблённость проходит за 1-3 года у ВСЕХ. Это не трагедия — это переход от биохимии к осознанному выбору.','Люди, которые строят крепкие отношения, не более «везучие» — они более дисциплинированные. Любовь требует ежедневного усилия: заботы, внимания, терпения и мужества быть настоящим.',`<span class="tg tg-g">Ключевой принцип</span>`)}
+  ${card('🔗','Ты не выбираешь партнёра случайно','У каждого «внутренняя модель» отношений из детства. Она определяет: чего ищешь, чего боишься, как реагируешь на стресс.','<b>Три паттерна:</b><br>🟢 <b>Надёжный (~50%)</b> — комфорт и в близости, и в автономии<br>🟡 <b>Тревожный (~20%)</b> — ищет подтверждения, чувствителен к отвержению. Протестное поведение (звонки, ревность) = биологический ответ, не манипуляция<br>🔴 <b>Избегающий (~25%)</b> — близость = потеря свободы. Смешанные сигналы. НЕ «плохой человек» — боится потерять себя<br><br><b>Ловушка:</b> тревожный + избегающий притягиваются как магнит и активируют друг друга. Хорошая новость: паттерн меняется у ~25% людей каждые 4 года. Главный фактор — надёжный партнёр рядом.',`<span class="tg tg-b">Привязанность</span>`)}
+  ${card('🪞','Женщина — зеркало','Она не создаёт атмосферу из воздуха — умножает то, что получает.','Даёшь заботу → получаешь тепло. Даёшь равнодушие → получаешь пустоту. Если «она изменилась» — посмотри, что изменилось в тебе. Она не стала хуже. Она перестала вытягивать того, кто кормит пустотой.',`<span class="tg tg-a">Для мужчин</span>`)}
+</div>
+
+<div class="sec">Три столпа — без любого всё рушится</div>
+<div class="g">
+  ${card('❤️','СВЯЗЬ','Привязанность, эмоциональная доступность, благодарность, ритуалы','Без связи — два соседа, которые делят жильё. Инструменты: еженедельный чек-ин, 5 позитивных на 1 негативное, замечать «заявки» на контакт (≥80% — повернуться К, а не ОТ).',`<span class="tg tg-g">Столп 1</span>`)}
+  ${card('🧱','СТРУКТУРА','Границы, роли, правила, распределение нагрузки','Без структуры — хаос, обиды, «я больше делаю», выгорание. Граница — забор с калиткой, не стена. Контроль над собой, не над партнёром.',`<span class="tg tg-b">Столп 2</span>`)}
+  ${card('🌱','РОСТ','Каждый развивается. Пара адаптируется к новым стадиям','Без роста — стагнация, скука, «мы стали чужими». Партнёр «высекает» лучшую версию тебя.',`<span class="tg tg-p">Столп 3</span>`)}
+</div>
+<div class="call"><b>Формула:</b> Связь без структуры = хаос. Структура без связи = холод. Без роста = медленная смерть. <b>Нужны все три.</b></div>
+
+<div class="sec">Ключевой вопрос</div>
+<div class="call blue" style="text-align:center;font-size:16px;padding:20px">
+  <b>«Ты со мной? Могу ли я на тебя рассчитывать? Важен ли я для тебя?»</b><br>
+  <span style="font-size:13px">Доступен ли ты? · Отзываешься ли? · Вовлечён ли?<br>Когда «да» на все три — безопасно. Когда «нет» — паника → автопилот: атака или уход.</span>
+</div>
+`;
+P.appendChild(fund);
+
+// ===== COMM =====
+const comm=document.createElement('div');comm.id='p-comm';comm.className='pnl';
+comm.innerHTML=`
+<div class="sec">Как говорить, чтобы быть услышанным</div>
+<div class="sub">Конкретные формулы на каждый день</div>
+
+<div class="g">
+  ${card('🎯','Универсальная формула','«Когда я вижу/слышу [факт], я чувствую [эмоция], потому что мне важно [потребность]. Готов(а) ли ты [просьба]?»','<b>Пример:</b><br>❌ «Ты опять в телефоне, тебе плевать на семью!»<br>✅ «Когда ты смотришь в телефон за ужином, мне одиноко, потому что мне важно наше время. Готов убрать телефон, пока едим?»',`<span class="tg tg-g">Главный инструмент</span>`,`🥇`)}
+  ${card('🛡️','Контрастирование','«Я НЕ хочу X. Я ХОЧУ Y» — снимает тревогу мгновенно','«Я не хочу тебя обвинять. Я хочу, чтобы мы нашли решение вместе.»<br>«Я не хочу сказать, что ты плохой отец. Я хочу обсудить, как нам справиться с вечерами.»',`<span class="tg tg-g">Быстрый эффект</span>`,`🥈`)}
+  ${card('📊','Для трудных разговоров (STATE)','Факты → Интерпретация → «Как ты видишь?» → Мягко → Пригласи оспорить','<b>Пример:</b> «За последний месяц мы были вместе без телефонов два раза <i>(факт)</i>. У меня ощущение, что мы отдаляемся <i>(история)</i>. Возможно, ошибаюсь. Как ты это видишь? <i>(приглашение)</i>»',`<span class="tg tg-b">Высокие ставки</span>`)}
+  ${card('👂','Когда партнёр молчит (AMPP)','Ask → Mirror → Paraphrase → Prime','<b>Ask:</b> задай вопрос<br><b>Mirror:</b> отрази эмоции: «вижу, что тебе неприятно»<br><b>Paraphrase:</b> перескажи своими словами<br><b>Prime:</b> если всё ещё молчит — предложи свою версию его мыслей, чтобы «завести» разговор',`<span class="tg tg-a">Молчание</span>`)}
+  ${card('💡','3 вопроса перед разговором','Переключает мозг из «атака/защита» в «диалог»','1. Что я хочу <b>для себя</b>?<br>2. Что я хочу <b>для партнёра</b>?<br>3. Что я хочу <b>для наших отношений</b>?',`<span class="tg tg-t">Подготовка</span>`)}
+  ${card('🙏','Как извиняться','Конкретно + без «но» + без оправданий','<b>Плохо:</b> «Извини, если обидело» · «Извини, но ты тоже…» · «Я такой человек»<br><b>Хорошо:</b> «Мне жаль, что я сказал X. Это было неправильно. Понимаю, тебе нужно время.»',`<span class="tg tg-g">Ремонт</span>`)}
+</div>
+
+<div class="sec">Шпаргалка</div>
+<div style="overflow-x:auto"><table class="tb">
+  <tr><th>Ситуация</th><th>Инструмент</th><th>Формула</th></tr>
+  <tr><td>Повседневная ссора</td><td>Мягкое начало</td><td>«Я чувствую X, когда Y. Мне нужно Z»</td></tr>
+  <tr><td>Важный разговор</td><td>STATE</td><td>Факты → интерпретация → «как ты видишь?»</td></tr>
+  <tr><td>Партнёр молчит</td><td>AMPP</td><td>Вопрос → Зеркало → Пересказ → Затравка</td></tr>
+  <tr><td>Безопасность нарушена</td><td>Контрастирование</td><td>«Я НЕ хочу X. Я ХОЧУ Y»</td></tr>
+  <tr><td>Оба завелись</td><td>Пауза 20 мин</td><td>Уйти с обязательным возвратом</td></tr>
+  <tr><td>Нужно извиниться</td><td>Конкретика</td><td>Что сделал + без «но» + без оправданий</td></tr>
+  <tr><td>Подсчёт очков</td><td>Благодарность</td><td>Конкретное «спасибо» каждый день</td></tr>
+</table></div>
+
+<div class="sec">Наблюдение ≠ оценка</div>
+<div style="overflow-x:auto"><table class="tb">
+  <tr><th>Оценка ❌ (разрушает)</th><th>Наблюдение ✅ (работает)</th></tr>
+  <tr><td>«Ты всегда опаздываешь»</td><td>«За неделю ты пришёл позже три раза»</td></tr>
+  <tr><td>«Ты безответственный»</td><td>«Счёт за свет не оплачен»</td></tr>
+  <tr><td>«Тебе наплевать»</td><td>«Ты не спросил, как прошёл мой день»</td></tr>
+</table></div>
+<div class="call"><b>Правило:</b> жёсткое начало разговора в <b>96%</b> случаев ведёт к провалу. Как начался — так и закончится. Телефон на столе во время общения <b>↓50%</b> качества разговора — даже если его не трогать.</div>
+`;
+P.appendChild(comm);
+
+// ===== CONF =====
+const conf=document.createElement('div');conf.id='p-conf';conf.className='pnl';
+conf.innerHTML=`
+<div class="sec">Что гарантированно убивает отношения</div>
+<div class="sub">4 паттерна, которые предсказывают развод. Если стали нормой — красный уровень</div>
+
+<div style="overflow-x:auto"><table class="tb">
+  <tr><th>Всадник</th><th>Что делает</th><th>Антидот</th></tr>
+  <tr><td style="color:var(--danger)">🗡️ <b>Критика</b></td><td>Атака на личность: «ты всегда…», «ты никогда…»</td><td><b>Мягкое начало:</b> «Я чувствую X, когда Y»</td></tr>
+  <tr><td style="color:var(--danger)">💀 <b>Презрение</b></td><td>Сарказм, закатывание глаз, насмешки — <b>#1 предиктор развода</b></td><td><b>Культура благодарности:</b> конкретное «спасибо» каждый день</td></tr>
+  <tr><td style="color:var(--warn)">🛡️ <b>Оборона</b></td><td>«Это не я, это ты!», перекладывание ответственности</td><td><b>Принять</b> хотя бы частичную ответственность</td></tr>
+  <tr><td style="color:var(--warn)">🧱 <b>Стены</b></td><td>Эмоциональный уход, «заморозка», молчание</td><td><b>Пауза 20 мин</b> (не уход!) + обязательный возврат</td></tr>
+</table></div>
+
+<div class="sec">3 негативных цикла</div>
+<div class="g">
+  ${card('🌀','Преследование — Бегство','Один требует → другой замыкается → первый громче → второй ещё дальше','<b>Что делать:</b><br>• Назвать цикл общим врагом: «Мы опять в этом танце. Давай остановимся»<br>• Преследователю: мягкое начало вместо атаки<br>• Бегущему: «мне нужно 20 минут, я вернусь» (не просто уйти)<br>• Понять: преследование = «боюсь потерять», бегство = «боюсь не справиться»',`<span class="tg tg-r">Самый частый</span>`)}
+  ${card('🧮','Подсчёт очков','«Я больше делаю!» Каждый видит 100% своего и 30% чужого вклада','<b>Что делать:</b><br>• Сдвиг от 50/50 к «оба вкладывают максимум, не считая»<br>• Благодарность каждый день — не абстрактная, а конкретная<br>• Еженедельное «раскрытие»: что вижу как свой и твой вклад',`<span class="tg tg-a">Ловушка</span>`)}
+  ${card('❄️','Заморозка','Оба отстранились. Ни ссор, ни близости. Параллельные жизни','<b>Самый опасный — потому что тихий.</b><br>• Кто-то должен сделать первый шаг (не слабость — мужество)<br>• Начни с мелкого: прикосновение, вопрос, взгляд<br>• Если не получается — терапевт. Без стыда',`<span class="tg tg-r">Самый опасный</span>`)}
+</div>
+
+<div class="sec">3 токсичных «истории» мозга</div>
+<div class="call">В конфликте мозг автоматически создаёт «истории»:<br>
+📕 <b>«Жертва»</b> — «Это всё из-за него/неё. Я ни при чём»<br>
+📕 <b>«Злодей»</b> — «Он/она делает это намеренно, чтобы навредить»<br>
+📕 <b>«Беспомощный»</b> — «Я ничего не могу сделать. Безнадёжно»<br><br>
+<b>Антидот:</b> «Что я видел на самом деле?» (факт) vs «Какую историю себе рассказал?» (интерпретация)</div>
+
+<div class="call green"><b>69% конфликтов неразрешимы</b> — и это нормально. Они основаны на фундаментальных различиях (интроверт/экстраверт, транжира/накопитель). Цель — не решить, а научиться жить через диалог. За каждой «вечной» проблемой — скрытая мечта. Спроси: «Что для тебя значит эта позиция?»</div>
+`;
+P.appendChild(conf);
+
+// ===== SEX =====
+const sex=document.createElement('div');sex.id='p-sex';sex.className='pnl';
+sex.innerHTML=`
+<div class="sec">Секс и желание — отдельная система</div>
+<div class="sub">Парадокс, который нужно принять и которым можно управлять</div>
+<div class="g">
+  ${card('⚡','Главный парадокс','Любовь = близость, безопасность, предсказуемость. Желание = дистанция, тайна, риск. Они противоположны.','Чем ближе и роднее партнёр — тем меньше желания. Это не патология, это закон. Огонь нуждается в воздухе. Нельзя убрать парадокс — но можно им управлять.',`<span class="tg tg-p">Ключевой инсайт</span>`)}
+  ${card('👀','Когда возникает желание?','Когда есть дистанция и инаковость','Топ-ответы из практики:<br>• «Когда вижу его в другом контексте»<br>• «Когда она увлечена чем-то своим»<br>• «После разлуки»<br>• «Когда он рассмешил комнату»<br>Все указывают: желание усиливается при дистанции и инаковости.',`<span class="tg tg-a">Практика</span>`)}
+  ${card('⚠️','Парадокс не универсален','Для тревожного привязанного — наоборот','Тревожные не могут желать без безопасности. Для них: сначала восстановить безопасную связь, потом работать с эротической дистанцией. Для избегающих — дистанция сохраняет интерес.',`<span class="tg tg-r">Важно</span>`)}
+</div>
+<div class="sec">Что делать</div>
+<div class="g">
+  ${card('🚫','НЕ сводить секс к логистике','«Давай во вторник» убивает спонтанность','Создавайте атмосферу, а не расписание.')}
+  ${card('⚖️','Справедливый быт = лучший секс','Исследования подтверждают','Пары, честно делящие обязанности, имеют лучшую сексуальную жизнь. Не «заслужил» — а нет ресентимента.')}
+  ${card('💬','Говорить о сексе','Не в критическом ключе, а с любопытством','Не «почему мы редко», а «что тебе нравится? чего хочешь попробовать?»')}
+  ${card('🧍','Сохранять индивидуальность','Свои интересы, друзья, пространство','Это не предательство пары — это питание желания. Фантазии нормальны — это язык психики, не план действий.')}
+</div>
+`;
+P.appendChild(sex);
+
+// ===== FAM =====
+const fam=document.createElement('div');fam.id='p-fam';fam.className='pnl';
+fam.innerHTML=`
+<div class="sec">Семья как система</div>
+<div class="sub">Подсистемы, границы, триангуляция</div>
+<div class="g">
+  ${card('💑','Супружеская подсистема','Фундамент. Когда она здорова — дети процветают','Еженедельный чек-ин, защита времени вдвоём от вторжений (дети, телефоны, работа).',`<span class="tg tg-g">База</span>`)}
+  ${card('👨‍👩‍👦','Родительская подсистема','Объединённый фронт. Спорить — наедине','Можно ссориться как супруги, но выступать единым фронтом как родители. «Мы-позиция» перед детьми.',`<span class="tg tg-b">Правило</span>`)}
+  ${card('🚫','Триангуляция — главный враг','Когда двое втягивают третьего в конфликт','Мама жалуется дочери на папу. Муж обсуждает жену с тёщей. Ребёнок = «посредник».<br><br><b>Правило:</b> решай проблему в той подсистеме, где она возникла. Супружеские — между супругами. Не через детей.',`<span class="tg tg-r">Опасность</span>`)}
+</div>
+<div class="sec">Дети видят ВСЁ</div>
+<div class="call blue"><b>Детей разрушают не конфликты — а неразрешённые конфликты.</b> Дети, которые видят как родители ссорятся И ЗАТЕМ МИРЯТСЯ, получают бесценную модель: конфликт можно починить. Шаги примирения (юмор, извинение, прикосновение) должны быть видимы для детей.</div>
+<div class="call">Дети впитывают семейную тревогу. Чем лучше родители управляют собой — тем здоровее дети.</div>
+`;
+P.appendChild(fam);
+
+// ===== BOUND =====
+const bound=document.createElement('div');bound.id='p-bound';bound.className='pnl';
+bound.innerHTML=`
+<div class="sec">Границы — заборы с калитками</div>
+<div class="sub">Граница — не стена, а линия собственности. Контроль над собой, не над партнёром</div>
+<div class="g">
+  ${card('🔑','Что такое граница','Линия, определяющая где заканчиваюсь я и начинается другой','Охватывает: эмоции, мысли, поведение, решения, время, тело, ценности. Забор показывает где граница, калитка — что впускать.',`<span class="tg tg-b">Определение</span>`)}
+  ${card('⚖️','Ответственность друг перед другом','НО не друг ЗА друга','Нельзя чувствовать, думать, расти вместо партнёра. «Я могу помочь, но не могу сделать это за тебя.»',`<span class="tg tg-g">Принцип</span>`)}
+  ${card('🔄','Сеяние и жатвы','Действия имеют последствия','Если один безответственен — другой НЕ должен спасать от последствий (покрывать, платить долги, извинять). Позволь столкнуться с результатом.',`<span class="tg tg-a">Закон</span>`)}
+  ${card('💔','Граница может причинить боль','Но боль ≠ вред','Хирург причиняет боль, чтобы исцелить. Дискомфорт от границы ≠ вред от границы.',`<span class="tg tg-p">Важно</span>`)}
+</div>
+<div class="sec">Щедрость vs созависимость</div>
+<div class="call"><b>Щедрость работает, когда оба вкладываются.</b> Если один постоянно «даёт 80%», а другой берёт и не благодарит — это не радикальная щедрость, это созависимость. В этом случае нужны границы, не щедрость.</div>
+<div class="call red"><b>Созависимость =</b> отсутствие границ, слияние с другим, ответственность за его чувства и выбор. «Спасение» партнёра от последствий разрушает обоих. Граница ≠ стена. Уязвимость ≠ отсутствие границ. «Хороший парень» ≠ здоровые границы.</div>
+`;
+P.appendChild(bound);
+
+// ===== CRISIS =====
+const crisis=document.createElement('div');crisis.id='p-crisis';crisis.className='pnl';
+crisis.innerHTML=`
+<div class="sec">Кризисы и красные линии</div>
+<div class="sub">Когда работать и когда остановиться</div>
+<div class="g">
+  ${card('🔧','Позиция: работать над отношениями','НЕ бегство при первой сложности','Мы за сохранение отношений. Против инстаграмной культуры «бросай при первом ред флаге». Вместо «уходи» → конкретный инструмент для решения. Ответственность обоих партнёров.',`<span class="tg tg-g">Принцип</span>`)}
+  ${card('🤝','Отказ одного от работы','Нельзя тащить в одиночку','Если один категорически отказывается от любых усилий — это не «работа над собой», это одностороннее обслуживание. Обсуди прямо: «Мне важно, чтобы мы оба старались.»',`<span class="tg tg-a">Сложно</span>`)}
+  ${card('🧩','Нарциссическая динамика','Формулы коммуникации НЕ работают','Формулы типа «наблюдение-чувство-потребность» не работают с нарциссическим партнёром. Рекомендация: индивидуальная терапия + жёсткие границы.',`<span class="tg tg-r">Исключение</span>`)}
+</div>
+<div class="sec">Когда уходить ≠ слабость</div>
+<div class="call red"><b>Единственное исключение — реальное физическое/сексуальное насилие.</b> Это вопрос безопасности, не «работы над собой». Также: систематический эмоциональный абьюз, нарциссическая динамика без готовности к изменению, остаёшься только из страха одиночества. <b>Границы существуют не только внутри отношений, но и вокруг них.</b></div>
+`;
+P.appendChild(crisis);
+
+// ===== DAILY =====
+const daily=document.createElement('div');daily.id='p-daily';daily.className='pnl';
+daily.innerHTML=`
+<div class="sec">Ежедневные практики</div>
+<div class="sub">Минимум усилий — максимум эффекта</div>
+<ul class="al">
+  <li><div class="ai">☀️</div><div class="at"><b>Утро: заметить первую «заявку»</b><span>Когда партнёр обращает внимание на что-то — повернись К, не ОТ. «Смотри, какое утро!» → «Красиво!» (а не молча в телефон)</span></div></li>
+  <li><div class="ai">🙏</div><div class="at"><b>Днём: одно конкретное «спасибо»</b><span>Не абстрактное, а: «Спасибо, что приготовила ужин, вкусно было» / «Спасибо, что отвёз Алекса, знаю, ты устал»</span></div></li>
+  <li><div class="ai">🌙</div><div class="at"><b>Вечер: рефлексия 5:1</b><span>Сколько + и − взаимодействий за день? Цель: ≥5 позитивных на 1 негативное. Счастливые пары: 5:1. Несчастливые: 0.8:1</span></div></li>
+  <li><div class="ai">📵</div><div class="at"><b>За ужином: телефон убрать</b><span>Даже его присутствие на столе ↓50% качества разговора</span></div></li>
+  <li><div class="ai">🤗</div><div class="at"><b>Физический контакт: 6 секунд</b><span>Поцелуй в 6 секунд = достаточно для гормонального ответа. Объятие 20 секунд = окситоцин. Не формально, а с присутствием</span></div></li>
+</ul>
+
+<div class="sec">Еженедельно</div>
+<ul class="al">
+  <li><div class="ai">🗓️</div><div class="at"><b>Чек-ин пары: 15 минут</b><span>Каждый: что было хорошо? Что мне нужно от тебя? Что я могу для тебя?</span></div></li>
+  <li><div class="ai">💑</div><div class="at"><b>«Свидание»: минимум 1 раз</b><span>Не обязательно ресторан — прогулка, фильм, общее дело. Без телефонов, без детских тем</span></div></li>
+  <li><div class="ai">🔄</div><div class="at"><b>Были ли «4 всадника»?</b><span>Критика? Презрение? Оборона? Стены? Был ли ремонт? Цель: 0 всадников, ремонт &lt;30 мин</span></div></li>
+</ul>
+
+<div class="sec">Ежемесячно</div>
+<ul class="al">
+  <li><div class="ai">📊</div><div class="at"><b>Общее ощущение связи (0–10)</b><span>Субъективная оценка обоих. Цель: ≥7</span></div></li>
+  <li><div class="ai">📖</div><div class="at"><b>1 новая практика или инструмент</b><span>Читать, слушать, пробовать. Знание без практики = книга на полке</span></div></li>
+</ul>
+`;
+P.appendChild(daily);
+
+// ===== KPI =====
+const kpi=document.createElement('div');kpi.id='p-kpi';kpi.className='pnl';
+kpi.innerHTML=`
+<div class="sec">KPI отношений</div>
+<div class="sub">Что измерять и какие цели</div>
+<div style="overflow-x:auto"><table class="tb">
+  <tr><th>Параметр</th><th>Как измерять</th><th>Цель</th><th>Частота</th></tr>
+  <tr><td>Соотношение +/−</td><td>Вечерняя рефлексия</td><td><b>≥5:1</b></td><td>Ежедневно</td></tr>
+  <tr><td>Реакция на «заявки»</td><td>Замечать К vs ОТ</td><td><b>≥80% К</b></td><td>Ежедневно</td></tr>
+  <tr><td>4 всадника</td><td>Были ли? Был ли ремонт?</td><td><b>0 всадников</b></td><td>Еженедельно</td></tr>
+  <tr><td>Близость</td><td>Частота + качество (0-10)</td><td>По согласию обоих</td><td>Еженедельно</td></tr>
+  <tr><td>«Свидания»</td><td>Были ли?</td><td><b>≥1/нед</b></td><td>Еженедельно</td></tr>
+  <tr><td>Связь (0-10)</td><td>Субъективная оценка</td><td><b>≥7</b></td><td>Ежемесячно</td></tr>
+  <tr><td>Новая практика</td><td>Что внедрено</td><td><b>1 шт</b></td><td>Ежемесячно</td></tr>
+</table></div>
+
+${histo('Что даёт максимальный эффект',[
+  {n:'Соотношение 5:1',s:98,c:'#059669'},
+  {n:'Заявки (bids)',s:95,c:'#059669'},
+  {n:'Мягкое начало',s:93,c:'#0D7377'},
+  {n:'Контрастирование',s:90,c:'#0D7377'},
+  {n:'Формула NVC',s:88,c:'#D97706'},
+  {n:'Пауза 20 мин',s:87,c:'#D97706'},
+  {n:'Благодарность',s:85,c:'#6D28D9'},
+  {n:'Еженедельный чек-ин',s:83,c:'#6D28D9'},
+  {n:'Телефон убрать',s:80,c:'#1D5EBB'},
+  {n:'Назвать цикл вслух',s:78,c:'#1D5EBB'}
+])}
+`;
+P.appendChild(kpi);
+
+// ===== PLAN =====
+const plan=document.createElement('div');plan.id='p-plan';plan.className='pnl';
+plan.innerHTML=`
+<div class="sec">План действий</div>
+<div class="sub">Фазированное внедрение. НЕ всё сразу — по 1 практике каждые 2 недели</div>
+
+<div class="sec" style="font-size:18px">🔴 Сделать СЕГОДНЯ</div>
+<ul class="al">
+  <li><div class="ai">1️⃣</div><div class="at"><b>Заметить 1 «заявку» партнёра и повернуться К</b><span>Любой сигнал: вопрос, взгляд, «смотри…» — отреагировать, а не в телефон</span></div></li>
+  <li><div class="ai">2️⃣</div><div class="at"><b>Сказать 1 конкретное «спасибо»</b><span>Не «спасибо за всё», а «спасибо, что [конкретно], это было [почему важно]»</span></div></li>
+  <li><div class="ai">3️⃣</div><div class="at"><b>Вечером: посчитать + и −</b><span>Сколько позитивных и негативных взаимодействий? Просто заметить, без самокритики</span></div></li>
+</ul>
+
+<div class="sec" style="font-size:18px">🟡 Эта неделя</div>
+<ul class="al">
+  <li><div class="ai">📵</div><div class="at"><b>Убрать телефон за ужином</b><span>7 дней подряд. Заметить разницу в качестве разговоров</span></div></li>
+  <li><div class="ai">🗓️</div><div class="at"><b>Первый чек-ин пары</b><span>15 минут. «Что было хорошо? Что тебе нужно? Что я могу?»</span></div></li>
+  <li><div class="ai">🔍</div><div class="at"><b>Заметить свой цикл</b><span>Ты преследуешь или бежишь? Ведёшь подсчёт очков? Просто заметить — без попытки исправить</span></div></li>
+</ul>
+
+<div class="sec" style="font-size:18px">🟢 Этот месяц</div>
+<ul class="al">
+  <li><div class="ai">💬</div><div class="at"><b>Освоить формулу: факт → чувство → потребность → просьба</b><span>Использовать 1 раз в день. Сначала будет неловко — это нормально</span></div></li>
+  <li><div class="ai">🛡️</div><div class="at"><b>Попробовать контрастирование в следующей ссоре</b><span>«Я НЕ хочу тебя обвинять. Я ХОЧУ, чтобы мы нашли решение»</span></div></li>
+  <li><div class="ai">🌀</div><div class="at"><b>Назвать цикл вслух</b><span>«Мы опять в нашем танце. Давай остановимся.» Цикл — общий враг, не партнёр</span></div></li>
+</ul>
+
+<div class="sec" style="font-size:18px">🔵 3 месяца</div>
+<ul class="al">
+  <li><div class="ai">📊</div><div class="at"><b>Довести 5:1 до нормы</b><span>5 позитивных на 1 негативное — устойчиво, не от случая к случаю</span></div></li>
+  <li><div class="ai">🔗</div><div class="at"><b>Определить паттерны привязанности</b><span>Свой и партнёра. Тревожный? Избегающий? Надёжный? Как они активируют друг друга?</span></div></li>
+  <li><div class="ai">⏸️</div><div class="at"><b>Отработать паузу 20 мин</b><span>Не уход, а: «Мне нужно 20 минут. Я не ухожу — вернусь». Ходьба/дыхание, НЕ телефон</span></div></li>
+</ul>
+
+<div class="sec" style="font-size:18px">🟣 Долгосрок</div>
+<ul class="al">
+  <li><div class="ai">🏛️</div><div class="at"><b>Все 3 столпа работают: Связь + Структура + Рост</b><span>Регулярные ритуалы, ясные границы, каждый развивается как личность</span></div></li>
+  <li><div class="ai">🔥</div><div class="at"><b>Управлять парадоксом близости/желания</b><span>Сохранять индивидуальность, дистанцию, инаковость — даже в «родных» отношениях</span></div></li>
+  <li><div class="ai">👨‍👩‍👦</div><div class="at"><b>Семья как система: подсистемы и границы</b><span>Супружеская подсистема отдельно от родительской. Объединённый фронт. Нет триангуляции</span></div></li>
+</ul>
+
+<div class="call green"><b>Золотое правило:</b> 1 практика каждые 2 недели. Знание без практики = ещё одна книга на полке. Не пытайся всё сразу — привычка строится за 21 день, закрепляется за 66.</div>
+`;
+P.appendChild(plan);
+
+// init animation
+setTimeout(animBars,150);
+</script>
+<script src="../assets/inject-overlay.js"></script>
+</body>
+</html>

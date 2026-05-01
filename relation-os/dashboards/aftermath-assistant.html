@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ассистент после ссоры · ODV999</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
+</head>
+<body data-theme="light">
+
+<div class="container">
+  <div class="hero">
+    <h1>Aftermath of a Fight · ассистент<span class="v">v1.0</span></h1>
+    <p>5-шаговый разбор ссоры по Готтману. Запускай, когда оба остыли (минимум 20 мин после флудинга, обычно через 60-90 мин когда кортизол к базе).</p>
+  </div>
+
+  <div class="warn"><strong>⚠ ДО запуска:</strong> ЧСС ниже 100, дыхание носом ровное, плечи опущены. Если ещё «затоплен» — сначала пауза. Готтман: разговор в флудинге = эскалация.</div>
+
+  <div class="card">
+    <div class="card-title">Шаг 1 · FEELINGS</div>
+    <div class="card-attrib">Каждый описывает чувства во время ссоры. Запрет: оправдания, объяснения «почему».</div>
+    <div class="field">
+      <label>Я чувствовал(а):</label>
+      <textarea id="step1" placeholder="злость / страх / стыд / одиночество / усталость / обиду..."></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Шаг 2 · REALITIES</div>
+    <div class="card-attrib">Каждый описывает СВОЁ восприятие ссоры. Запрет: спорить с восприятием другого.</div>
+    <div class="field">
+      <label>Что я видел(а)/слышал(а):</label>
+      <textarea id="step2" placeholder="мне показалось что ты... / я услышал что..."></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Шаг 3 · TRIGGERS</div>
+    <div class="card-attrib">Что сработало — детство, прошлый опыт, страх. Это про тебя, не про партнёра.</div>
+    <div class="field">
+      <label>Триггер:</label>
+      <textarea id="step3" placeholder="это напомнило мне как родители... / я всегда боюсь что..."></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Шаг 4 · RESPONSIBILITY</div>
+    <div class="card-attrib">Каждый: «как Я внёс в эскалацию». Не «50/50», а конкретно своя часть.</div>
+    <div class="field">
+      <label>Моя часть:</label>
+      <textarea id="step4" placeholder="я повысил голос, я закатил глаза, я ушёл в стену..."></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Шаг 5 · CONSTRUCTIVE PLANS</div>
+    <div class="card-attrib">1 конкретное действие на следующий раз. Не «буду стараться» — а «когда X, я сделаю Y».</div>
+    <div class="field">
+      <label>В следующий раз:</label>
+      <textarea id="step5" placeholder="когда замечу что повышаю голос — возьму 20 мин паузы..."></textarea>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn" id="saveBtn" type="button">Сохранить разбор</button>
+    <button class="btn btn-secondary" id="clearBtn" type="button">Очистить поля</button>
+  </div>
+
+  <div class="card" style="margin-top:24px;">
+    <div class="card-title">История разборов</div>
+    <div id="historyList"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="if(confirm('Удалить всю историю?')){localStorage.removeItem('aftermath_log');location.reload();}">Очистить всю историю</button>
+    </div>
+  </div>
+
+  <div class="success">
+    <strong>Если на любом шаге возвращается ссора → стоп → ещё не готовы.</strong> Чем раньше repair attempt — тем меньше остаточный резентимент (Готтман, U Washington).
+  </div>
+
+  <div class="footer">
+    Источник: Gottman, J. — Aftermath of a Fight protocol · <a href="https://www.gottman.com/blog/manage-conflict-the-aftermath-of-a-fight/" target="_blank">gottman.com</a>
+  </div>
+</div>
+
+<script src="../assets/dashboard-nav.js"></script>
+<script>
+function load(){ return JSON.parse(localStorage.getItem('aftermath_log') || '[]'); }
+function save(arr){ localStorage.setItem('aftermath_log', JSON.stringify(arr)); }
+
+document.getElementById('saveBtn').addEventListener('click', function(){
+  var entry = {
+    date: new Date().toISOString(),
+    feelings: document.getElementById('step1').value,
+    realities: document.getElementById('step2').value,
+    triggers: document.getElementById('step3').value,
+    responsibility: document.getElementById('step4').value,
+    plan: document.getElementById('step5').value
+  };
+  var hasContent = entry.feelings || entry.realities || entry.triggers || entry.responsibility || entry.plan;
+  if (!hasContent) { alert('Заполни хотя бы один шаг.'); return; }
+  var log = load();
+  log.unshift(entry);
+  save(log);
+  alert('Сохранено. История ниже.');
+  document.querySelectorAll('textarea').forEach(function(t){ t.value = ''; });
+  render();
+});
+
+document.getElementById('clearBtn').addEventListener('click', function(){
+  document.querySelectorAll('textarea').forEach(function(t){ t.value = ''; });
+});
+
+function render(){
+  var log = load();
+  var box = document.getElementById('historyList');
+  if (log.length === 0) {
+    box.innerHTML = '<div class="card-attrib" style="text-align:center;padding:20px;">Пока пусто. Первый сохранённый разбор появится здесь.</div>';
+    return;
+  }
+  box.innerHTML = log.map(function(e, i){
+    var d = new Date(e.date);
+    var dd = d.toLocaleDateString('ru') + ' ' + d.toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'});
+    return '<details style="margin-bottom:8px;">' +
+      '<summary>' + dd + ' — план: <em>' + (e.plan ? e.plan.slice(0, 80) : '(не записан)') + '</em></summary>' +
+      (e.feelings ?       '<p><strong>Feelings:</strong> '       + esc(e.feelings)       + '</p>' : '') +
+      (e.realities ?      '<p><strong>Realities:</strong> '      + esc(e.realities)      + '</p>' : '') +
+      (e.triggers ?       '<p><strong>Triggers:</strong> '       + esc(e.triggers)       + '</p>' : '') +
+      (e.responsibility ? '<p><strong>Responsibility:</strong> ' + esc(e.responsibility) + '</p>' : '') +
+      (e.plan ?           '<p><strong>Plan:</strong> '           + esc(e.plan)           + '</p>' : '') +
+      '<button class="btn btn-secondary" onclick="del(' + i + ')" style="font-size:12px;padding:4px 10px;">Удалить</button>' +
+    '</details>';
+  }).join('');
+}
+function esc(s){ return s.replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function del(i){
+  var log = load();
+  log.splice(i, 1);
+  save(log);
+  render();
+}
+window.del = del;
+render();
+</script>
+</body>
+</html>

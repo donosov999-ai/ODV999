@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Цикл-навигатор для мужчин · ODV999</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
+</head>
+<body data-theme="light">
+
+<div class="container">
+  <div class="hero">
+    <h1>Цикл-навигатор (👨)<span class="v">v1.0</span></h1>
+    <p>Календарь её цикла + что от этого зависит. Не «дни боя на минимуме», а: когда какие темы поднимать, когда не запускать тяжёлые разговоры, когда красиво идти на сближение.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Введи данные</div>
+    <div class="field">
+      <label>Дата начала её последней менструации:</label>
+      <input type="date" id="lastPeriod">
+    </div>
+    <div class="field">
+      <label>Средняя длина цикла, дней:</label>
+      <input type="number" id="cycleLen" min="21" max="40" value="28">
+    </div>
+    <div class="field">
+      <label>Возраст:</label>
+      <input type="number" id="age" min="14" max="60" placeholder="35">
+    </div>
+    <button class="btn" id="calcBtn" type="button">Показать карту</button>
+  </div>
+
+  <div id="result"></div>
+
+  <details>
+    <summary>Что в каждой фазе</summary>
+    <p><strong>Менструальная (день 1-5):</strong> эстроген ↓↓, прогестерон ↓↓. Усталость, желание быть наедине. <em>Что делать:</em> снизить требования, дать пространство, помочь по дому без просьбы.</p>
+    <p><strong>Фолликулярная (день 6-13):</strong> эстроген ↑. Энергия, оптимизм, дофамин ↑. <em>Лучшее время для:</em> планов, обсуждения денег, новых начинаний, спорта вместе.</p>
+    <p><strong>Овуляция (день ~14):</strong> пик эстрогена + ЛГ. Либидо ↑↑, общительность, привлекательность. <em>Лучшее время для:</em> близости, романтических жестов, флирта.</p>
+    <p><strong>Лютеиновая (день 15-23):</strong> прогестерон ↑. Спокойствие, потребность в безопасности. <em>Лучшее время для:</em> тихого вечера, домашних дел вместе.</p>
+    <p><strong>ПМС (день 24-28):</strong> прогестерон ↓ резко, серотонин ↓. Раздражительность, чувствительность. <em>НЕ лучшее время для:</em> финансовых споров, критики, «давай поговорим о наших отношениях».</p>
+  </details>
+
+  <div class="warn"><strong>Важно:</strong> это <em>усреднённая</em> карта. У конкретной женщины фазы могут смещаться, ПМС может быть на 26-й день или на 22-й. Лучший способ — отслеживать вместе через её приложение (Flo, Clue) и наблюдать паттерны.</div>
+
+  <div class="card">
+    <div class="card-title">⚠ Если её 35+: флаги перименопаузы</div>
+    <ul style="font-size:14px;line-height:1.8;padding-left:20px;">
+      <li>Цикл сбился (стал короче на 5+ дней или длиннее на 7+)</li>
+      <li>Бессонница, ночные пробуждения</li>
+      <li>Раздражительность вне ПМС-окна</li>
+      <li>Приливы жара</li>
+      <li>Сухость влагалища</li>
+    </ul>
+    <div class="note">Перименопауза начинается за 5-10 лет до менопаузы (обычно 40-44, может с 35). <strong>Это не «ссоримся» — это эндокринология.</strong> К гинекологу-эндокринологу: ФСГ, ЛГ, эстрадиол, АМГ. См. <a href="biochemistry-first.html">Биохимия первым</a>.</div>
+  </div>
+
+  <div class="footer">
+    Источники: ACOG · Mayo Clinic 2024 (perimenopause) · Endotext NCBI 2024
+  </div>
+</div>
+
+<script src="../assets/dashboard-nav.js"></script>
+<script>
+function dayDiff(a, b){ return Math.floor((a - b) / 86400000); }
+
+document.getElementById('calcBtn').addEventListener('click', function(){
+  var lp = document.getElementById('lastPeriod').value;
+  var cl = parseInt(document.getElementById('cycleLen').value, 10);
+  var age = parseInt(document.getElementById('age').value, 10);
+  if (!lp || !cl) { alert('Заполни дату и длину цикла.'); return; }
+  var lastDate = new Date(lp);
+  var today = new Date();
+  var diff = dayDiff(today, lastDate);
+  var dayOfCycle = (diff % cl + cl) % cl + 1;
+
+  var phase, advice, color;
+  if (dayOfCycle <= 5) {
+    phase = 'Менструальная (день ' + dayOfCycle + ')';
+    advice = 'Эстроген ↓↓, прогестерон ↓↓. Усталость. <strong>Делай:</strong> сними требования, помоги по дому без просьбы, не предлагай «давай поговорим». <strong>Не делай:</strong> не настаивай на сексе, не критикуй.';
+    color = '#bf3989';
+  } else if (dayOfCycle <= 13) {
+    phase = 'Фолликулярная (день ' + dayOfCycle + ')';
+    advice = 'Эстроген ↑. Энергия, оптимизм. <strong>Делай:</strong> обсуждай планы, деньги, начинай новое вместе, спорт. <strong>Не делай:</strong> не упускай момент — это лучшее окно для конструктивных разговоров.';
+    color = '#3fb950';
+  } else if (dayOfCycle <= 16) {
+    phase = 'Овуляция (день ' + dayOfCycle + ')';
+    advice = 'Пик эстрогена + ЛГ. Либидо ↑↑. <strong>Делай:</strong> романтика, близость, флирт. <strong>Не делай:</strong> не пропускай этот день за работой — это окно желания.';
+    color = '#d29922';
+  } else if (dayOfCycle <= 23) {
+    phase = 'Лютеиновая (день ' + dayOfCycle + ')';
+    advice = 'Прогестерон ↑. Спокойствие, потребность в безопасности. <strong>Делай:</strong> тихий вечер, домашнее, поддерживай. <strong>Не делай:</strong> не выдёргивай в активности и шумные тусовки.';
+    color = '#58a6ff';
+  } else {
+    phase = 'ПМС (день ' + dayOfCycle + ')';
+    advice = 'Прогестерон ↓ резко, серотонин ↓. Раздражительность, чувствительность. <strong>Делай:</strong> избыток терпения, простые маленькие приятности. <strong>НЕ делай:</strong> финансовые споры, критика, «давай поговорим о наших отношениях», большие планы.';
+    color = '#f85149';
+  }
+
+  var html = '<div class="result-box" style="border-color:' + color + '"><h3 style="color:' + color + '">' + phase + '</h3>';
+  html += '<div class="note">' + advice + '</div>';
+
+  // Прогнозы
+  var nextPeriod = new Date(lastDate);
+  nextPeriod.setDate(nextPeriod.getDate() + cl);
+  var ovulation = new Date(lastDate);
+  ovulation.setDate(ovulation.getDate() + cl - 14);
+  html += '<table style="margin-top:14px;">';
+  html += '<tr><th>След. овуляция (приблизит.)</th><td>' + ovulation.toLocaleDateString('ru') + '</td></tr>';
+  html += '<tr><th>След. менструация (приблизит.)</th><td>' + nextPeriod.toLocaleDateString('ru') + '</td></tr>';
+  html += '</table>';
+
+  // Перименопауза флаг
+  if (age >= 35) {
+    html += '<div class="warn"><strong>⚠ ' + age + ' лет — рассмотри перименопаузу.</strong> Если у неё цикл сбился на 5+ дней, бессонница, раздражительность вне ПМС-окна, приливы — это эндокринология, не «отношения». См. <a href="biochemistry-first.html">Биохимия первым</a>.</div>';
+  }
+
+  html += '</div>';
+  document.getElementById('result').innerHTML = html;
+  document.getElementById('result').scrollIntoView({behavior:'smooth'});
+});
+</script>
+</body>
+</html>

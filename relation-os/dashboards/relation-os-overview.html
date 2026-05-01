@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RELATION OS — Интерактивная карта</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Source+Sans+3:wght@300;400;600;700&display=swap');
+:root{
+  --bg:#FAF8F5;--bg2:#F0EDE8;--bg3:#E5E1DB;
+  --text:#1C1917;--text2:#57534E;--text3:#A8A29E;
+  --border:#D6D3CD;--accent:#B45309;--accent2:#92400E;
+  --info:#2563EB;--ok:#059669;--danger:#DC2626;--warn:#D97706;
+  --gold:#F59E0B;--purple:#7C3AED;--teal:#0D9488;
+  --card:#FFFFFF;--card-hover:#FEFDFB;
+  --radius:14px;--shadow:0 1px 3px rgba(0,0,0,.06);
+  --font-display:'Playfair Display',Georgia,serif;
+  --font-body:'Source Sans 3',-apple-system,sans-serif;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#171412;--bg2:#231F1B;--bg3:#2E2924;
+  --text:#F5F3F0;--text2:#A8A29E;--text3:#6B6560;
+  --border:#3D3733;--card:#1E1A16;--card-hover:#252220;
+  --shadow:0 1px 3px rgba(0,0,0,.3);
+}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+.header{padding:32px 24px 0;max-width:1200px;margin:0 auto}
+.header h1{font-family:var(--font-display);font-size:clamp(28px,5vw,42px);font-weight:800;letter-spacing:-.02em;color:var(--accent)}
+.header p{color:var(--text2);font-size:14px;margin-top:4px}
+.tabs{display:flex;gap:4px;padding:16px 24px 0;max-width:1200px;margin:0 auto;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{white-space:nowrap;padding:10px 16px;border-radius:10px 10px 0 0;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);background:var(--bg2);border:1px solid transparent;border-bottom:none;transition:all .2s;user-select:none}
+.tab:hover{background:var(--bg3);color:var(--text)}
+.tab.active{background:var(--card);color:var(--accent);border-color:var(--border);position:relative}
+.tab.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--card)}
+.content{max-width:1200px;margin:0 auto;padding:0 24px 40px;border-top:1px solid var(--border)}
+.panel{display:none;animation:fadeIn .3s ease}
+.panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.section-title{font-family:var(--font-display);font-size:22px;font-weight:600;margin:28px 0 16px;color:var(--text)}
+.section-sub{font-size:14px;color:var(--text2);margin:-10px 0 18px;line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;cursor:pointer;transition:all .25s;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.card-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px}
+.card-icon{font-size:28px;flex-shrink:0;line-height:1}
+.card-title{font-weight:700;font-size:15px;line-height:1.3}
+.card-desc{font-size:13px;color:var(--text2);line-height:1.5}
+.card-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tag{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;background:var(--bg2);color:var(--text2)}
+.tag.green{background:#ECFDF5;color:#065F46}
+.tag.red{background:#FEF2F2;color:#991B1B}
+.tag.blue{background:#EFF6FF;color:#1E40AF}
+.tag.amber{background:#FFFBEB;color:#92400E}
+.tag.purple{background:#F5F3FF;color:#5B21B6}
+@media(prefers-color-scheme:dark){
+.tag.green{background:#052e16;color:#6ee7b7}
+.tag.red{background:#350a0a;color:#fca5a5}
+.tag.blue{background:#0c1a3a;color:#93c5fd}
+.tag.amber{background:#2a1a00;color:#fcd34d}
+.tag.purple{background:#1e0a3e;color:#c4b5fd}
+}
+.badge{position:absolute;top:12px;right:12px;font-size:14px}
+.card-detail{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:13px;color:var(--text2);line-height:1.6}
+.card.open .card-detail{display:block;animation:fadeIn .25s ease}
+.histo{margin:20px 0 32px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.histo-title{font-weight:700;font-size:15px;margin-bottom:14px;color:var(--text)}
+.histo-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px}
+.histo-label{width:140px;flex-shrink:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.histo-bar-wrap{flex:1;height:24px;background:var(--bg2);border-radius:6px;overflow:hidden;position:relative}
+.histo-bar{height:100%;border-radius:6px;transition:width .6s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:11px;font-weight:700;color:#fff;min-width:30px}
+.histo-medal{width:22px;text-align:center;flex-shrink:0;font-size:14px}
+.histo-note{flex-shrink:0;font-size:12px;color:var(--text2);max-width:120px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table.data{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
+table.data th,table.data td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+table.data th{font-weight:700;color:var(--text);background:var(--bg2);position:sticky;top:0}
+table.data td{color:var(--text2)}
+table.data tr:hover td{background:var(--bg2)}
+.insight-box{background:linear-gradient(135deg,var(--bg2),var(--bg));border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--radius);padding:16px 20px;margin:16px 0;font-size:14px;line-height:1.6;color:var(--text2)}
+.insight-box strong{color:var(--text)}
+.action-list{list-style:none;margin:12px 0}
+.action-list li{padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;font-size:14px;display:flex;align-items:flex-start;gap:10px;box-shadow:var(--shadow)}
+.action-list li .a-icon{font-size:18px;flex-shrink:0}
+.action-list li .a-text{flex:1}
+.action-list li .a-text strong{display:block;color:var(--text);margin-bottom:2px}
+.action-list li .a-text span{font-size:13px;color:var(--text2)}
+.stars{color:var(--gold);letter-spacing:1px}
+.footer{text-align:center;padding:20px;font-size:12px;color:var(--text3)}
+@media(max-width:640px){
+  .header{padding:20px 16px 0}
+  .tabs{padding:12px 16px 0}
+  .tab{font-size:12px;padding:8px 12px}
+  .content{padding:0 16px 32px}
+  .grid{grid-template-columns:1fr}
+  .histo-label{width:90px;font-size:12px}
+  .histo-note{display:none}
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>RELATION OS</h1>
+  <p>22 книги · 5 истин · 3 столпа · Интерактивная карта знаний об отношениях</p>
+</div>
+
+<div class="tabs" id="tabs"></div>
+<div class="content" id="content"></div>
+<div class="footer">RELATION OS v1.0 · Denis Onosov (ODV999) · Конфиденциально</div>
+
+<script>
+const DATA = {
+tabs: [
+  {id:'books', icon:'📚', label:'Книги'},
+  {id:'pillars', icon:'🏛️', label:'3 Столпа'},
+  {id:'tools', icon:'🔧', label:'Инструменты'},
+  {id:'cycles', icon:'🔄', label:'Циклы'},
+  {id:'attach', icon:'🔗', label:'Привязанность'},
+  {id:'sex', icon:'🔥', label:'Секс и желание'},
+  {id:'family', icon:'🏠', label:'Семья'},
+  {id:'truths', icon:'💎', label:'5 Истин'},
+  {id:'rating', icon:'📊', label:'Рейтинг'},
+  {id:'plan', icon:'🗺️', label:'План действий'}
+],
+
+books: [
+  {icon:'📖',title:'Готтман — 7 принципов',desc:'40 лет исследований. 4 всадника, 5:1, заявки.',cat:'green',badge:'🥇',
+   science:5,practice:4,depth:3,relevance:5,total:95,color:'#059669',
+   detail:'Золотой стандарт. Предсказывает развод с точностью >90%. Инструменты: карты любви, мягкое начало, шаги примирения, 5:1. Ограничение: мало про «почему».'},
+  {icon:'📖',title:'Джонсон — Hold Me Tight',desc:'EFT. За ссорами — паника привязанности. 73% эффективность.',cat:'green',badge:'🥇',
+   science:4,practice:3,depth:5,relevance:5,total:93,color:'#059669',
+   detail:'Революция в понимании конфликтов. 7 диалогов для восстановления связи. RCT-подтверждённая эффективность. Ограничение: нужен терапевт для полного эффекта.'},
+  {icon:'📖',title:'Левин/Хеллер — Attached',desc:'3 стиля привязанности. Почему мы выбираем «не тех».',cat:'green',badge:'🥈',
+   science:4,practice:4,depth:4,relevance:4,total:88,color:'#2563EB',
+   detail:'Объясняет глубинные паттерны. Тревожный + избегающий = ловушка. 25% людей меняют стиль каждые 4 года. Ограничение: упрощение до 3 типов.'},
+  {icon:'📖',title:'Браун — Daring Greatly',desc:'Уязвимость — основа связи, не слабость.',cat:'blue',badge:'🥈',
+   science:3,practice:3,depth:5,relevance:5,total:87,color:'#7C3AED',
+   detail:'12 лет исследования стыда. Перфекционизм и эмоциональная броня блокируют близость. Ограничение: не всегда безопасно быть уязвимым.'},
+  {icon:'📖',title:'Розенберг — NVC',desc:'Наблюдение → Чувство → Потребность → Просьба.',cat:'green',badge:'🥉',
+   science:2,practice:5,depth:3,relevance:4,total:82,color:'#D97706',
+   detail:'Лучший инструмент коммуникации. 5 млн копий. Ограничения: не работает с нарциссами, формульность, мало научных данных.'},
+  {icon:'📖',title:'Crucial Conversations',desc:'STATE, AMPP, контрастирование. Трудные разговоры.',cat:'green',badge:'',
+   science:3,practice:5,depth:2,relevance:4,total:80,color:'#D97706',
+   detail:'STATE — практичнее NVC. Контрастирование снимает тревогу мгновенно. Корпоративная ДНК — не всегда переводится в интимные отношения.'},
+  {icon:'📖',title:'Рил — Us',desc:'«Адаптивное дитя». Баланс Я и Мы. Мужской голос.',cat:'blue',badge:'',
+   science:3,practice:4,depth:5,relevance:5,total:85,color:'#7C3AED',
+   detail:'Честный мужской голос без стыда. Концепция «адаптивного дитя» — как детские роли воспроизводятся в браке. Нет RCT.'},
+  {icon:'📖',title:'Перель — Mating in Captivity',desc:'Парадокс: близость ≠ желание. Эротический интеллект.',cat:'purple',badge:'',
+   science:2,practice:2,depth:5,relevance:4,total:78,color:'#DC2626',
+   detail:'Перевернула понимание угасания страсти. Огонь нуждается в воздухе. Дистанция питает желание. Мало конкретных инструментов.'},
+  {icon:'📖',title:'Финкель — All-or-Nothing Marriage',desc:'3 эры брака. Гора Маслоу. Контекст эпохи.',cat:'blue',badge:'',
+   science:4,practice:3,depth:3,relevance:4,total:75,color:'#2563EB',
+   detail:'Лучшая историческая перспектива. Средний брак хуже, лучшие — лучше чем когда-либо. Эффект Микеланджело. Нет инструментов.'},
+  {icon:'📖',title:'Фромм — Искусство любить',desc:'Любовь — не чувство, а практика. 4 элемента.',cat:'amber',badge:'',
+   science:3,practice:2,depth:5,relevance:5,total:82,color:'#7C3AED',
+   detail:'Философский фундамент, не устаревший за 70 лет. 4 элемента: забота, ответственность, уважение, знание. Мало практических инструментов.'},
+  {icon:'📖',title:'Cloud/Townsend — Boundaries',desc:'10 законов границ. Забор с калиткой, не стена.',cat:'green',badge:'',
+   science:2,practice:4,depth:2,relevance:3,total:65,color:'#0D9488',
+   detail:'Граница — контроль над собой, не над другим. 10 законов. Христианская рамка. Нет теории привязанности.'},
+  {icon:'📖',title:'Клемпы — 80/80 Marriage',desc:'Ловушка 50/50. Радикальная щедрость.',cat:'blue',badge:'',
+   science:2,practice:4,depth:3,relevance:4,total:70,color:'#D97706',
+   detail:'Точный диагноз: подсчёт очков убивает любовь. Метафора call-and-response. Привилегированная выборка.'},
+  {icon:'📖',title:'Битти — Созависимость',desc:'Треугольник Карпмана. Отстранение с любовью.',cat:'red',badge:'',
+   science:2,practice:3,depth:4,relevance:3,total:62,color:'#DC2626',
+   detail:'Созависимость = отсутствие границ, слияние. Предостережение: не путать с нормальной взаимозависимостью.'},
+  {icon:'📖',title:'Мур — Король, Воин, Маг, Любовник',desc:'4 мужских архетипа. Тени и интеграция.',cat:'purple',badge:'',
+   science:2,practice:2,depth:5,relevance:4,total:72,color:'#7C3AED',
+   detail:'Патриархат = власть испуганных мальчиков. Каждый архетип имеет активную и пассивную тень. Юнгианская психология.'},
+  {icon:'📖',title:'Лернер — Why Won\'t You Apologize?',desc:'Хорошее извинение: конкретно + без «но».',cat:'green',badge:'',
+   science:2,practice:5,depth:3,relevance:4,total:68,color:'#D97706',
+   detail:'Плохое: «извини, если обидело». Хорошее: конкретно, без оправданий, без перекладывания, без требования прощения.'},
+  {icon:'📖',title:'Лускомб — Marriageology',desc:'6 F-слов. Лёгкая, остроумная, первая книга.',cat:'amber',badge:'',
+   science:2,practice:3,depth:2,relevance:3,total:55,color:'#0D9488',
+   detail:'Familiarity, Fighting, Finances, Family, Fooling Around, Finding Help. Обзорный уровень. Перекос в «оставаться вместе».'},
+  {icon:'📖',title:'Spousonomics',desc:'Экономика отношений. Для аналитиков и скептиков.',cat:'amber',badge:'',
+   science:2,practice:3,depth:1,relevance:3,total:50,color:'#0D9488',
+   detail:'Сравнительное преимущество, невозвратные издержки. Остроумно, но сводит отношения к транзакциям.'},
+  {icon:'📖',title:'Грэй — Мужчины с Марса',desc:'Метафоры «пещера», «волна». Вход в тему.',cat:'red',badge:'⚠️',
+   science:1,practice:3,depth:2,relevance:2,total:38,color:'#A8A29E',
+   detail:'⚠️ УСТАРЕВШИЙ. Жёсткий бинарный гендер не подтверждён наукой. Различия внутри пола > между полами. Только как первый контакт с темой.'},
+  {icon:'📖',title:'Чепмен — 5 языков любви',desc:'Words, Time, Gifts, Service, Touch.',cat:'amber',badge:'⚠️',
+   science:1,practice:4,depth:1,relevance:3,total:42,color:'#A8A29E',
+   detail:'⚠️ НЕТ НАУЧНОЙ ВАЛИДАЦИИ. Статичные типы — реальность динамична. Может стать ярлыком. Только как вход в тему.'},
+  {icon:'📖',title:'Харви — Act Like a Lady',desc:'❌ Не рекомендуется. Устаревшие стереотипы.',cat:'red',badge:'❌',
+   science:1,practice:2,depth:1,relevance:1,total:18,color:'#DC2626',
+   detail:'❌ «Правило 90 дней» без базы. Секс как валюта. «Притворись беспомощной». Помечать как устаревший при ЛЮБОМ цитировании.'},
+  {icon:'📖',title:'Франко — Platonic',desc:'Привязанность в дружбе. Одиночество.',cat:'blue',badge:'',
+   science:3,practice:4,depth:3,relevance:4,total:70,color:'#0D9488',
+   detail:'Одна из немногих книг о дружбе через привязанность. Для тех, кто чувствует себя одиноким.'},
+  {icon:'📖',title:'Готтман — Relationship Cure',desc:'Заявки (bids) во всех отношениях.',cat:'green',badge:'',
+   science:4,practice:4,depth:3,relevance:4,total:78,color:'#059669',
+   detail:'Расширяет идеи за пределы брака на все отношения. Концепция «заявок» — любой сигнал для контакта.'}
+],
+
+tools: [
+  {icon:'💬',title:'Формула NVC',desc:'Наблюдение → Чувство → Потребность → Просьба',cat:'green',score:95,
+   detail:'«Когда я вижу [факт], я чувствую [эмоция], потому что мне важно [потребность]. Готов ли ты [просьба]?» Помни: просьба ≠ требование.'},
+  {icon:'🎯',title:'STATE (Crucial Conv.)',desc:'Share facts → Tell story → Ask path → Talk tentatively → Encourage testing',cat:'green',score:92,
+   detail:'Практичнее NVC. Включает приглашение оспорить интерпретацию. Лучше для трудных разговоров с высокими ставками.'},
+  {icon:'🛡️',title:'Контрастирование',desc:'«Я НЕ хочу X. Я ХОЧУ Y»',cat:'green',score:90,
+   detail:'Снимает тревогу мгновенно. «Я не хочу тебя обвинять. Я хочу, чтобы мы нашли решение вместе.»'},
+  {icon:'🤝',title:'Мягкое начало (Готтман)',desc:'«Я чувствую X, когда Y. Мне нужно Z»',cat:'green',score:88,
+   detail:'Жёсткое начало в 96% случаев ведёт к провалу. Как разговор начался — так и закончится.'},
+  {icon:'👂',title:'AMPP (слушание)',desc:'Ask → Mirror → Paraphrase → Prime',cat:'blue',score:85,
+   detail:'Когда партнёр молчит или злится. Prime — предложи свою версию его мыслей, чтобы «завести» разговор.'},
+  {icon:'⏸️',title:'Пауза 20 минут',desc:'Не уход, а физиологическое восстановление',cat:'amber',score:88,
+   detail:'При flooding (пульс >100) мозг неспособен к разговору. Уйти на 20 мин: ходьба, дыхание, НЕ телефон. ОБЯЗАТЕЛЬНО вернуться.'},
+  {icon:'🙏',title:'Хорошее извинение (Лернер)',desc:'Конкретно + без «но» + без оправданий',cat:'green',score:82,
+   detail:'❌ «Извини, если обидело» ❌ «Извини, но ты тоже» ✅ «Мне жаль, что я сказал X. Это было неправильно. Тебе нужно время.»'},
+  {icon:'📊',title:'Соотношение 5:1 (Готтман)',desc:'5 позитивных взаимодействий на 1 негативное',cat:'green',score:92,
+   detail:'Золотое соотношение. Счастливые пары: 5:1. Несчастливые: 0.8:1. Ежедневная рефлексия: сколько + и − за день.'},
+  {icon:'🤲',title:'Заявки / Bids (Готтман)',desc:'Поворот К vs ОТ vs ПРОТИВ',cat:'green',score:90,
+   detail:'Любой сигнал: «Смотри, какая луна!» — это заявка на контакт. Поворот К = «Красиво!». ОТ = молча в телефон. ПРОТИВ = «Не мешай». Цель: ≥80% К.'},
+  {icon:'🔄',title:'Колесо обратной связи',desc:'Факт → Мысль → Чувство → Просьба',cat:'blue',score:78,
+   detail:'Для важных разговоров. Факт: «Вот что произошло». Мысль: «Вот что я надумал» (честно). Чувство. Просьба (конкретно).'},
+  {icon:'💡',title:'«Начни с сердца»',desc:'3 вопроса перед разговором',cat:'blue',score:80,
+   detail:'1. Что я хочу для себя? 2. Для партнёра? 3. Для отношений? Переключает мозг из «атака/защита» в «диалог».'},
+  {icon:'🗓️',title:'Еженедельный чек-ин',desc:'15 мин: что хорошо? что нужно?',cat:'green',score:85,
+   detail:'Каждый говорит: что было хорошо? Что мне нужно от тебя? Что я могу для тебя? Без телефонов.'}
+],
+
+cycles: [
+  {icon:'🌀',title:'Преследование — Бегство',desc:'Один требует → другой замыкается → первый громче',cat:'red',score:95,
+   detail:'Джонсон: «Протестная полька». Готтман: Критика→Stonewalling. Левин: Тревожный+Избегающий. Антидот: назвать цикл общим врагом + мягкое начало + понять привязанность.'},
+  {icon:'🧮',title:'Подсчёт очков',desc:'Каждый видит 100% своего и 30% чужого вклада',cat:'amber',score:85,
+   detail:'Клемпы: ловушка 50/50. Spousonomics: неприятие потерь. Антидот: радикальная щедрость + ежедневная конкретная благодарность.'},
+  {icon:'🏇',title:'4 Всадника Апокалипсиса',desc:'Критика → Презрение → Оборона → Стены',cat:'red',score:98,
+   detail:'Презрение = сильнейший предиктор развода. Антидоты: мягкое начало, культура восхищения, частичная ответственность, пауза 20 мин.'},
+  {icon:'❄️',title:'Заморозка',desc:'Оба отстранились. Параллельные жизни. Тишина.',cat:'red',score:88,
+   detail:'Самый опасный — потому что тихий. Кто-то должен сделать первый шаг (мелкое: прикосновение, вопрос, взгляд). Если не получается — терапевт.'},
+  {icon:'📖',title:'3 токсичных истории',desc:'Жертва, Злодей, Беспомощный',cat:'amber',score:80,
+   detail:'Мозг создаёт автоматически. Антидот: отделить факт от интерпретации. «Что я видел на самом деле?» vs «Какую историю я себе рассказал?»'}
+],
+
+attach: [
+  {icon:'🟢',title:'Надёжный (~50%)',desc:'Комфорт и в близости, и в автономии',cat:'green',score:100,
+   detail:'«Чудо-оружие» отношений. Нет доминирующего страха. Ловушка: может терпеть плохое обращение «потому что всё ОК». Рядом с ним другие стабилизируются.'},
+  {icon:'🟡',title:'Тревожный (~20%)',desc:'Ищет подтверждения, чувствителен к отвержению',cat:'amber',score:70,
+   detail:'Протестное поведение: звонки, проверка, ревность — это биологический ответ, НЕ манипуляция. Когда спокоен — прекрасный, эмпатичный партнёр.'},
+  {icon:'🔴',title:'Избегающий (~25%)',desc:'Близость = потеря свободы. Смешанные сигналы.',cat:'red',score:60,
+   detail:'Деактивирующие стратегии: фокус на недостатках, идеализация бывших. НЕ «плохие люди» — боятся потерять себя в близости.'},
+  {icon:'⚫',title:'Тревожно-избегающий (3-5%)',desc:'Хочет близости И боится её одновременно',cat:'red',score:30,
+   detail:'Самый сложный. Часто связан с травмой. Нуждается в индивидуальной терапии.'}
+],
+
+truths: [
+  {icon:'💎',title:'Уязвимость — основа связи',desc:'Браун, Джонсон, Фромм, Рил, Готтман',
+   detail:'Без готовности быть уязвимым подлинная близость невозможна. Но уязвимость ≠ отсутствие границ.'},
+  {icon:'🛡️',title:'Безопасность первична',desc:'Готтман 5:1, Джонсон, NVC, Crucial Conv.',
+   detail:'Без ощущения безопасности общение невозможно. Люди реагируют не на содержание, а на намерение.'},
+  {icon:'🧊',title:'За поведением стоит потребность',desc:'NVC, Джонсон, Готтман, Рил',
+   detail:'Крик, молчание, контроль — верхушка айсберга. Под ними: «Ты со мной? Могу ли я на тебя рассчитывать?»'},
+  {icon:'🔨',title:'Отношения — навык, не судьба',desc:'Фромм, Готтман, Левин/Хеллер, NVC',
+   detail:'Влюблённость проходит за 1-3 года. Это не трагедия — это переход от биохимии к осознанному выбору.'},
+  {icon:'🎭',title:'Подлинность > угодничество',desc:'Рил, Браун, NVC, Гловер',
+   detail:'«Хороший парень» разрушает связь не меньше «плохого». Подлинность = мужество быть собой, даже когда страшно.'}
+]
+};
+
+// Build tabs
+const tabsEl = document.getElementById('tabs');
+const contentEl = document.getElementById('content');
+DATA.tabs.forEach((t,i)=>{
+  const d = document.createElement('div');
+  d.className = 'tab'+(i===0?' active':'');
+  d.textContent = t.icon+' '+t.label;
+  d.onclick = ()=>switchTab(t.id,d);
+  tabsEl.appendChild(d);
+});
+
+function switchTab(id,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+}
+
+// Render panels
+function renderCards(items,containerId){
+  const g = document.createElement('div');
+  g.className = 'grid';
+  items.forEach(c=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      ${c.badge?'<div class="badge">'+c.badge+'</div>':''}
+      <div class="card-head"><div class="card-icon">${c.icon}</div><div class="card-title">${c.title}</div></div>
+      <div class="card-desc">${c.desc}</div>
+      ${c.science!==undefined?`<div class="card-tags">
+        <span class="tag blue">Наука ${'★'.repeat(c.science)}${'☆'.repeat(5-c.science)}</span>
+        <span class="tag green">Практика ${'★'.repeat(c.practice)}${'☆'.repeat(5-c.practice)}</span>
+        <span class="tag purple">Глубина ${'★'.repeat(c.depth)}${'☆'.repeat(5-c.depth)}</span>
+      </div>`:''}
+      ${c.cat?`<div class="card-tags">${c.score?'<span class="tag '+c.cat+'">Балл: '+c.score+'</span>':''}</div>`:''}
+      <div class="card-detail">${c.detail||''}</div>
+    `;
+    card.onclick = ()=>card.classList.toggle('open');
+    g.appendChild(card);
+  });
+  return g;
+}
+
+function miniHisto(title,items){
+  const h = document.createElement('div');
+  h.className = 'histo';
+  const sorted = [...items].sort((a,b)=>b.s-a.s);
+  h.innerHTML = `<div class="histo-title">${title}</div>`;
+  sorted.forEach((it,i)=>{
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    h.innerHTML += `<div class="histo-row">
+      <div class="histo-medal">${medal}</div>
+      <div class="histo-label">${it.n}</div>
+      <div class="histo-bar-wrap"><div class="histo-bar" style="width:${it.s}%;background:${it.c||'var(--accent)'}">${it.s}</div></div>
+      <div class="histo-note">${it.t||''}</div>
+    </div>`;
+  });
+  return h;
+}
+
+// PANEL: Books
+function buildBooks(){
+  const p = document.createElement('div');
+  p.id='panel-books';p.className='panel active';
+  p.innerHTML='<div class="section-title">📚 22 книги об отношениях</div><div class="section-sub">Кликни на карточку для подробностей. Оценки: наука, практика, глубина (★1-5)</div>';
+  p.appendChild(renderCards(DATA.books));
+  const hist = DATA.books.filter(b=>b.total>0).map(b=>({n:b.title.split('—')[0].trim(),s:b.total,c:b.color,t:b.desc.split('.')[0]}));
+  p.appendChild(miniHisto('Общий рейтинг книг',hist));
+  return p;
+}
+
+// PANEL: 3 Pillars
+function buildPillars(){
+  const p = document.createElement('div');
+  p.id='panel-pillars';p.className='panel';
+  p.innerHTML=`
+  <div class="section-title">🏛️ Три столпа отношений</div>
+  <div class="section-sub">Без ЛЮБОГО из них всё рушится. Связь + Структура + Рост = здоровые отношения</div>
+  <div class="grid">
+    <div class="card" onclick="this.classList.toggle('open')">
+      <div class="card-head"><div class="card-icon">❤️</div><div class="card-title">Столп 1 — СВЯЗЬ</div></div>
+      <div class="card-desc">Привязанность, эмоциональная доступность, близость, благодарность, ритуалы</div>
+      <div class="card-tags"><span class="tag green">Авторы: Джонсон, Готтман, Браун</span></div>
+      <div class="card-detail">Без связи отношения — два соседа, делящие жильё. Инструменты: карты любви, заявки (bids), 5:1, еженедельный чек-ин, 7 диалогов Джонсон. Формула NVC для трудных разговоров.</div>
+    </div>
+    <div class="card" onclick="this.classList.toggle('open')">
+      <div class="card-head"><div class="card-icon">🧱</div><div class="card-title">Столп 2 — СТРУКТУРА</div></div>
+      <div class="card-desc">Границы, роли, подсистемы, правила, распределение нагрузки</div>
+      <div class="card-tags"><span class="tag blue">Авторы: Cloud/Townsend, Минучин, Crucial Conv.</span></div>
+      <div class="card-detail">Граница — забор с калиткой, не стена. 10 законов границ. Родительская подсистема = объединённый фронт. Триангуляция (втягивание 3-го) — разрушает все подсистемы.</div>
+    </div>
+    <div class="card" onclick="this.classList.toggle('open')">
+      <div class="card-head"><div class="card-icon">🌱</div><div class="card-title">Столп 3 — РОСТ</div></div>
+      <div class="card-desc">Дифференциация, самоактуализация, адаптация к стадиям жизни</div>
+      <div class="card-tags"><span class="tag purple">Авторы: Финкель, Перель, Рил, Фромм</span></div>
+      <div class="card-detail">Эффект Микеланджело: партнёр «высекает» лучшую версию тебя. Без роста — стагнация и «мы стали чужими». Каждый развивается как личность, пара адаптируется.</div>
+    </div>
+  </div>
+  <div class="insight-box">
+    <strong>⚠️ Формула:</strong> Связь без структуры = хаос. Структура без связи = холод. Связь + структура без роста = медленная смерть отношений. <strong>Нужны все три.</strong>
+  </div>
+  `;
+  return p;
+}
+
+// PANEL: Tools
+function buildTools(){
+  const p = document.createElement('div');
+  p.id='panel-tools';p.className='panel';
+  p.innerHTML='<div class="section-title">🔧 Инструменты коммуникации</div><div class="section-sub">Конкретные формулы и техники. Кликни для деталей</div>';
+  p.appendChild(renderCards(DATA.tools));
+  const hist = DATA.tools.map(t=>({n:t.title,s:t.score,c:t.cat==='green'?'#059669':t.cat==='blue'?'#2563EB':'#D97706',t:t.desc.split('.')[0]}));
+  p.appendChild(miniHisto('Рейтинг инструментов по эффективности',hist));
+  // Quick ref table
+  p.innerHTML += `
+  <div class="section-title">Быстрая таблица: что использовать</div>
+  <div style="overflow-x:auto">
+  <table class="data">
+    <tr><th>Ситуация</th><th>Инструмент</th><th>Формула</th></tr>
+    <tr><td>Повседневная ссора</td><td>Мягкое начало</td><td>«Я чувствую X, когда Y. Мне нужно Z»</td></tr>
+    <tr><td>Важный разговор</td><td>STATE</td><td>Факты → история → «как ты видишь?»</td></tr>
+    <tr><td>Партнёр молчит</td><td>AMPP</td><td>Ask → Mirror → Paraphrase → Prime</td></tr>
+    <tr><td>Потребность</td><td>NVC</td><td>Наблюдение → чувство → потребность → просьба</td></tr>
+    <tr><td>Безопасность нарушена</td><td>Контрастирование</td><td>«Я НЕ хочу X. Я ХОЧУ Y»</td></tr>
+    <tr><td>Оба завелись</td><td>Пауза 20 мин</td><td>Уйти с обязательным возвратом</td></tr>
+    <tr><td>Извинение</td><td>Модель Лернер</td><td>Конкретно + без «но» + без оправданий</td></tr>
+    <tr><td>Подсчёт очков</td><td>Благодарность</td><td>Конкретное «спасибо» каждый день</td></tr>
+  </table></div>`;
+  return p;
+}
+
+// PANEL: Cycles
+function buildCycles(){
+  const p = document.createElement('div');
+  p.id='panel-cycles';p.className='panel';
+  p.innerHTML='<div class="section-title">🔄 Негативные циклы</div><div class="section-sub">Распознавать мгновенно. Все авторы описывают одни и те же деструктивные паттерны — разным языком</div>';
+  p.appendChild(renderCards(DATA.cycles));
+  p.innerHTML += `
+  <div class="section-title">Четыре всадника — антидоты</div>
+  <div style="overflow-x:auto">
+  <table class="data">
+    <tr><th>Всадник</th><th>Что делает</th><th>Антидот</th></tr>
+    <tr><td style="color:var(--danger)">🗡️ Критика</td><td>Атака на личность, не поведение</td><td>Мягкое начало: «Я чувствую X, когда Y»</td></tr>
+    <tr><td style="color:var(--danger)">💀 Презрение</td><td>Сарказм, насмешки — #1 предиктор развода</td><td>Культура восхищения: ежедневная благодарность</td></tr>
+    <tr><td style="color:var(--warn)">🛡️ Оборона</td><td>«Это не я, это ты!»</td><td>Принять хотя бы частичную ответственность</td></tr>
+    <tr><td style="color:var(--warn)">🧱 Стены</td><td>Эмоциональный уход, «заморозка»</td><td>Пауза 20 мин + обязательный возврат</td></tr>
+  </table></div>
+  <div class="insight-box"><strong>69% конфликтов неразрешимы</strong> — и это нормально (Готтман). Они основаны на фундаментальных различиях. Цель — не решить, а научиться жить с ними через диалог и уважение.</div>
+  `;
+  return p;
+}
+
+// PANEL: Attachment
+function buildAttach(){
+  const p = document.createElement('div');
+  p.id='panel-attach';p.className='panel';
+  p.innerHTML='<div class="section-title">🔗 Стили привязанности</div><div class="section-sub">Левин/Хеллер, Джонсон, Боулби. Определяют как мы ведём себя в близких отношениях</div>';
+  p.appendChild(renderCards(DATA.attach));
+  p.innerHTML += `
+  <div class="insight-box"><strong>Системная ловушка:</strong> тревожный + избегающий притягиваются как магнит. Надёжных «разбирают» быстро. В пуле одиноких — непропорционально тревожные и избегающие. «Бабочки в животе» = тревога, не любовь.</div>
+  <div class="insight-box"><strong>Хорошая новость:</strong> стиль меняется у ~25% людей каждые 4 года. Главный фактор — отношения с надёжным партнёром. Это «заслуженная надёжность» (earned security).</div>
+  <div class="section-title">Ключевой вопрос привязанности</div>
+  <div class="insight-box" style="border-left-color:var(--danger);font-size:16px;text-align:center">
+    <strong>«Ты со мной? Могу ли я на тебя рассчитывать? Важен ли я для тебя?»</strong><br>
+    <span style="font-size:14px">A.R.E. — Accessible (доступен?), Responsive (отзываешься?), Engaged (вовлечён?)</span>
+  </div>
+  `;
+  return p;
+}
+
+// PANEL: Sex
+function buildSex(){
+  const p = document.createElement('div');
+  p.id='panel-sex';p.className='panel';
+  p.innerHTML=`
+  <div class="section-title">🔥 Секс и желание</div>
+  <div class="section-sub">Парадокс Перель и как с ним жить</div>
+  <div class="grid">
+    <div class="card" onclick="this.classList.toggle('open')">
+      <div class="card-head"><div class="card-icon">⚡</div><div class="card-title">Эротический парадокс</div></div>
+      <div class="card-desc">Любовь = близость, безопасность. Желание = дистанция, тайна, риск. Они противоположны.</div>
+      <div class="card-tags"><span class="tag purple">Перель</span></div>
+      <div class="card-detail">Чем ближе и роднее партнёр, тем меньше желания. Это не патология — это закон. «Огонь нуждается в воздухе.»</div>
+    </div>
+    <div class="card" onclick="this.classList.toggle('open')">
+      <div class="card-head"><div class="card-icon">👀</div><div class="card-title">Когда возникает желание?</div></div>
+      <div class="card-desc">Когда есть дистанция и инаковость</div>
+      <div class="card-tags"><span class="tag amber">Практика</span></div>
+      <div class="card-detail">Топ-ответы из практики Перель: «Когда вижу его в другом контексте», «когда она увлечена чем-то своим», «когда мы после разлуки», «когда он рассмешил комнату».</div>
+    </div>
+    <div class="card" onclick="this.classList.toggle('open')">
+      <div class="card-head"><div class="card-icon">⚖️</div><div class="card-title">Парадокс не универсален</div></div>
+      <div class="card-desc">Для тревожного привязанного — наоборот</div>
+      <div class="card-tags"><span class="tag red">Важно</span></div>
+      <div class="card-detail">Тревожные не могут желать без безопасности. Для них: сначала Джонсон (безопасная связь), потом Перель (эротическая дистанция).</div>
+    </div>
+    <div class="card" onclick="this.classList.toggle('open')">
+      <div class="card-head"><div class="card-icon">✅</div><div class="card-title">Что делать</div></div>
+      <div class="card-desc">Практические шаги</div>
+      <div class="card-tags"><span class="tag green">Практика</span></div>
+      <div class="card-detail">• Не сводить секс к логистике<br>• Справедливый быт = лучший секс<br>• Говорить о сексе с любопытством, не критикой<br>• Сохранять индивидуальность<br>• Фантазии нормальны</div>
+    </div>
+  </div>
+  <div class="insight-box"><strong>Главные разногласия:</strong> Джонсон: безопасность ПОРОЖДАЕТ желание. Перель: избыток близости УБИВАЕТ желание. Истина: зависит от стиля привязанности. Для надёжных — работают оба. Для тревожных — сначала безопасность. Для избегающих — дистанция сохраняет интерес.</div>
+  `;
+  return p;
+}
+
+// PANEL: Family
+function buildFamily(){
+  const p = document.createElement('div');
+  p.id='panel-family';p.className='panel';
+  p.innerHTML=`
+  <div class="section-title">🏠 Семья как система</div>
+  <div class="section-sub">Подсистемы, границы, дети. Минучин, Боуэн, Готтман</div>
+  <div class="grid">
+    <div class="card" onclick="this.classList.toggle('open')">
+      <div class="card-head"><div class="card-icon">💑</div><div class="card-title">Супружеская подсистема</div></div>
+      <div class="card-desc">Фундамент. Когда она здорова — дети процветают</div>
+      <div class="card-detail">Еженедельный чек-ин, защита времени вдвоём, формула NVC, создание дистанции для желания (Перель).</div>
+    </div>
+    <div class="card" onclick="this.classList.toggle('open')">
+      <div class="card-head"><div class="card-icon">👨‍👩‍👦</div><div class="card-title">Родительская подсистема</div></div>
+      <div class="card-desc">Объединённый фронт. Спорить — наедине</div>
+      <div class="card-detail">Можно ссориться как супруги, но единый фронт как родители. «Мы-позиция» перед детьми. Шаги примирения должны быть видимы.</div>
+    </div>
+    <div class="card" onclick="this.classList.toggle('open')">
+      <div class="card-head"><div class="card-icon">🚫</div><div class="card-title">Триангуляция — главный враг</div></div>
+      <div class="card-desc">Когда двое втягивают третьего в свой конфликт</div>
+      <div class="card-tags"><span class="tag red">Опасность</span></div>
+      <div class="card-detail">Мама жалуется дочери на папу. Муж обсуждает жену с тёщей. Ребёнок = «посредник». Стабилизирует тревогу двоих, разрушает третьего. Правило: решай проблему в той подсистеме, где она возникла.</div>
+    </div>
+    <div class="card" onclick="this.classList.toggle('open')">
+      <div class="card-head"><div class="card-icon">👦</div><div class="card-title">Дети видят ВСЁ</div></div>
+      <div class="card-desc">Разрушают не конфликты — а неразрешённые конфликты</div>
+      <div class="card-tags"><span class="tag amber">Алекс</span></div>
+      <div class="card-detail">Дети, видящие как родители ссорятся И ЗАТЕМ МИРЯТСЯ, получают модель здорового конфликта. Впитывают семейную тревогу. Чем выше дифференциация родителей — тем здоровее дети.</div>
+    </div>
+  </div>
+  <div class="section-title">Маркеры опасности</div>
+  <div class="insight-box" style="border-left-color:var(--danger)">
+    <strong>Когда уходить ≠ слабость:</strong> физическое насилие, систематический эмоциональный абьюз, нарциссическая динамика без готовности к изменению, один партнёр категорически отказывается от работы, остаёшься только из страха одиночества. <em>Границы существуют не только внутри отношений, но и вокруг них.</em>
+  </div>
+  `;
+  return p;
+}
+
+// PANEL: 5 Truths
+function buildTruths(){
+  const p = document.createElement('div');
+  p.id='panel-truths';p.className='panel';
+  p.innerHTML='<div class="section-title">💎 5 истин, подтверждённых ВСЕМИ авторами</div><div class="section-sub">Общий знаменатель 22 книг</div>';
+  const g = document.createElement('div');
+  g.className = 'grid';
+  DATA.truths.forEach((t,i)=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.borderLeft = '4px solid var(--accent)';
+    card.innerHTML = `
+      <div class="card-head"><div class="card-icon">${t.icon}</div><div class="card-title">${i+1}. ${t.title}</div></div>
+      <div class="card-desc">${t.desc}</div>
+      <div class="card-detail" style="display:block">${t.detail}</div>
+    `;
+    g.appendChild(card);
+  });
+  p.appendChild(g);
+  p.innerHTML += `
+  <div class="section-title">Главные разногласия между авторами</div>
+  <div style="overflow-x:auto">
+  <table class="data">
+    <tr><th>Вопрос</th><th>Позиция A</th><th>Позиция B</th></tr>
+    <tr><td>Близость и желание</td><td>Джонсон: безопасность порождает желание</td><td>Перель: избыток близости убивает желание</td></tr>
+    <tr><td>Коммуникация решает?</td><td>NVC: да, если правильно</td><td>Готтман: 69% проблем неразрешимы</td></tr>
+    <tr><td>Автономия vs Связь</td><td>Cloud, Перель: автономия необходима</td><td>Джонсон: зависимость нормальна</td></tr>
+    <tr><td>Конфликт — проблема?</td><td>Карнеги: избегай</td><td>Готтман, Рил: конфликт необходим</td></tr>
+    <tr><td>Гендерные различия</td><td>Грэй, Харви: фундаментальные</td><td>Наука: внутри пола > между полами</td></tr>
+  </table></div>
+  <div class="section-title">Что убрано как устаревшее</div>
+  <div style="overflow-x:auto">
+  <table class="data">
+    <tr><th>Идея</th><th>Почему устарела</th></tr>
+    <tr><td>М=Марс, Ж=Венера (жёстко)</td><td>Различия внутри пола > между полами</td></tr>
+    <tr><td>«Правило 90 дней»</td><td>Нет базы, секс как валюта</td></tr>
+    <tr><td>«Активное слушание решает всё»</td><td>Готтман опроверг — партнёр не терапевт</td></tr>
+    <tr><td>«Больше разговоров = ближе»</td><td>Перель: тело и молчание — тоже язык</td></tr>
+    <tr><td>«Притворись беспомощной»</td><td>Неаутентичность разрушает связь</td></tr>
+  </table></div>`;
+  return p;
+}
+
+// PANEL: Rating
+function buildRating(){
+  const p = document.createElement('div');
+  p.id='panel-rating';p.className='panel';
+  p.innerHTML='<div class="section-title">📊 Сводный рейтинг</div><div class="section-sub">Все элементы из всех разделов — один рейтинг</div>';
+  // Combine books + tools + cycles
+  const all = [
+    ...DATA.books.filter(b=>b.total>15).map(b=>({n:b.title.split('—')[0].trim(),s:b.total,c:b.color,t:'Книга'})),
+    ...DATA.tools.map(t=>({n:t.title,s:t.score,c:'#D97706',t:'Инструмент'})),
+    ...DATA.cycles.map(c=>({n:c.title,s:c.score,c:'#DC2626',t:'Цикл/паттерн'}))
+  ];
+  p.appendChild(miniHisto('Общий рейтинг по баллам',all));
+  p.innerHTML += `
+  <div class="section-title">Ключевые выводы</div>
+  <div class="insight-box"><strong>1.</strong> Готтман и Джонсон — два бесспорных лидера с научной базой. Готтман = ЧТО делать. Джонсон = ПОЧЕМУ это работает.</div>
+  <div class="insight-box"><strong>2.</strong> Инструменты коммуникации (NVC, STATE, контрастирование, 5:1) дают максимальный ROI при минимуме времени на освоение.</div>
+  <div class="insight-box"><strong>3.</strong> 4 всадника Готтмана (98 баллов) — самый критичный паттерн для распознавания. Презрение = #1 предиктор развода.</div>
+  <div class="insight-box"><strong>4.</strong> Теория привязанности (Левин, Джонсон) — слепое пятно большинства книг, но ключ к пониманию «почему мы так реагируем».</div>
+  <div class="insight-box"><strong>5.</strong> Харви, жёсткий Грэй и Чепмен без научной валидации = только как вход в тему, не основа рекомендаций.</div>
+  `;
+  return p;
+}
+
+// PANEL: Action Plan
+function buildPlan(){
+  const p = document.createElement('div');
+  p.id='panel-plan';p.className='panel';
+  p.innerHTML=`
+  <div class="section-title">🗺️ План действий</div>
+  <div class="section-sub">Фазированное внедрение. 1 книга каждые 2-3 недели с ПРАКТИКОЙ между ними</div>
+  
+  <div class="section-title" style="font-size:18px">🔴 Сделать СЕЙЧАС (топ-3)</div>
+  <ul class="action-list">
+    <li><div class="a-icon">1️⃣</div><div class="a-text"><strong>Считать соотношение 5:1 ежедневно</strong><span>Вечерняя рефлексия: сколько + и − взаимодействий за день. Цель: ≥5 позитивных на 1 негативное</span></div></li>
+    <li><div class="a-icon">2️⃣</div><div class="a-text"><strong>Замечать «заявки» (bids)</strong><span>Каждый раз, когда Валя обращает на что-то внимание — повернуться К, а не ОТ. Цель: ≥80%</span></div></li>
+    <li><div class="a-icon">3️⃣</div><div class="a-text"><strong>Назвать цикл вслух при следующей ссоре</strong><span>«Мы опять в нашем танце. Давай остановимся.» Цикл — общий враг, не партнёр</span></div></li>
+  </ul>
+
+  <div class="section-title" style="font-size:18px">🟡 На этой неделе</div>
+  <ul class="action-list">
+    <li><div class="a-icon">📖</div><div class="a-text"><strong>Прочитать Готтман «7 принципов»</strong><span>Недели 1-3. Карты любви (20 вопросов). Фокус: ПОВЕДЕНИЕ — что мы делаем</span></div></li>
+    <li><div class="a-icon">🙏</div><div class="a-text"><strong>1 конкретное «спасибо» в день</strong><span>Не абстрактное, а: «Спасибо, что отвёз Алекса, я знаю, ты устал»</span></div></li>
+    <li><div class="a-icon">📵</div><div class="a-text"><strong>Телефон на столе = −50% качества разговора</strong><span>Убирать телефон за ужином. Даже его присутствие снижает внимание</span></div></li>
+  </ul>
+
+  <div class="section-title" style="font-size:18px">🟢 В этом месяце</div>
+  <ul class="action-list">
+    <li><div class="a-icon">🔗</div><div class="a-text"><strong>Определить стили привязанности</strong><span>Левин/Хеллер «Attached», недели 4-6. Распознать свой цикл. Фокус: ПАТТЕРНЫ</span></div></li>
+    <li><div class="a-icon">💬</div><div class="a-text"><strong>Освоить формулу NVC</strong><span>«Когда я вижу [факт], я чувствую [эмоция], потому что мне важно [потребность]. Готов ли ты [просьба]?»</span></div></li>
+    <li><div class="a-icon">🗓️</div><div class="a-text"><strong>Запустить еженедельный чек-ин</strong><span>15 минут без телефонов. Что хорошо? Что нужно? Что могу для тебя?</span></div></li>
+  </ul>
+
+  <div class="section-title" style="font-size:18px">🔵 Долгосрочные цели</div>
+  <ul class="action-list">
+    <li><div class="a-icon">📚</div><div class="a-text"><strong>12 книг за 6 месяцев</strong><span>Готтман → Левин → Браун → Джонсон → NVC → Перель → Фромм → Cloud → Рил → Финкель → Crucial Conv. → Мур</span></div></li>
+    <li><div class="a-icon">📊</div><div class="a-text"><strong>KPI отношений</strong><span>5:1 ежедневно · ≥80% заявок · 0 всадников · 1 свидание/нед · связь ≥7/10</span></div></li>
+    <li><div class="a-icon">📝</div><div class="a-text"><strong>Создать ежедневный трекер 5:1</strong><span>RELATION_DAILY_TRACKER.md — ещё не создан, приоритет ★★★★★</span></div></li>
+    <li><div class="a-icon">📖</div><div class="a-text"><strong>Дочитать: Гловер + Браун</strong><span>Синдром хорошего парня + уязвимость — пробелы в текущей базе</span></div></li>
+  </ul>
+
+  <div class="insight-box" style="border-left-color:var(--ok)">
+    <strong>Золотое правило:</strong> НЕ читать всё сразу. 1 книга каждые 2-3 недели с ПРАКТИКОЙ между ними. Знание без практики = ещё одна книга на полке.
+  </div>
+  `;
+  return p;
+}
+
+// Mount panels
+contentEl.appendChild(buildBooks());
+contentEl.appendChild(buildPillars());
+contentEl.appendChild(buildTools());
+contentEl.appendChild(buildCycles());
+contentEl.appendChild(buildAttach());
+contentEl.appendChild(buildSex());
+contentEl.appendChild(buildFamily());
+contentEl.appendChild(buildTruths());
+contentEl.appendChild(buildRating());
+contentEl.appendChild(buildPlan());
+
+// Animate bars on tab switch
+const observer = new MutationObserver(()=>{
+  document.querySelectorAll('.panel.active .histo-bar').forEach(b=>{
+    const w = b.style.width;
+    b.style.width = '0';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>b.style.width = w));
+  });
+});
+observer.observe(contentEl,{subtree:true,attributes:true,attributeFilter:['class']});
+// Initial animation
+setTimeout(()=>{
+  document.querySelectorAll('.histo-bar').forEach(b=>{
+    const w = b.style.width; b.style.width='0';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>b.style.width=w));
+  });
+},100);
+</script>
+<script src="../assets/inject-overlay.js"></script>
+</body>
+</html>

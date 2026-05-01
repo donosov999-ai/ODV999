@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Я-сообщение генератор · ODV999</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
+</head>
+<body data-theme="light">
+
+<div class="container">
+  <div class="hero">
+    <h1>Я-сообщение · генератор<span class="v">v1.0</span></h1>
+    <p>Превращает «ты-обвинение» в Я-сообщение по формуле NVC Розенберга и Готтмановскому soft start-up. Учит на ходу.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Формула</div>
+    <pre class="code">Когда [<span class="kw">ФАКТ</span>], я чувствую [<span class="kw">ЭМОЦИЯ</span>],
+мне нужно [<span class="kw">ПОТРЕБНОСТЬ</span>], прошу [<span class="kw">КОНКРЕТНО</span>].
+
+ФАКТ ≠ оценка («3 раза», не «всегда»)
+ЭМОЦИЯ ≠ мысль («одиноко», не «проигнорированной»)</pre>
+  </div>
+
+  <div class="card">
+    <div class="card-title">1. Ты-обвинение (как ты обычно говоришь)</div>
+    <div class="field">
+      <textarea id="input" placeholder="Например: «Ты вечно сидишь в телефоне когда я с тобой говорю!»"></textarea>
+    </div>
+    <button class="btn" id="analyzeBtn" type="button">Разобрать</button>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="card">
+    <div class="card-title">2. Собери Я-сообщение по шагам</div>
+    <div class="field">
+      <label>ФАКТ (что конкретно — не «всегда», а «3 раза за вчерашний вечер»):</label>
+      <input type="text" id="fact" placeholder="3 раза за вечер ты доставал телефон во время моего рассказа">
+    </div>
+    <div class="field">
+      <label>ЭМОЦИЯ (одно слово — обида, страх, одиночество, злость, стыд):</label>
+      <input type="text" id="emotion" placeholder="одиноко">
+    </div>
+    <div class="field">
+      <label>ПОТРЕБНОСТЬ (внимание, безопасность, уважение, близость, принятие):</label>
+      <input type="text" id="need" placeholder="внимание">
+    </div>
+    <div class="field">
+      <label>ПРОСЬБА (конкретное действие, которое ты можешь увидеть/услышать):</label>
+      <input type="text" id="ask" placeholder="когда я говорю — отложи телефон экраном вниз">
+    </div>
+    <button class="btn" id="buildBtn" type="button">Собрать Я-сообщение</button>
+    <div id="builtResult"></div>
+  </div>
+
+  <details>
+    <summary>Список эмоций (для шага 2)</summary>
+    <p><strong>Уязвимые:</strong> грустно, страшно, обидно, одиноко, стыдно, виновато, бессильно, потерянно</p>
+    <p><strong>Активные:</strong> зло, раздражённо, фрустрированно, нетерпеливо, обиженно</p>
+    <p><strong>НЕ эмоции (это мысли):</strong> «отверженным», «использованным», «преданным», «брошенным», «непонятым» — за ними прячется чувство</p>
+  </details>
+
+  <details>
+    <summary>Список базовых потребностей (Розенберг)</summary>
+    <p><strong>Связь:</strong> близость, эмпатия, принятие, любовь, уважение, поддержка</p>
+    <p><strong>Безопасность:</strong> предсказуемость, доверие, защищённость, стабильность</p>
+    <p><strong>Автономия:</strong> свобода выбора, пространство, независимость</p>
+    <p><strong>Признание:</strong> внимание, важность, ценность вклада</p>
+    <p><strong>Физическое:</strong> отдых, еда, движение, прикосновение, секс</p>
+  </details>
+
+  <div class="footer">
+    Источники: Розенберг — Nonviolent Communication · Готтман — soft start-up
+  </div>
+</div>
+
+<script src="../assets/dashboard-nav.js"></script>
+<script>
+var TRIGGERS_TY = [
+  {pattern: /ты\s+(вечно|всегда|никогда)/i, problem: 'Слова «всегда / никогда» — критика характера, не факт. Замени на конкретные «X раз за Y время».'},
+  {pattern: /^ты\s+/i, problem: 'Начало с «ты» — ставит партнёра в защиту (Готтман: harsh start-up). Начни с «я» или с «когда».'},
+  {pattern: /ты\s+(такой|такая|тупой|тупая|эгоист|идиот|дура|урод|неблагодарн)/i, problem: 'Атака на личность = критика по Готтману. 1-й всадник.'},
+  {pattern: /(заткнись|пошёл|пошла|отъебись)/i, problem: 'Презрение / стоунволлинг через грубость. Это 2-й и 4-й всадники.'},
+  {pattern: /я\s+(должен|должна)/i, problem: '«Должен/должна» — внутренний долг/стыд. Замени на «я хочу» или «мне важно».'},
+  {pattern: /(невыносим|кошмар|ненавижу)/i, problem: 'Гипербола — мозг партнёра услышит «всё пропало» вместо конкретного запроса.'}
+];
+
+document.getElementById('analyzeBtn').addEventListener('click', function(){
+  var t = document.getElementById('input').value.trim();
+  if (!t) { alert('Введи фразу.'); return; }
+  var issues = [];
+  TRIGGERS_TY.forEach(function(rule){
+    if (rule.pattern.test(t)) issues.push(rule.problem);
+  });
+  var html = '<div class="result-box"><h3>Разбор</h3>';
+  if (issues.length === 0) {
+    html += '<div class="success">Прямых маркеров «ты-обвинения» не найдено. Но всё равно проверь по формуле ниже — есть ли факт + эмоция + потребность + просьба?</div>';
+  } else {
+    html += '<div class="warn"><strong>Проблемы:</strong><ul style="margin-top:8px;padding-left:20px;">';
+    issues.forEach(function(i){ html += '<li>' + i + '</li>'; });
+    html += '</ul></div>';
+  }
+  html += '<p style="margin-top:14px;">Теперь разложи свою фразу по 4 полям ниже — собери Я-сообщение.</p>';
+  html += '</div>';
+  document.getElementById('result').innerHTML = html;
+});
+
+document.getElementById('buildBtn').addEventListener('click', function(){
+  var f = document.getElementById('fact').value.trim();
+  var e = document.getElementById('emotion').value.trim();
+  var n = document.getElementById('need').value.trim();
+  var a = document.getElementById('ask').value.trim();
+  if (!f || !e || !n || !a) { alert('Заполни все 4 поля.'); return; }
+  var msg = 'Когда ' + f + ', я чувствую ' + e + ', мне нужно ' + n + ', прошу: ' + a + '.';
+  var html = '<div class="result-box"><h3>Твоё Я-сообщение:</h3>';
+  html += '<div style="background:var(--code-bg);padding:18px;border-radius:6px;font-size:15px;line-height:1.7;margin:12px 0;">' + esc(msg) + '</div>';
+  html += '<div class="success">Готово. Произнеси спокойным тоном, без сарказма. Если партнёр в обороне — повтори ещё раз с признанием его части («понимаю, ты тоже устал»).</div>';
+  html += '<button class="btn btn-secondary" onclick="navigator.clipboard.writeText(' + JSON.stringify(msg) + ').then(function(){alert(\'Скопировано\');});">Скопировать</button>';
+  html += '</div>';
+  document.getElementById('builtResult').innerHTML = html;
+  document.getElementById('builtResult').scrollIntoView({behavior:'smooth'});
+});
+
+function esc(s){ return s.replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>

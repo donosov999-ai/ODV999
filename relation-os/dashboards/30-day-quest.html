@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>30 дней спасения отношений</title>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10;--bg2:#13161b;--bg3:#1b1f26;--bg4:#242930;
+  --green:#3ecf8e;--green2:#2da86e;--yellow:#e8c547;--orange:#e0914a;--red:#e55b6a;--blue:#5b9bd5;--purple:#9b7ed8;
+  --text:#e2e2e2;--text2:#8a8f99;--text3:#4e535e;--border:#252a33;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Onest',sans-serif;min-height:100vh;}
+.app{max-width:640px;margin:0 auto;padding:16px;}
+
+/* Header */
+.hd{text-align:center;padding:20px 0 16px;}
+.hd-icon{font-size:36px;margin-bottom:6px;}
+.hd-title{font-size:22px;font-weight:800;margin-bottom:2px;}
+.hd-sub{font-size:12px;color:var(--text2);}
+
+/* Stats bar */
+.stats{display:flex;gap:6px;margin-bottom:16px;}
+.stat{flex:1;padding:10px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;text-align:center;}
+.stat-val{font-size:20px;font-weight:800;}
+.stat-lbl{font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--bg2);border-radius:8px;padding:3px;}
+.tab{flex:1;padding:8px;text-align:center;font-size:12px;font-weight:500;color:var(--text3);
+  border-radius:6px;cursor:pointer;transition:all 0.2s;}
+.tab.active{background:var(--bg4);color:var(--text);}
+
+/* Calendar */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:16px;}
+.cal-head{font-size:9px;color:var(--text3);text-align:center;padding:4px 0;letter-spacing:1px;text-transform:uppercase;}
+.cal-day{
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;
+  position:relative;
+}
+.cal-day.empty{cursor:default;}
+.cal-day.locked{background:var(--bg2);color:var(--text3);cursor:default;}
+.cal-day.available{background:var(--bg2);color:var(--text2);border:1px solid var(--border);}
+.cal-day.available:hover{border-color:var(--green);}
+.cal-day.done{background:rgba(62,207,142,0.12);color:var(--green);border:1px solid rgba(62,207,142,0.3);}
+.cal-day.today{border:2px solid var(--green);box-shadow:0 0 12px rgba(62,207,142,0.2);}
+.cal-day.selected{border:2px solid var(--blue);}
+
+/* Phase labels */
+.phase-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.phase-chip{
+  font-size:10px;padding:4px 10px;border-radius:12px;font-weight:500;
+  letter-spacing:0.5px;
+}
+.phase-chip.p1{background:rgba(62,207,142,0.1);color:var(--green);}
+.phase-chip.p2{background:rgba(91,155,213,0.1);color:var(--blue);}
+.phase-chip.p3{background:rgba(155,126,216,0.1);color:var(--purple);}
+.phase-chip.p4{background:rgba(224,145,74,0.1);color:var(--orange);}
+.phase-chip.p5{background:rgba(232,197,71,0.1);color:var(--yellow);}
+
+/* Task card */
+.task{display:none;}
+.task.active{display:block;}
+.task-phase{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+.task-day{font-size:11px;color:var(--text3);margin-bottom:4px;}
+.task-title{font-size:18px;font-weight:700;margin-bottom:10px;line-height:1.3;}
+.task-body{font-size:14px;line-height:1.7;color:var(--text2);margin-bottom:16px;}
+.task-body strong{color:var(--text);font-weight:600;}
+.task-source{
+  font-size:11px;color:var(--text3);padding:8px 12px;background:var(--bg2);
+  border-radius:6px;margin-bottom:16px;display:inline-block;
+}
+.task-diff{display:flex;gap:3px;margin-bottom:16px;}
+.task-dot{width:8px;height:8px;border-radius:50%;background:var(--border);}
+.task-dot.on{background:var(--green);}
+
+.btn-done{
+  width:100%;padding:14px;background:var(--green);color:#000;border:none;border-radius:8px;
+  font-family:'Onest',sans-serif;font-size:14px;font-weight:700;cursor:pointer;
+  transition:all 0.2s;letter-spacing:0.5px;
+}
+.btn-done:hover{background:var(--green2);}
+.btn-done.completed{background:var(--bg3);color:var(--green);cursor:default;}
+
+.btn-undo{
+  display:none;width:100%;padding:10px;background:transparent;color:var(--text3);border:1px solid var(--border);
+  border-radius:8px;font-size:12px;cursor:pointer;margin-top:6px;transition:all 0.2s;
+}
+.btn-undo.show{display:block;}
+
+/* Achievements */
+.achiev{margin-top:16px;}
+.ach{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;}
+.ach.earned{border-color:rgba(62,207,142,0.3);background:rgba(62,207,142,0.04);}
+.ach-icon{font-size:24px;min-width:32px;text-align:center;}
+.ach-text{flex:1;}
+.ach-name{font-size:13px;font-weight:600;}
+.ach-desc{font-size:11px;color:var(--text3);}
+.ach-badge{font-size:10px;color:var(--green);font-weight:600;}
+
+.footer{text-align:center;padding:20px;font-size:10px;color:var(--text3);line-height:1.5;margin-top:16px;}
+
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--bg4);color:var(--green);padding:10px 20px;
+  border:1px solid rgba(62,207,142,0.3);border-radius:6px;font-size:13px;font-weight:600;
+  z-index:99;opacity:0;transition:opacity 0.3s;pointer-events:none;
+}
+.toast.show{opacity:1;}
+
+/* In-app browser banner */
+.inapp-banner{
+  display:none;padding:12px 16px;background:rgba(232,197,71,0.1);
+  border-bottom:1px solid rgba(232,197,71,0.2);text-align:center;
+}
+.inapp-banner.show{display:block;}
+.inapp-text{font-size:12px;color:var(--yellow);margin-bottom:8px;line-height:1.4;}
+.inapp-btn{
+  font-family:'Onest',sans-serif;font-size:12px;font-weight:600;
+  padding:8px 20px;background:var(--yellow);color:#000;border:none;
+  border-radius:4px;cursor:pointer;
+}
+</style>
+</head>
+<body>
+<div class="inapp-banner" id="inappBanner">
+  <div class="inapp-text">⚠️ Вы в встроенном браузере — прогресс может не сохраниться. Откройте в полном браузере:</div>
+  <button class="inapp-btn" onclick="openInBrowser()">Открыть в браузере ↗</button>
+</div>
+<script>
+(function(){
+  const ua=navigator.userAgent||'';
+  const isInApp=/Telegram|Instagram|FBAN|FBAV|Twitter|Line|Snapchat|WhatsApp|MicroMessenger/i.test(ua);
+  if(isInApp)document.getElementById('inappBanner').classList.add('show');
+})();
+function openInBrowser(){
+  const url=window.location.href;
+  // iOS: window.open often works from in-app browsers
+  // Android Telegram: intent scheme
+  if(/android/i.test(navigator.userAgent)){
+    window.open('intent://'+url.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end','_system');
+  } else {
+    window.open(url,'_system')||window.open(url,'_blank');
+  }
+}
+</script>
+<div class="app">
+  <div class="hd">
+    <div class="hd-icon">🛟</div>
+    <div class="hd-title">30 дней спасения</div>
+    <div class="hd-sub">Ежедневный квест для пары · От простого к глубокому</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="sDone">0</div><div class="stat-lbl">Выполнено</div></div>
+    <div class="stat"><div class="stat-val" id="sStreak">0</div><div class="stat-lbl">Streak</div></div>
+    <div class="stat"><div class="stat-val" id="sPhase">1</div><div class="stat-lbl">Фаза</div></div>
+    <div class="stat"><div class="stat-val" id="sRatio">—</div><div class="stat-lbl">5:1</div></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('calendar')">Календарь</div>
+    <div class="tab" onclick="showTab('today')">Сегодня</div>
+    <div class="tab" onclick="showTab('achieve')">Ачивки</div>
+  </div>
+
+  <div id="pCalendar">
+    <div class="phase-row">
+      <span class="phase-chip p1">1-6: Фундамент</span>
+      <span class="phase-chip p2">7-12: Коммуникация</span>
+      <span class="phase-chip p3">13-18: Глубина</span>
+      <span class="phase-chip p4">19-24: Страсть</span>
+      <span class="phase-chip p5">25-30: Интеграция</span>
+    </div>
+    <div class="cal" id="calGrid"></div>
+  </div>
+
+  <div id="pToday" style="display:none"></div>
+  <div id="pAchieve" style="display:none"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== 30 TASKS =====
+const TASKS=[
+// Phase 1: Foundation (days 1-6)
+{d:1,phase:'Фундамент',phaseN:1,title:'Скажи «спасибо» за конкретное',
+body:'Сегодня скажи партнёру одну <strong>конкретную</strong> вещь, за которую ты благодарен(а). Не «спасибо, что ты есть» — а «спасибо, что вчера забрал ребёнка, мне было важно отдохнуть».\n\nГоттман доказал: пары, которые практикуют <strong>культуру благодарности</strong>, имеют в 3 раза ниже риск развода. Одна конкретная благодарность в день = антидот к презрению.',
+src:'Готтман: культура благодарности',diff:1},
+{d:2,phase:'Фундамент',phaseN:1,title:'6-секундный поцелуй',
+body:'Поцелуй партнёра <strong>минимум 6 секунд</strong>. Не чмок в щёку на бегу — а настоящий, долгий поцелуй.\n\nГоттман называет это «поцелуй, который значит что-то». 6 секунд — минимум, чтобы тело начало вырабатывать окситоцин. Это <strong>физиологический переключатель</strong> из режима «соседи» в режим «пара».',
+src:'Готтман: ритуалы связи',diff:1},
+{d:3,phase:'Фундамент',phaseN:1,title:'Убери телефон за ужином',
+body:'Весь ужин — <strong>телефон в другой комнате</strong>. Не на столе экраном вниз. В другой комнате.\n\nЗаметь: о чём вы говорите, когда экран не отвлекает? Что меняется в качестве контакта?\n\nГоттман: каждый раз, когда партнёр обращается к тебе, а ты в телефоне — это <strong>поворот ОТ</strong>. Пары, которые развелись, откликались на заявки в 33%. Те, кто остались вместе — в 86%.',
+src:'Готтман: заявки (bids)',diff:1},
+{d:4,phase:'Фундамент',phaseN:1,title:'Вопрос из «карты любви»',
+body:'Задай партнёру один вопрос, <strong>выходящий за пределы логистики</strong>:\n\n• «О чём ты сейчас больше всего думаешь?»\n• «Что тебя порадовало за последнюю неделю?»\n• «Если бы у тебя был свободный день без обязательств — что бы ты сделал(а)?»\n\n<strong>Слушай. Не комментируй. Не решай.</strong> Просто слушай.',
+src:'Готтман: карты любви',diff:1},
+{d:5,phase:'Фундамент',phaseN:1,title:'Заметь 3 хороших вещи',
+body:'Сегодня <strong>целенаправленно заметь</strong> три вещи, которые партнёр делает хорошо. Не говори ему — просто заметь.\n\nМозг привыкает видеть то, на что направлено внимание. Если ты привык замечать косяки — ты видишь только косяки. Перенастрой фокус.\n\nЗавтра сможешь сказать эти три вещи вслух.',
+src:'Готтман: соотношение 5:1',diff:1},
+{d:6,phase:'Фундамент',phaseN:1,title:'Обними на 20 секунд',
+body:'Обними партнёра и <strong>держи 20 секунд</strong>. Молча. Без слов.\n\n20 секунд — порог, после которого тело начинает выделять окситоцин и снижать кортизол. Это не метафора — это <strong>нейрохимия</strong>.\n\nЕсли чувствуешь неловкость — это нормально. Значит, давно не обнимались по-настоящему.',
+src:'Джонсон: физический контакт как безопасность',diff:1},
+
+// Phase 2: Communication (days 7-12)
+{d:7,phase:'Коммуникация',phaseN:2,title:'Замени одно «ты всегда» на «мне было»',
+body:'Сегодня, если возникнет даже мелкое раздражение, <strong>перефразируй</strong>:\n\n❌ «Ты опять забыл...»\n✅ «Мне было обидно, когда я увидела, что...»\n\nОдна замена. Больше не нужно. Заметь реакцию партнёра — она будет <strong>другой</strong>.',
+src:'NVC: Я-сообщения',diff:2},
+{d:8,phase:'Коммуникация',phaseN:2,title:'Выслушай без решения',
+body:'Когда партнёр расскажет о проблеме — <strong>не предлагай решение</strong>. Вместо этого скажи:\n\n«Это звучит тяжело. Ты хочешь, чтобы я помог решить — или просто побыть рядом?»\n\nДля мужчин это особенно сложно: мозг автоматически включает режим «починить». Но часто партнёру нужно <strong>быть услышанным</strong>, а не починенным.',
+src:'Готтман + Джонсон',diff:2},
+{d:9,phase:'Коммуникация',phaseN:2,title:'Контрастирование',
+body:'Используй технику <strong>контрастирования</strong> в любом сложном разговоре сегодня:\n\n«Я <strong>НЕ хочу</strong> тебя обвинять. Я <strong>ХОЧУ</strong>, чтобы мы нашли решение вместе».\n\nЭта формула моментально снижает градус — потому что восстанавливает <strong>безопасность</strong>. Партнёр слышит намерение, а не атаку.',
+src:'Crucial Conversations: контрастирование',diff:2},
+{d:10,phase:'Коммуникация',phaseN:2,title:'Первый чек-ин пары',
+body:'Сядьте на <strong>15 минут</strong> без телефонов. Каждый отвечает на 3 вопроса:\n\n1. Что на этой неделе было <strong>хорошо</strong> между нами?\n2. Что мне <strong>нужно</strong> от тебя?\n3. Что <strong>я могу</strong> сделать для тебя?\n\nБез критики. Без обвинений. Формат: <strong>просьба, не претензия</strong>.',
+src:'80/80 Marriage: еженедельное раскрытие',diff:2},
+{d:11,phase:'Коммуникация',phaseN:2,title:'Формула NVC',
+body:'Сегодня используй полную формулу <strong>хотя бы один раз</strong>:\n\n«Когда [факт], я чувствую [эмоция], потому что мне важно [потребность]. Можешь ли ты [просьба]?»\n\nПример: «Когда ты приходишь и сразу в телефон, я чувствую одиночество, потому что мне важно быть рядом с тобой. Можешь первые 10 минут побыть без экрана?»',
+src:'Розенберг: NVC',diff:2},
+{d:12,phase:'Коммуникация',phaseN:2,title:'Repair-попытка',
+body:'Если сегодня будет напряжение — сделай <strong>шаг примирения</strong>. Это может быть:\n\n• Шутка (не саркастическая)\n• Прикосновение\n• «Подожди, давай начнём сначала»\n• «Мне кажется, мы уходим не туда»\n\nГоттман: не отсутствие ссор отличает счастливые пары, а <strong>способность чинить</strong>.',
+src:'Готтман: repair attempts',diff:2},
+
+// Phase 3: Depth (days 13-18)
+{d:13,phase:'Глубина',phaseN:3,title:'Назови свой цикл',
+body:'Каждая пара имеет <strong>свой танец конфликта</strong>. Один преследует — другой убегает. Или оба нападают. Или оба замирают.\n\nСегодня попробуй <strong>назвать ваш цикл</strong> вслух: «Я замечаю, что когда я [X], ты [Y], и тогда я [Z]».\n\nЦикл — ваш <strong>общий враг</strong>. Не партнёр.',
+src:'Джонсон: негативные циклы',diff:3},
+{d:14,phase:'Глубина',phaseN:3,title:'Скажи «мне страшно»',
+body:'Сегодня — один <strong>акт уязвимости</strong>. Скажи партнёру что-то настоящее:\n\n• «Мне страшно, что мы отдаляемся»\n• «Я боюсь, что не справляюсь как отец/мать»\n• «Мне важна близость с тобой, и мне больно от её отсутствия»\n\nУязвимость — не слабость. Это <strong>мост</strong>.',
+src:'Джонсон + Браун',diff:3},
+{d:15,phase:'Глубина',phaseN:3,title:'Пауза 20 минут',
+body:'Если сегодня конфликт начнёт накаляться — <strong>примени паузу</strong>:\n\n«Мне нужна пауза. Я не ухожу — вернусь через 20 минут. Давай продолжим тогда».\n\nВажно: <strong>вернись</strong>. Пауза без возвращения = стоунволлинг. Пауза с возвращением = зрелость.\n\nВо время паузы: ходьба, дыхание. НЕ телефон.',
+src:'Готтман: физиологическое самоуспокоение',diff:3},
+{d:16,phase:'Глубина',phaseN:3,title:'Вспомни, как начиналось',
+body:'Расскажи партнёру <strong>историю вашего знакомства</strong>. Что привлекло? Что было первым впечатлением? Первый поцелуй?\n\nГоттман: пары, которые рассказывают «нашу историю» <strong>с теплотой</strong>, имеют значительно более крепкие отношения. Нарратив = клей идентичности пары.',
+src:'Готтман: общий нарратив',diff:2},
+{d:17,phase:'Глубина',phaseN:3,title:'Потребность за обидой',
+body:'Вспомни последнюю ссору. Задай себе вопрос: <strong>какая потребность стояла за моей реакцией?</strong>\n\n• Я хотел(а) быть услышанным?\n• Я хотел(а) безопасности?\n• Я хотел(а) уважения?\n• Я хотел(а) близости?\n\nПоделись этим с партнёром. Не обвинением, а <strong>открытием</strong>.',
+src:'Джонсон: A.R.E.',diff:3},
+{d:18,phase:'Глубина',phaseN:3,title:'Извинись по-настоящему',
+body:'Вспомни что-то, за что ты <strong>не извинился(ась) хорошо</strong>. И скажи сейчас:\n\n1. Конкретно — за что именно\n2. Без «но» и оправданий\n3. Без перекладывания\n4. + что изменишь: «В следующий раз я сделаю X»\n\nОдно <strong>настоящее</strong> извинение стоит больше ста дежурных «прости».',
+src:'Лернер: искусство извинения',diff:3},
+
+// Phase 4: Passion (days 19-24)
+{d:19,phase:'Страсть',phaseN:4,title:'Свидание без телефонов',
+body:'Организуй <strong>свидание</strong>. Минимум 1.5 часа. Без телефонов. Без детей. Без разговоров о логистике.\n\nНе обязательно ресторан. Прогулка, парк, новое место. Главное — <strong>новизна</strong> + <strong>внимание друг на друге</strong>.\n\nФинкель: новые совместные впечатления активируют те же нейросети, что при влюблённости.',
+src:'Финкель + 80/80: EPIC Date Night',diff:2},
+{d:20,phase:'Страсть',phaseN:4,title:'Увидь его/её в новом контексте',
+body:'Перель: желание усиливается, когда мы видим партнёра <strong>в другой среде</strong>.\n\nСегодня — посмотри на партнёра глазами постороннего. Как он(а) общается с другими? Как выглядит «не дома»?\n\nЕсли нет возможности выйти — посмотри <strong>старые фото</strong> партнёра. Вспомни, в кого ты влюбился(ась).',
+src:'Перель: сепаратность',diff:2},
+{d:21,phase:'Страсть',phaseN:4,title:'Поговори о желании',
+body:'Начни разговор о <strong>физической близости</strong>. Не из претензии, а из любопытства:\n\n• «Когда тебе было хорошо со мной — что именно нравилось?»\n• «Есть ли что-то, что ты хотел(а) бы попробовать?»\n• «Что я могу сделать, чтобы тебе было приятнее?»\n\nБудь готов(а) <strong>слушать</strong> без обороны.',
+src:'Перель: эротический интеллект',diff:3},
+{d:22,phase:'Страсть',phaseN:4,title:'Текст не по делу',
+body:'Отправь партнёру сообщение <strong>не по делу</strong>. Не «купи хлеб». А:\n\n• «Думаю о тебе прямо сейчас»\n• «Вспомнил(а) нашу поездку в... Улыбаюсь»\n• «Ты красивая/красивый. Просто так.»\n\nОдна <strong>заявка на связь</strong> в течение дня. Маленькая, но настоящая.',
+src:'Готтман: заявки (bids)',diff:1},
+{d:23,phase:'Страсть',phaseN:4,title:'Сделай что-то его/её языком',
+body:'Вспомни <strong>язык любви</strong> партнёра (слова, время, подарки, помощь, прикосновения) и сделай что-то <strong>на его/её языке</strong>, а не на своём.\n\nЕсли его язык — помощь, а твой — слова: помоги без просьбы.\nЕсли её язык — время, а ты дарил подарки: проведи вечер вместе.',
+src:'Чепмен: 5 языков любви',diff:2},
+{d:24,phase:'Страсть',phaseN:4,title:'Личное пространство',
+body:'Сегодня — <strong>осознанная дистанция</strong>. Проведи вечер отдельно. Каждый — со своим делом.\n\nПерель: огонь нуждается в воздухе. Слияние убивает желание. <strong>Побыть отдельно</strong> — не угроза, а инвестиция.\n\nЗамечай: скучаешь ли ты? Что чувствуешь, когда он(а) занят(а) своим?',
+src:'Перель: парадокс близости',diff:2},
+
+// Phase 5: Integration (days 25-30)
+{d:25,phase:'Интеграция',phaseN:5,title:'Проверка 5:1',
+body:'Посчитай за сегодня: сколько <strong>позитивных</strong> взаимодействий (благодарность, прикосновение, комплимент, помощь, смех) и сколько <strong>негативных</strong> (критика, раздражение, игнор).\n\nГоттман: <strong>5:1</strong> = минимум для стабильных отношений. Ниже 3:1 — красная зона. Выше 7:1 — вы молодцы.',
+src:'Готтман: 5:1',diff:2},
+{d:26,phase:'Интеграция',phaseN:5,title:'Граница с калиткой',
+body:'Назови одну <strong>границу</strong>, которая тебе важна, но которую ты никогда не озвучивал(а):\n\n«Мне важно, чтобы [X]. Когда это нарушается, я чувствую [Y]. Давай договоримся о [Z]».\n\nГраница — не стена. Это <strong>забор с калиткой</strong>: ты решаешь, кого впускать и когда.',
+src:'Cloud/Townsend: границы',diff:3},
+{d:27,phase:'Интеграция',phaseN:5,title:'Еженедельный ритуал',
+body:'Договоритесь о <strong>одном ритуале</strong>, который будет вашим:\n\n• Пятничное свидание\n• Утренний кофе вместе по воскресеньям\n• Вечерний вопрос перед сном\n• Прогулка после ужина\n\nРитуал = <strong>предсказуемая точка связи</strong>. Отношения строятся не грандиозными жестами, а тысячами мелочей.',
+src:'Готтман: ритуалы связи',diff:2},
+{d:28,phase:'Интеграция',phaseN:5,title:'Письмо партнёру',
+body:'Напиши партнёру <strong>письмо от руки</strong> (или длинное сообщение). Что ты ценишь. За что благодарен(а). Что ты понял(а) за эти 28 дней.\n\nНе «спасибо за всё». Конкретно:\n• «Я заметил(а), что ты [X] — это важно для меня»\n• «Мне было сложно в день [N], но я рад(а), что попробовал(а)»\n• «Я хочу, чтобы мы [Y]»',
+src:'Фромм: любовь как практика',diff:2},
+{d:29,phase:'Интеграция',phaseN:5,title:'Чего я хочу от нас?',
+body:'Поделись с партнёром <strong>видением вашего будущего</strong>:\n\n• Какими ты видишь ваши отношения через год?\n• Что ты хочешь сохранить?\n• Что хочешь изменить?\n\nНе план. Не претензии. <strong>Мечта</strong>. Общие мечты = общее «мы».',
+src:'Готтман: общие цели + Финкель',diff:3},
+{d:30,phase:'Интеграция',phaseN:5,title:'День ноль: начало, не конец',
+body:'Поздравляю. 30 дней — это <strong>не финиш</strong>. Это фундамент.\n\nСегодня — выбери <strong>3 практики</strong> из этого квеста, которые стали «вашими», и продолжай.\n\nГоттман: привычка строится за 21 день, закрепляется за 66. Ты на полпути.\n\n<strong>Не останавливайся.</strong> Отношения — не точка назначения. Это ежедневная практика.',
+src:'Все 22 книги',diff:1}
+];
+
+const PHASES=[
+  {n:1,name:'Фундамент',color:'var(--green)',days:'1-6'},
+  {n:2,name:'Коммуникация',color:'var(--blue)',days:'7-12'},
+  {n:3,name:'Глубина',color:'var(--purple)',days:'13-18'},
+  {n:4,name:'Страсть',color:'var(--orange)',days:'19-24'},
+  {n:5,name:'Интеграция',color:'var(--yellow)',days:'25-30'}
+];
+
+const ACHIEVEMENTS=[
+  {id:'start',name:'Первый шаг',desc:'Выполни день 1',icon:'🌱',check:s=>s.done.length>=1},
+  {id:'streak3',name:'3 дня подряд',desc:'Streak 3',icon:'🔥',check:s=>s.streak>=3},
+  {id:'streak7',name:'Неделя!',desc:'Streak 7',icon:'⚡',check:s=>s.streak>=7},
+  {id:'phase2',name:'Заговорили',desc:'Начни фазу 2',icon:'💬',check:s=>s.done.some(d=>d>=7)},
+  {id:'phase3',name:'Глубже',desc:'Начни фазу 3',icon:'🔮',check:s=>s.done.some(d=>d>=13)},
+  {id:'phase4',name:'Огонь',desc:'Начни фазу 4',icon:'🔥',check:s=>s.done.some(d=>d>=19)},
+  {id:'half',name:'Половина пути',desc:'Выполни 15 дней',icon:'🏔',check:s=>s.done.length>=15},
+  {id:'streak14',name:'2 недели!',desc:'Streak 14',icon:'💪',check:s=>s.streak>=14},
+  {id:'done',name:'Герой',desc:'Выполни все 30',icon:'🏆',check:s=>s.done.length>=30},
+];
+
+// State
+let state={done:[],streak:0,maxStreak:0,selected:1};
+
+async function loadState(){
+  try{
+    const r=localStorage.getItem('quest30_state');
+    if(r) state=JSON.parse(r);
+  }catch(e){/* first time */}
+}
+
+async function saveState(){
+  try{localStorage.setItem('quest30_state',JSON.stringify(state));}catch(e){}
+}
+
+function calcStreak(){
+  // Simple: count consecutive completed days from day 1
+  let s=0;
+  for(let i=1;i<=30;i++){if(state.done.includes(i))s++;else break;}
+  state.streak=s;
+  if(s>state.maxStreak)state.maxStreak=s;
+}
+
+function updateStats(){
+  calcStreak();
+  document.getElementById('sDone').textContent=state.done.length;
+  document.getElementById('sStreak').textContent=state.streak;
+  const ph=state.done.length===0?1:Math.min(5,Math.ceil(Math.max(...state.done)/6));
+  document.getElementById('sPhase').textContent=ph;
+  const ratio=state.done.length>=5?'✅':'—';
+  document.getElementById('sRatio').textContent=state.done.length+'/30';
+}
+
+function renderCal(){
+  const g=document.getElementById('calGrid');
+  g.innerHTML='';
+  ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(d=>{
+    g.innerHTML+=`<div class="cal-head">${d}</div>`;
+  });
+  // Start on Monday, 5 rows × 7 = 35 cells, days 1-30 + 5 empty
+  const startOffset=0; // day 1 = Monday
+  for(let i=0;i<35;i++){
+    const dayN=i-startOffset+1;
+    if(dayN<1||dayN>30){
+      g.innerHTML+=`<div class="cal-day empty"></div>`;
+    }else{
+      const isDone=state.done.includes(dayN);
+      const isSel=state.selected===dayN;
+      const isAvail=dayN===1||state.done.includes(dayN-1)||isDone;
+      let cls='cal-day';
+      if(isDone)cls+=' done';
+      else if(isAvail)cls+=' available';
+      else cls+=' locked';
+      if(isSel)cls+=' selected';
+      const phColor=PHASES[Math.ceil(dayN/6)-1]?.color||'var(--text3)';
+      g.innerHTML+=`<div class="${cls}" onclick="selectDay(${dayN})" style="border-bottom:2px solid ${isDone||isAvail?phColor:'transparent'}">${dayN}</div>`;
+    }
+  }
+}
+
+function selectDay(n){
+  const isAvail=n===1||state.done.includes(n-1)||state.done.includes(n);
+  if(!isAvail)return;
+  state.selected=n;
+  renderCal();
+  showTab('today');
+}
+
+function renderToday(){
+  const p=document.getElementById('pToday');
+  const t=TASKS[state.selected-1];
+  const isDone=state.done.includes(t.d);
+  const phase=PHASES[t.phaseN-1];
+  let dots='';
+  for(let i=0;i<3;i++)dots+=`<div class="task-dot ${i<t.diff?'on':''}"></div>`;
+
+  p.innerHTML=`
+    <div class="task active">
+      <div class="task-phase" style="color:${phase.color}">${phase.name} · Фаза ${phase.n}</div>
+      <div class="task-day">День ${t.d} из 30</div>
+      <div class="task-title">${t.title}</div>
+      <div class="task-diff">${dots}</div>
+      <div class="task-body">${t.body.replace(/\n/g,'<br>')}</div>
+      <div class="task-source">📖 ${t.src}</div>
+      <button class="btn-done ${isDone?'completed':''}" onclick="${isDone?'':'markDone('+t.d+')'}">${isDone?'✅ Выполнено':'Выполнить ✓'}</button>
+      <button class="btn-undo ${isDone?'show':''}" onclick="undoDone(${t.d})">Отменить</button>
+    </div>`;
+}
+
+function renderAchievements(){
+  const p=document.getElementById('pAchieve');
+  let html='<div class="achiev">';
+  ACHIEVEMENTS.forEach(a=>{
+    const earned=a.check(state);
+    html+=`<div class="ach ${earned?'earned':''}">
+      <div class="ach-icon">${earned?a.icon:'🔒'}</div>
+      <div class="ach-text"><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div>
+      ${earned?'<div class="ach-badge">✓</div>':''}
+    </div>`;
+  });
+  html+='</div>';
+  p.innerHTML=html;
+}
+
+async function markDone(d){
+  if(!state.done.includes(d)){
+    state.done.push(d);
+    state.done.sort((a,b)=>a-b);
+    calcStreak();
+    await saveState();
+    updateStats();renderCal();renderToday();renderAchievements();
+    toast('День '+d+' выполнен! 🎉');
+    // Auto-advance
+    if(d<30&&!state.done.includes(d+1)){state.selected=d+1;}
+  }
+}
+
+async function undoDone(d){
+  state.done=state.done.filter(x=>x!==d);
+  calcStreak();
+  await saveState();
+  updateStats();renderCal();renderToday();renderAchievements();
+}
+
+function showTab(t){
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab')[['calendar','today','achieve'].indexOf(t)].classList.add('active');
+  document.getElementById('pCalendar').style.display=t==='calendar'?'block':'none';
+  document.getElementById('pToday').style.display=t==='today'?'block':'none';
+  document.getElementById('pAchieve').style.display=t==='achieve'?'block':'none';
+  if(t==='today')renderToday();
+  if(t==='achieve')renderAchievements();
+}
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+// Init
+(async()=>{
+  await loadState();
+  updateStats();renderCal();renderToday();renderAchievements();
+})();
+</script>
+<div class="footer">
+  Источники: Готтман, Джонсон, Розенберг, Перель, Финкель, Cloud/Townsend, 80/80, Лернер, Фромм<br>
+  Квест не заменяет консультацию специалиста
+</div>
+<script src="../assets/inject-overlay.js"></script>
+</body>
+</html>

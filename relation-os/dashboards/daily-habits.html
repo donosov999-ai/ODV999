@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Habits · ODV999</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
+</head>
+<body data-theme="light">
+
+<div class="container">
+  <div class="hero">
+    <h1>Daily Habits · трекер<span class="v">v1.0</span></h1>
+    <p>5 микропривычек в день. B = MAP (Behavior = Motivation × Ability × Prompt) по Fogg. 60-90 дней до укоренения через embodied cognition.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Сегодня · <span id="today"></span></div>
+    <ul class="checklist" id="todayList"></ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Стрик</div>
+    <div class="stat" id="streak">0 <span class="lbl">дней подряд (5/5 чек-листа)</span></div>
+    <div class="stat" id="anyStreak" style="font-size:20px;">0 <span class="lbl">дней подряд (хотя бы 1 пункт)</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Календарь последних 30 дней</div>
+    <div id="calendar" style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px;font-size:11px;text-align:center;"></div>
+    <div class="card-attrib" style="margin-top:10px;">🟢 5/5 · 🟡 1-4/5 · ⚫ 0/5</div>
+  </div>
+
+  <details>
+    <summary>Что такое B = MAP и зачем 60-90 дней</summary>
+    <p><strong>B = MAP (Fogg):</strong> Поведение происходит = Motivation × Ability × Prompt. Если поведения нет — слабо одно из трёх. Микропривычка решает все три: motivation = маленький порог, ability = занимает 60 секунд, prompt = триггер (после X делаю Y).</p>
+    <p><strong>Hebbian rule:</strong> «Нейроны, активирующиеся вместе, связываются». 60-90 дней повторений = автоматизм.</p>
+    <p><strong>Embodied cognition:</strong> Тело меняет мозг быстрее, чем разговор. Ежедневное «6-сек поцелуй» переписывает связь «утро → телефон» на «утро → телесная близость с партнёром» — за месяц.</p>
+  </details>
+
+  <div class="footer">
+    Источник: Fogg, B. J. — Tiny Habits · B = MAP model · Hebbian rule
+  </div>
+</div>
+
+<script src="../assets/dashboard-nav.js"></script>
+<script>
+var HABITS = [
+  {id:'kiss',  label:'Поцелуй 6+ сек при расставании', prompt:'после кофе утром'},
+  {id:'hug',   label:'Объятие 20+ сек на пороге вечером', prompt:'когда встретились'},
+  {id:'thanks',label:'Конкретная благодарность партнёру', prompt:'за ужином'},
+  {id:'phone', label:'Телефон в другой комнате 2+ часа', prompt:'после ужина'},
+  {id:'sleep', label:'Контакт 60 сек перед сном', prompt:'легли в постель'}
+];
+
+function todayKey(){
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function load(){ return JSON.parse(localStorage.getItem('habits_log') || '{}'); }
+function save(s){ localStorage.setItem('habits_log', JSON.stringify(s)); }
+
+function render(){
+  var log = load();
+  var key = todayKey();
+  log[key] = log[key] || {};
+
+  // Today list
+  var ul = document.getElementById('todayList');
+  ul.innerHTML = '';
+  HABITS.forEach(function(h){
+    var li = document.createElement('li');
+    li.dataset.id = h.id;
+    if (log[key][h.id]) li.classList.add('done');
+    li.innerHTML = '<span class="box">✓</span><span><strong>' + h.label + '</strong><br><span style="font-size:11px;color:var(--text-muted);">⚡ триггер: ' + h.prompt + '</span></span>';
+    li.addEventListener('click', function(){
+      log[key][h.id] = !log[key][h.id];
+      save(log);
+      render();
+    });
+    ul.appendChild(li);
+  });
+
+  document.getElementById('today').textContent = key;
+
+  // Streaks
+  var fullStreak = 0, anyStreak = 0;
+  var d = new Date();
+  while (true) {
+    var k = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    var entry = log[k] || {};
+    var done = HABITS.filter(function(h){ return entry[h.id]; }).length;
+    if (done === 5) fullStreak++; else break;
+    d.setDate(d.getDate()-1);
+    if (fullStreak > 365) break;
+  }
+  d = new Date();
+  while (true) {
+    var k = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    var entry = log[k] || {};
+    var done = HABITS.filter(function(h){ return entry[h.id]; }).length;
+    if (done >= 1) anyStreak++; else break;
+    d.setDate(d.getDate()-1);
+    if (anyStreak > 365) break;
+  }
+  document.getElementById('streak').innerHTML = fullStreak + ' <span class="lbl">дней подряд (5/5)</span>';
+  document.getElementById('anyStreak').innerHTML = anyStreak + ' <span class="lbl">дней подряд (хотя бы 1 пункт)</span>';
+
+  // Calendar
+  var cal = document.getElementById('calendar');
+  cal.innerHTML = '';
+  var days = [];
+  for (var i = 29; i >= 0; i--) {
+    var dd = new Date();
+    dd.setDate(dd.getDate() - i);
+    var k = dd.getFullYear() + '-' + String(dd.getMonth()+1).padStart(2,'0') + '-' + String(dd.getDate()).padStart(2,'0');
+    var entry = log[k] || {};
+    var done = HABITS.filter(function(h){ return entry[h.id]; }).length;
+    var color = done === 5 ? '#3fb950' : done >= 1 ? '#d29922' : '#30363d';
+    days.push('<div title="' + k + ': ' + done + '/5" style="background:' + color + ';padding:6px 0;border-radius:3px;color:#fff;">' + dd.getDate() + '</div>');
+  }
+  cal.innerHTML = days.join('');
+}
+render();
+</script>
+</body>
+</html>

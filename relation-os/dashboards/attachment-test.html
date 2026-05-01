@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тест привязанности · ODV999</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
+</head>
+<body data-theme="light">
+
+<div class="container">
+  <div class="hero">
+    <h1>Тест стилей привязанности<span class="v">v1.0</span></h1>
+    <p>Bowlby + Tatkin (PACT). 12 вопросов. Anchor (~50%) / Wave (~20%) / Island (~25%). Можно пройти на двоих и увидеть динамику пары.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-attrib">Шкала: 1 = совсем не про меня · 5 = очень про меня</div>
+    <form id="testForm"></form>
+    <div class="btn-row">
+      <button class="btn" id="calcBtn" type="button">Посчитать мой стиль</button>
+      <button class="btn btn-secondary" id="resetBtn" type="button">Сбросить</button>
+    </div>
+  </div>
+
+  <div id="result"></div>
+
+  <details style="margin-top:24px;">
+    <summary>Что такое стили привязанности?</summary>
+    <p><strong>Anchor (Якорь, ~50%):</strong> Безопасный стиль. Комфортно и в близости, и в одиночестве. Регулирует эмоции автономно.</p>
+    <p><strong>Wave (Волна, ~20%):</strong> Тревожный стиль. Паника при отдалении, постоянная проверка. Cтрах быть оставленным.</p>
+    <p><strong>Island (Остров, ~25%):</strong> Избегающий стиль. Дискомфорт от близости, бежит при «слишком близко». Ценит автономию выше связи.</p>
+    <p><strong>Earned secure:</strong> Переход из Wave/Island в Anchor через работу. Реальный концепт, не миф.</p>
+  </details>
+
+  <div class="footer">
+    Источники: Bowlby (1969–1980) · Mikulincer & Shaver (мета-анализы) · Tatkin (PACT) · Hazan & Shaver (1987)
+  </div>
+</div>
+
+<script src="../assets/dashboard-nav.js"></script>
+<script>
+var QUESTIONS = [
+  {h:'anchor', q:'Мне комфортно и одному, и в близких отношениях'},
+  {h:'anchor', q:'Я могу попросить о поддержке без чувства вины'},
+  {h:'anchor', q:'Конфликт не разрушает моё чувство безопасности с партнёром'},
+  {h:'anchor', q:'Я доверяю что партнёр вернётся, если ушёл остыть'},
+  {h:'wave',   q:'Когда партнёр не отвечает быстро — я начинаю тревожиться'},
+  {h:'wave',   q:'Часто проверяю как партнёр ко мне относится прямо сейчас'},
+  {h:'wave',   q:'При охлаждении паникую и начинаю «дёргать» партнёра'},
+  {h:'wave',   q:'Боюсь что меня бросят даже без объективных причин'},
+  {h:'island', q:'Когда партнёр «слишком близко» — хочется отстраниться'},
+  {h:'island', q:'Свободу и автономию ценю выше глубокой эмоциональной связи'},
+  {h:'island', q:'Эмоциональные разговоры утомляют меня'},
+  {h:'island', q:'В стрессе предпочитаю справляться один, без помощи'}
+];
+var LABELS = {anchor:'Anchor (Якорь, безопасная)', wave:'Wave (Волна, тревожная)', island:'Island (Остров, избегающая)'};
+
+function build(){
+  var f = document.getElementById('testForm');
+  QUESTIONS.forEach(function(item, i){
+    var row = document.createElement('div');
+    row.className = 'slider-q';
+    row.innerHTML =
+      '<div class="q">' + (i+1) + '. ' + item.q + '</div>' +
+      '<div class="slider-row">' +
+        '<span class="slider-min">не про меня</span>' +
+        '<input type="range" min="1" max="5" value="3" data-h="' + item.h + '">' +
+        '<span class="slider-val unset">·</span>' +
+        '<span class="slider-max">очень про меня</span>' +
+      '</div>';
+    var inp = row.querySelector('input[type=range]');
+    var val = row.querySelector('.slider-val');
+    inp.dataset.touched = '0';
+    inp.addEventListener('input', function(){
+      val.textContent = inp.value; val.classList.remove('unset'); inp.dataset.touched = '1';
+    });
+    f.appendChild(row);
+  });
+}
+build();
+
+document.getElementById('calcBtn').addEventListener('click', function(){
+  var sums = {anchor:0, wave:0, island:0};
+  var counts = {anchor:0, wave:0, island:0};
+  var answered = 0;
+  document.querySelectorAll('input[type=range]').forEach(function(r){
+    if (r.dataset.touched === '1') {
+      sums[r.dataset.h] += parseInt(r.value, 10);
+      counts[r.dataset.h] += 1;
+      answered++;
+    }
+  });
+  if (answered < QUESTIONS.length) {
+    alert('Подвинь слайдер на каждом из ' + QUESTIONS.length + ' вопросов. Отвечено: ' + answered);
+    return;
+  }
+  var avgs = {
+    anchor: sums.anchor / counts.anchor,
+    wave: sums.wave / counts.wave,
+    island: sums.island / counts.island
+  };
+  // Доминантный
+  var max = 'anchor', maxV = avgs.anchor;
+  if (avgs.wave > maxV) { max = 'wave'; maxV = avgs.wave; }
+  if (avgs.island > maxV) { max = 'island'; maxV = avgs.island; }
+
+  var html = '<div class="result-box"><h3>Твой стиль:</h3>';
+  html += '<div class="stat">' + LABELS[max] + '</div>';
+
+  ['anchor','wave','island'].forEach(function(k){
+    var pct = Math.round((avgs[k] - 1) / 4 * 100);
+    html += '<div style="margin:14px 0;">';
+    html += '<div style="display:flex;justify-content:space-between;font-weight:600;font-size:14px;">';
+    html += '<span>' + LABELS[k] + '</span><span>' + pct + '%</span></div>';
+    html += '<div class="progress"><div class="progress-bar" style="width:' + pct + '%;background:' + (k==='anchor' ? '#3fb950' : k==='wave' ? '#d29922' : '#58a6ff') + '"></div></div>';
+    html += '</div>';
+  });
+
+  // Рекомендации
+  var rec = '';
+  if (max === 'anchor') {
+    rec = '<strong>Anchor.</strong> Поддерживай Magic 6 Hours, помогай партнёру (Wave/Island) переходить в earned secure.';
+  } else if (max === 'wave') {
+    rec = '<strong>Wave.</strong> Учись сам себя успокаивать (5-4-3-2-1, дыхание 4-7-8) ДО того как «дёргать» партнёра. Если партнёр Island — твоя тревога его пугает; вместо проверок — ясно сказать «мне нужно подтверждение».';
+  } else {
+    rec = '<strong>Island.</strong> Учись оставаться в эмоциональном контакте 20 мин даже если хочется уйти. Если партнёр Wave — твой уход = его триггер; вместо ухода — «мне нужно 20 мин, я вернусь в N часов».';
+  }
+  html += '<div class="note">' + rec + '</div>';
+  html += '<div class="btn-row"><a class="btn btn-secondary" href="i-message-generator.html">Перейти к Я-сообщению →</a></div>';
+  html += '</div>';
+
+  // На двоих
+  html += '<div class="card" style="margin-top:18px;">';
+  html += '<h3>Для пары: динамика «Wave + Island»</h3>';
+  html += '<p style="font-size:13px;color:var(--text-dim);margin:8px 0;">Самая частая ловушка пары: один Wave, другой Island. Wave требует близости — Island отступает — Wave паникует и требует ещё — Island отступает дальше. Цикл преследователь-отстраняющийся (Sue Johnson, EFT). Выход: оба учатся <strong>называть цикл</strong>, а не воевать в нём.</p>';
+  html += '</div>';
+
+  document.getElementById('result').innerHTML = html;
+  document.getElementById('result').scrollIntoView({behavior:'smooth'});
+});
+
+document.getElementById('resetBtn').addEventListener('click', function(){
+  document.querySelectorAll('input[type=radio]').forEach(function(r){ r.checked = false; });
+  document.getElementById('result').innerHTML = '';
+});
+</script>
+</body>
+</html>
