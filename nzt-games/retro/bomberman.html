@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NZT-48 · Bomberman</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a15;color:#eaeaea;font-family:'Courier New',monospace;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}
+header{padding:8px 16px;display:flex;justify-content:space-between;width:100%;max-width:560px;color:#22d3ee;font-size:14px;font-weight:700}
+header a{color:#fbbf24;text-decoration:none;border:1px solid #fbbf24;padding:2px 8px;border-radius:4px}
+.wrap{position:relative;margin:auto 0}
+canvas{display:block;background:#1a1a2e;border:2px solid #1e1e3a;border-radius:6px}
+.hud{position:absolute;top:6px;left:8px;right:8px;display:flex;justify-content:space-between;font-size:12px;color:#22d3ee;font-weight:700;text-shadow:0 0 4px #000;pointer-events:none}
+.hud .right{color:#fbbf24}
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,5,.85);text-align:center;padding:20px;backdrop-filter:blur(4px)}
+.overlay.hide{display:none}
+.overlay h2{color:#22d3ee;font-size:36px;margin-bottom:14px;letter-spacing:4px}
+.overlay p{margin:4px 0;font-size:13px;line-height:1.5}
+.overlay button{margin-top:18px;padding:10px 24px;background:#22d3ee;color:#000;border:none;border-radius:4px;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:2px}
+.overlay button:hover{background:#fbbf24}
+.controls{margin-top:8px;font-size:11px;color:#6b7280;text-align:center;max-width:520px;line-height:1.5}
+</style>
+</head>
+<body>
+<header><span>◀ NZT-48 · Bomberman</span><a href="../index.html">Меню</a></header>
+<div class="wrap">
+  <canvas id="cv" width="520" height="440"></canvas>
+  <div class="hud"><span id="hudL">LV1 ♥3</span><span class="right" id="hudR">SCORE 0</span></div>
+  <div class="overlay" id="ov">
+    <h2>BOMBERMAN</h2>
+    <p>Уничтожьте всех врагов и найдите выход</p>
+    <p>Из кирпичей выпадают бонусы: +бомба · +радиус · +скорость · щит</p>
+    <p>Стрелки/WASD — движение · Space — бомба</p>
+    <p>P — пауза · R — рестарт</p>
+    <button id="startBtn">START</button>
+  </div>
+</div>
+<div class="controls">Лучшее: <span id="best">0</span> · Сетка 13×11 тайлов · 3 типа врагов: блуждающие, преследователи, проходящие сквозь стены</div>
+<script>
+(()=>{
+const cv=document.getElementById('cv'),x=cv.getContext('2d'),W=520,H=440;
+const COLS=13,ROWS=11,T=40;
+const hudL=document.getElementById('hudL'),hudR=document.getElementById('hudR'),ov=document.getElementById('ov');
+const startBtn=document.getElementById('startBtn'),bestEl=document.getElementById('best');
+const BEST_KEY='nzt_bomb_best';let best=parseInt(localStorage.getItem(BEST_KEY)||'0');bestEl.textContent=best;
+
+// tile types: 0=empty 1=wall 2=brick 3=exit(hidden) 4=exit(visible)
+let map,player,bombs,explosions,enemies,powerups,score,level,lives,paused,gameOver,started,frame,exitVisible,shieldEnd;
+
+const keys={};
+
+function newMap(){
+  map=Array.from({length:ROWS},()=>Array(COLS).fill(0));
+  // outer walls + inner pillars
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(r===0||c===0||r===ROWS-1||c===COLS-1)map[r][c]=1;
+    else if(r%2===0&&c%2===0)map[r][c]=1;
+  }
+  // bricks 60% on empty
+  for(let r=1;r<ROWS-1;r++)for(let c=1;c<COLS-1;c++){
+    if(map[r][c]===0&&!((r<=2&&c<=2))&&Math.random()<0.55)map[r][c]=2;
+  }
+  // hide exit under random brick
+  const bricks=[];
+  for(let r=1;r<ROWS-1;r++)for(let c=1;c<COLS-1;c++)if(map[r][c]===2)bricks.push([r,c]);
+  if(bricks.length){const[er,ec]=bricks[Math.floor(Math.random()*bricks.length)];map[er][ec]=3}
+  exitVisible=null;
+}
+
+function reset(){
+  level=1;lives=3;score=0;startLevel();
+}
+function startLevel(){
+  newMap();
+  player={c:1,r:1,x:1*T,y:1*T,dir:0,bombs:1,radius:2,speed:2.5,placed:0};
+  bombs=[];explosions=[];powerups=[];
+  enemies=[];
+  const enemyCount=2+level;
+  let placed=0,tries=0;
+  while(placed<enemyCount&&tries<300){
+    tries++;
+    const r=2+Math.floor(Math.random()*(ROWS-4)),c=2+Math.floor(Math.random()*(COLS-4));
+    if(map[r][c]===0&&Math.hypot(r-1,c-1)>4){
+      const types=['walker','chaser',level>=2?'ghost':'walker'];
+      enemies.push({r,c,x:c*T,y:r*T,dir:[-1,1,0,0][Math.floor(Math.random()*4)],dirY:0,
+        type:types[Math.floor(Math.random()*types.length)],cool:0,speed:1.2+level*0.15});
+      placed++;
+    }
+  }
+  paused=false;gameOver=false;frame=0;shieldEnd=0;
+}
+
+function tileAt(x,y){return[Math.floor(y/T),Math.floor(x/T)]}
+function passable(r,c,who){
+  if(r<0||c<0||r>=ROWS||c>=COLS)return false;
+  const v=map[r][c];
+  if(v===1)return false;
+  if(v===2&&who!=='ghost')return false;
+  // bombs are obstacles for player after stepping off
+  if(who==='player')return !bombs.some(b=>b.r===r&&b.c===c&&!b.justPlaced);
+  return true;
+}
+
+function placeBomb(){
+  if(player.placed>=player.bombs)return;
+  if(bombs.some(b=>b.r===player.r&&b.c===player.c))return;
+  bombs.push({r:player.r,c:player.c,t:120,radius:player.radius,justPlaced:true});
+  player.placed++;
+}
+
+function detonate(b){
+  const cells=[[b.r,b.c]];
+  // 4 directions
+  for(const[dr,dc]of[[-1,0],[1,0],[0,-1],[0,1]]){
+    for(let i=1;i<=b.radius;i++){
+      const r=b.r+dr*i,c=b.c+dc*i;
+      if(r<0||c<0||r>=ROWS||c>=COLS||map[r][c]===1)break;
+      cells.push([r,c]);
+      if(map[r][c]===2||map[r][c]===3){
+        if(map[r][c]===3){map[r][c]=4;exitVisible=[r,c]}else{map[r][c]=0;
+          // 30% chance powerup
+          if(Math.random()<0.3){const types=['bomb','radius','speed','shield'];powerups.push({r,c,type:types[Math.floor(Math.random()*types.length)]})}
+        }
+        break;
+      }
+    }
+  }
+  explosions.push({cells,t:30});
+  player.placed--;
+}
+
+function update(){
+  if(paused||gameOver)return;
+  frame++;
+  // player movement
+  let vx=0,vy=0;
+  if(keys.ArrowUp||keys.w||keys.W){vy=-1;player.dir=3}
+  else if(keys.ArrowDown||keys.s||keys.S){vy=1;player.dir=1}
+  else if(keys.ArrowLeft||keys.a||keys.A){vx=-1;player.dir=2}
+  else if(keys.ArrowRight||keys.d||keys.D){vx=1;player.dir=0}
+  if(vx||vy){
+    const nx=player.x+vx*player.speed,ny=player.y+vy*player.speed;
+    // collision check via center
+    const cx=nx+T/2,cy=ny+T/2;
+    const[nr,nc]=tileAt(cx,cy);
+    // make sure the next 4 corners are passable
+    const ok=passable(Math.floor((cy-T/3)/T),Math.floor((cx-T/3)/T),'player')
+          && passable(Math.floor((cy-T/3)/T),Math.floor((cx+T/3)/T),'player')
+          && passable(Math.floor((cy+T/3)/T),Math.floor((cx-T/3)/T),'player')
+          && passable(Math.floor((cy+T/3)/T),Math.floor((cx+T/3)/T),'player');
+    if(ok){player.x=nx;player.y=ny;player.r=Math.round(player.y/T);player.c=Math.round(player.x/T)}
+  }
+  // mark bombs we've stepped off as solid for player
+  bombs.forEach(b=>{if(b.justPlaced&&(player.r!==b.r||player.c!==b.c))b.justPlaced=false});
+  // pickup powerups
+  powerups=powerups.filter(p=>{
+    if(p.r===player.r&&p.c===player.c){
+      score+=50;
+      if(p.type==='bomb')player.bombs++;
+      else if(p.type==='radius')player.radius++;
+      else if(p.type==='speed')player.speed=Math.min(player.speed+0.4,4.5);
+      else if(p.type==='shield')shieldEnd=frame+600;
+      return false;
+    }
+    return true;
+  });
+  // bombs
+  bombs.forEach(b=>{b.t--});
+  bombs.filter(b=>b.t<=0).forEach(detonate);
+  bombs=bombs.filter(b=>b.t>0);
+  // explosions
+  explosions.forEach(e=>e.t--);
+  // explosion damage
+  explosions.forEach(e=>{
+    e.cells.forEach(([r,c])=>{
+      // hit enemies
+      enemies=enemies.filter(en=>{
+        if(en.r===r&&en.c===c){score+=200;return false}
+        return true;
+      });
+      // hit player
+      if(player.r===r&&player.c===c&&shieldEnd<frame){
+        lives--;
+        if(lives<=0)endGame();else startLevel();
+      }
+      // chain bombs
+      bombs.forEach(bb=>{if(bb.r===r&&bb.c===c)bb.t=Math.min(bb.t,3)});
+    });
+  });
+  explosions=explosions.filter(e=>e.t>0);
+  // enemy AI
+  enemies.forEach(e=>{
+    e.cool--;
+    if(e.cool<=0){
+      if(e.type==='walker'){
+        // change direction occasionally
+        if(Math.random()<0.05||!canMoveEnemy(e,e.dir,e.dirY)){
+          const dirs=[[-1,0],[1,0],[0,-1],[0,1]].filter(([dx,dy])=>canMoveEnemy(e,dx,dy));
+          if(dirs.length){const[dx,dy]=dirs[Math.floor(Math.random()*dirs.length)];e.dir=dx;e.dirY=dy}
+        }
+      }else if(e.type==='chaser'){
+        const dx=Math.sign(player.x-e.x),dy=Math.sign(player.y-e.y);
+        if(Math.abs(player.x-e.x)>Math.abs(player.y-e.y)){
+          if(canMoveEnemy(e,dx,0)){e.dir=dx;e.dirY=0}
+          else if(canMoveEnemy(e,0,dy)){e.dir=0;e.dirY=dy}
+          else{const dirs=[[-1,0],[1,0],[0,-1],[0,1]].filter(([a,b])=>canMoveEnemy(e,a,b));if(dirs.length){const[a,b]=dirs[Math.floor(Math.random()*dirs.length)];e.dir=a;e.dirY=b}}
+        }else{
+          if(canMoveEnemy(e,0,dy)){e.dir=0;e.dirY=dy}
+          else if(canMoveEnemy(e,dx,0)){e.dir=dx;e.dirY=0}
+          else{const dirs=[[-1,0],[1,0],[0,-1],[0,1]].filter(([a,b])=>canMoveEnemy(e,a,b));if(dirs.length){const[a,b]=dirs[Math.floor(Math.random()*dirs.length)];e.dir=a;e.dirY=b}}
+        }
+      }else{
+        // ghost: always head toward player, ignore bricks
+        const dx=Math.sign(player.x-e.x),dy=Math.sign(player.y-e.y);
+        if(Math.abs(player.x-e.x)>Math.abs(player.y-e.y)){e.dir=dx;e.dirY=0}else{e.dir=0;e.dirY=dy}
+      }
+    }
+    e.x+=e.dir*e.speed;e.y+=e.dirY*e.speed;
+    e.r=Math.round(e.y/T);e.c=Math.round(e.x/T);
+    // hit player
+    if(Math.abs(e.x-player.x)<T*0.6&&Math.abs(e.y-player.y)<T*0.6&&shieldEnd<frame){
+      lives--;
+      if(lives<=0)endGame();else startLevel();
+    }
+  });
+  // exit reached
+  if(exitVisible&&enemies.length===0&&player.r===exitVisible[0]&&player.c===exitVisible[1]){
+    score+=1000;level++;startLevel();
+  }
+  hudL.textContent='LV'+level+' ♥'+lives+(shieldEnd>frame?' 🛡️':'');
+  hudR.textContent='SCORE '+score+' · 💣'+player.bombs+' · ⚡'+player.radius;
+}
+function canMoveEnemy(e,dx,dy){
+  const nx=e.x+dx*e.speed,ny=e.y+dy*e.speed;
+  const cx=nx+T/2,cy=ny+T/2;
+  const[r,c]=tileAt(cx,cy);
+  return passable(r,c,e.type);
+}
+
+function draw(){
+  x.fillStyle='#1a1a2e';x.fillRect(0,0,W,H);
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const v=map[r][c];const px=c*T,py=r*T;
+    if(v===1){x.fillStyle='#4a5568';x.fillRect(px,py,T,T);x.fillStyle='#2d3748';x.fillRect(px+2,py+2,T-4,T-4);x.fillStyle='#4a5568';x.fillRect(px+T/2-1,py+2,2,T-4);x.fillRect(px+2,py+T/2-1,T-4,2)}
+    else if(v===2){x.fillStyle='#92400e';x.fillRect(px+2,py+2,T-4,T-4);x.fillStyle='#78350f';x.fillRect(px+2,py+T/2,T-4,2);x.fillRect(px+T/2,py+2,2,T-4)}
+    else if(v===4){x.fillStyle='#fbbf24';x.fillRect(px+8,py+8,T-16,T-16);x.fillStyle='#000';x.font='bold 14px monospace';x.textAlign='center';x.fillText('▼',px+T/2,py+T/2+5)}
+    else{x.fillStyle='#0f0f1c';x.fillRect(px,py,T,T)}
+  }
+  powerups.forEach(p=>{
+    x.save();x.translate(p.c*T+T/2,p.r*T+T/2);
+    x.fillStyle={bomb:'#ef4444',radius:'#22d3ee',speed:'#fbbf24',shield:'#22c55e'}[p.type];
+    x.beginPath();x.arc(0,0,12,0,Math.PI*2);x.fill();
+    x.fillStyle='#000';x.font='bold 14px monospace';x.textAlign='center';
+    x.fillText({bomb:'B',radius:'R',speed:'S',shield:'⛨'}[p.type],0,5);
+    x.restore();
+  });
+  bombs.forEach(b=>{
+    const px=b.c*T+T/2,py=b.r*T+T/2;
+    const pulse=1+Math.sin(b.t*0.3)*0.1;
+    x.fillStyle='#000';x.beginPath();x.arc(px,py,14*pulse,0,Math.PI*2);x.fill();
+    x.fillStyle='#ef4444';x.fillRect(px-2,py-18,4,6);
+  });
+  explosions.forEach(e=>{
+    e.cells.forEach(([r,c])=>{
+      const a=e.t/30;
+      x.fillStyle=`rgba(251,191,36,${a})`;x.fillRect(c*T+4,r*T+4,T-8,T-8);
+      x.fillStyle=`rgba(239,68,68,${a*0.7})`;x.fillRect(c*T+10,r*T+10,T-20,T-20);
+    });
+  });
+  enemies.forEach(e=>{
+    x.save();x.translate(e.x+T/2,e.y+T/2);
+    const col={walker:'#ef4444',chaser:'#a855f7',ghost:'#06b6d4'}[e.type];
+    x.fillStyle=col;x.beginPath();x.arc(0,0,T*0.35,0,Math.PI*2);x.fill();
+    x.fillStyle='#fff';x.fillRect(-6,-3,3,3);x.fillRect(3,-3,3,3);
+    x.fillStyle='#000';x.fillRect(-5,-2,2,2);x.fillRect(4,-2,2,2);
+    x.restore();
+  });
+  // player
+  x.save();x.translate(player.x+T/2,player.y+T/2);
+  if(shieldEnd>frame){x.strokeStyle='#22c55e';x.lineWidth=2;x.beginPath();x.arc(0,0,T*0.42,0,Math.PI*2);x.stroke()}
+  x.fillStyle='#22d3ee';x.beginPath();x.arc(0,0,T*0.32,0,Math.PI*2);x.fill();
+  x.fillStyle='#fff';x.fillRect(-6,-4,12,4);
+  x.fillStyle='#000';x.fillRect(-5,-3,3,2);x.fillRect(2,-3,3,2);
+  x.restore();
+  if(paused){x.fillStyle='rgba(0,0,0,.7)';x.fillRect(0,0,W,H);x.fillStyle='#22d3ee';x.font='bold 28px monospace';x.textAlign='center';x.fillText('PAUSED',W/2,H/2)}
+}
+
+function endGame(){
+  gameOver=true;
+  if(score>best){best=score;localStorage.setItem(BEST_KEY,best);bestEl.textContent=best}
+  ov.classList.remove('hide');
+  ov.querySelector('h2').textContent='GAME OVER';
+  ov.querySelector('button').textContent='REPLAY';
+  const ps=ov.querySelectorAll('p');ps[0].textContent='Score: '+score+' · Level: '+level;ps[1].textContent='Best: '+best;
+}
+function loop(){update();draw();requestAnimationFrame(loop)}
+
+startBtn.onclick=()=>{ov.classList.add('hide');reset();started=true};
+addEventListener('keydown',e=>{keys[e.key]=true;if(e.key===' '){e.preventDefault();placeBomb()}if(e.key==='p'||e.key==='P')paused=!paused;if(e.key==='r'||e.key==='R'){ov.classList.add('hide');reset()}});
+addEventListener('keyup',e=>{keys[e.key]=false});
+loop();
+})();
+</script>
+</body>
+</html>

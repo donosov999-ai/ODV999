@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NZT-48 · Lemmings</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a15;color:#eaeaea;font-family:'Courier New',monospace;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}
+header{padding:8px 16px;display:flex;justify-content:space-between;width:100%;max-width:760px;color:#22d3ee;font-size:14px;font-weight:700}
+header a{color:#fbbf24;text-decoration:none;border:1px solid #fbbf24;padding:2px 8px;border-radius:4px}
+.wrap{position:relative;margin:auto 0}
+canvas{display:block;background:#0a0a15;border:2px solid #1e1e3a;border-radius:6px;cursor:crosshair}
+.hud{position:absolute;top:6px;left:8px;right:8px;display:flex;justify-content:space-between;font-size:12px;color:#22d3ee;font-weight:700;text-shadow:0 0 4px #000;pointer-events:none}
+.toolbar{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;justify-content:center;max-width:760px}
+.tool{padding:6px 10px;background:#1c1c40;border:1px solid #1e1e3a;color:#eaeaea;font-family:inherit;font-size:11px;cursor:pointer;border-radius:4px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:64px}
+.tool.active{background:#22d3ee;color:#000;border-color:#22d3ee}
+.tool .count{font-size:14px;font-weight:700;color:#fbbf24}
+.tool.active .count{color:#000}
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,5,.85);text-align:center;padding:20px;backdrop-filter:blur(4px)}
+.overlay.hide{display:none}
+.overlay h2{color:#22d3ee;font-size:36px;margin-bottom:14px;letter-spacing:4px}
+.overlay p{margin:4px 0;font-size:13px;line-height:1.5}
+.overlay button{margin-top:18px;padding:10px 24px;background:#22d3ee;color:#000;border:none;border-radius:4px;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:2px}
+.overlay button:hover{background:#fbbf24}
+.controls{margin-top:8px;font-size:11px;color:#6b7280;text-align:center;max-width:680px;line-height:1.5}
+</style>
+</head>
+<body>
+<header><span>◀ NZT-48 · Lemmings</span><a href="../index.html">Меню</a></header>
+<div class="wrap">
+  <canvas id="cv" width="760" height="380"></canvas>
+  <div class="hud">
+    <span id="hudL">LV1 · IN 0/0 OUT 0/0</span>
+    <span style="color:#fbbf24" id="hudR">Need 0</span>
+  </div>
+  <div class="overlay" id="ov">
+    <h2>LEMMINGS</h2>
+    <p>Спасите достаточно леммингов: проведите их от ВХОДА до ВЫХОДА</p>
+    <p>Кликните инструмент → клик по леммингу — назначить профессию</p>
+    <p>Копатель копает вниз · Строитель ставит лестницу · Альпинист лезет вверх</p>
+    <p>Зонтик защищает от падения · Блокировщик стоит стеной · Взрывник самоликвидируется</p>
+    <p>P — пауза · R — рестарт</p>
+    <button id="startBtn">START</button>
+  </div>
+</div>
+<div class="toolbar" id="tb"></div>
+<div class="controls">Лучшее: <span id="best">0</span> · 3 уровня · Падение с большой высоты убивает (если без зонтика)</div>
+<script>
+(()=>{
+const cv=document.getElementById('cv'),x=cv.getContext('2d'),W=760,H=380;
+const ov=document.getElementById('ov'),startBtn=document.getElementById('startBtn');
+const hudL=document.getElementById('hudL'),hudR=document.getElementById('hudR'),tb=document.getElementById('tb'),bestEl=document.getElementById('best');
+const BEST_KEY='nzt_lem_best';let best=parseInt(localStorage.getItem(BEST_KEY)||'0');bestEl.textContent=best;
+
+// Tile map: 0=air, 1=ground, 2=stair (built)
+const TW=10,TH=10,COLS=W/TW,ROWS=H/TH;
+let map,lemmings,entry,exit,tools,activeTool,level,spawnRate,spawnTimer,spawned,total,saved,need,paused,gameOver,started,score,levelTime;
+
+const LEVELS=[
+  {total:20,need:12,rate:80,
+    build(){
+      // simple platform with a chasm
+      for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)map[r][c]=0;
+      // ground bands
+      for(let c=0;c<COLS;c++)for(let r=ROWS-6;r<ROWS;r++)map[r][c]=1;
+      // chasm
+      for(let c=30;c<46;c++)for(let r=ROWS-6;r<ROWS;r++)map[r][c]=0;
+      // pillar with floor
+      for(let c=46;c<60;c++)for(let r=ROWS-10;r<ROWS-6;r++)map[r][c]=0;
+      entry={x:60,y:H-65};exit={x:W-60,y:H-65,w:20,h:20};
+    },
+    tools:{digger:5,builder:8,climber:3,floater:5,blocker:3,bomber:0}
+  },
+  {total:25,need:16,rate:60,
+    build(){
+      for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)map[r][c]=0;
+      for(let c=0;c<COLS;c++)for(let r=ROWS-4;r<ROWS;r++)map[r][c]=1;
+      // big ceiling overhang on right
+      for(let c=20;c<COLS;c++)for(let r=8;r<14;r++)map[r][c]=1;
+      // gap in floor
+      for(let c=44;c<54;c++)for(let r=ROWS-4;r<ROWS;r++)map[r][c]=0;
+      // pit
+      for(let c=10;c<22;c++)for(let r=ROWS-4;r<ROWS-1;r++)map[r][c]=0;
+      entry={x:50,y:H-50};exit={x:W-50,y:H-50,w:20,h:20};
+    },
+    tools:{digger:8,builder:10,climber:5,floater:8,blocker:3,bomber:2}
+  },
+  {total:30,need:22,rate:50,
+    build(){
+      for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)map[r][c]=0;
+      // multilevel platforms
+      for(let c=0;c<COLS;c++)for(let r=ROWS-4;r<ROWS;r++)map[r][c]=1;
+      for(let c=0;c<28;c++)for(let r=14;r<18;r++)map[r][c]=1;
+      for(let c=40;c<60;c++)for(let r=20;r<24;r++)map[r][c]=1;
+      // walls
+      for(let r=14;r<ROWS-4;r++)map[r][28]=1;
+      for(let r=14;r<ROWS-4;r++)map[r][27]=1;
+      // exit pit
+      for(let c=COLS-10;c<COLS-4;c++)for(let r=ROWS-4;r<ROWS;r++)map[r][c]=0;
+      entry={x:30,y:120};exit={x:W-80,y:H-30,w:20,h:20};
+    },
+    tools:{digger:10,builder:15,climber:8,floater:10,blocker:5,bomber:5}
+  }
+];
+
+const TOOL_DEFS=[
+  {id:'walk',name:'Walker',icon:'➤'},
+  {id:'digger',name:'Digger',icon:'⛏'},
+  {id:'builder',name:'Builder',icon:'▰'},
+  {id:'climber',name:'Climber',icon:'↟'},
+  {id:'floater',name:'Floater',icon:'☂'},
+  {id:'blocker',name:'Blocker',icon:'⬛'},
+  {id:'bomber',name:'Bomber',icon:'💣'},
+];
+
+function rebuildToolbar(){
+  tb.innerHTML='';
+  TOOL_DEFS.forEach(td=>{
+    const el=document.createElement('div');el.className='tool'+(activeTool===td.id?' active':'');
+    el.innerHTML='<div>'+td.icon+' '+td.name+'</div><div class="count">'+(td.id==='walk'?'∞':(tools[td.id]||0))+'</div>';
+    el.onclick=()=>{activeTool=td.id;rebuildToolbar()};
+    tb.appendChild(el);
+  });
+}
+
+function reset(){
+  level=1;score=0;startLevel();
+}
+function startLevel(){
+  map=Array.from({length:ROWS},()=>Array(COLS).fill(0));
+  const cfg=LEVELS[level-1];
+  cfg.build();
+  tools=Object.assign({},cfg.tools);
+  activeTool='walk';
+  total=cfg.total;need=cfg.need;spawnRate=cfg.rate;
+  spawned=0;saved=0;spawnTimer=0;levelTime=Date.now();
+  lemmings=[];
+  paused=false;gameOver=false;
+  rebuildToolbar();
+}
+
+function tileAt(px,py){const r=Math.floor(py/TH),c=Math.floor(px/TW);if(r<0||r>=ROWS||c<0||c>=COLS)return 1;return map[r][c]}
+function setTile(r,c,v){if(r>=0&&r<ROWS&&c>=0&&c<COLS)map[r][c]=v}
+
+function spawn(){
+  lemmings.push({x:entry.x+5,y:entry.y+5,vx:0.6,vy:0,job:'walk',jobT:0,fallH:0,alive:true,saved:false,builderSteps:0});
+}
+
+function update(){
+  if(paused||gameOver)return;
+  if(spawned<total){
+    spawnTimer++;
+    if(spawnTimer>=spawnRate){spawnTimer=0;spawn();spawned++}
+  }
+  lemmings.forEach(L=>{
+    if(!L.alive||L.saved)return;
+    // gravity
+    const below=tileAt(L.x,L.y+8);
+    if(below===0){
+      L.vy+=0.3;
+      L.y+=L.vy;
+      L.fallH+=L.vy;
+      if(L.job==='floater'&&L.vy>1.5)L.vy=1.5;
+    }else{
+      // hit ground
+      if(L.fallH>40&&L.job!=='floater'){L.alive=false;return}
+      L.fallH=0;L.vy=0;
+      // align to ground
+      while(tileAt(L.x,L.y+8)!==0&&L.y>0)L.y--;
+      L.y++;
+      // job actions
+      if(L.job==='digger'){
+        L.jobT++;
+        if(L.jobT>3){
+          L.jobT=0;
+          // dig down: clear tile under feet
+          const r=Math.floor((L.y+9)/TH),c=Math.floor(L.x/TW);
+          if(map[r]&&map[r][c]===1){map[r][c]=0}
+          else{L.job='walk'} // hit air or out of map
+          if(r>=ROWS-1)L.job='walk';
+        }
+      }else if(L.job==='builder'){
+        L.jobT++;
+        if(L.jobT>5){
+          L.jobT=0;L.builderSteps++;
+          // place tile at foot in front
+          const dir=L.vx>0?1:-1;
+          const c=Math.floor(L.x/TW)+dir;
+          const r=Math.floor((L.y+9)/TH);
+          if(map[r]&&map[r][c]===0){map[r][c]=2;L.x+=dir*TW;L.y-=TH}
+          else{L.job='walk';L.vx=-L.vx} // turn around
+          if(L.builderSteps>=10){L.job='walk';L.builderSteps=0}
+        }
+      }else if(L.job==='blocker'){
+        L.vx=0; // just stand
+      }else if(L.job==='bomber'){
+        L.jobT++;
+        if(L.jobT>120){
+          // explosion: clear circle
+          const cx=Math.floor(L.x/TW),cy=Math.floor(L.y/TH);
+          for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){
+            if(dx*dx+dy*dy<=10)setTile(cy+dy,cx+dx,0);
+          }
+          L.alive=false;
+        }
+      }else{
+        // walk: detect wall
+        const ahead=tileAt(L.x+L.vx*8,L.y);
+        if(ahead===1||ahead===2){
+          if(L.job==='climber'){L.y--;}
+          else{L.vx=-L.vx} // turn
+        }else{
+          L.x+=L.vx;
+        }
+        // also check blocker collision: hit a blocker → turn
+        for(const O of lemmings){
+          if(O===L||!O.alive||O.saved||O.job!=='blocker')continue;
+          if(Math.abs(O.x-L.x)<8&&Math.abs(O.y-L.y)<10){L.vx=-L.vx;L.x+=L.vx*2;break}
+        }
+      }
+    }
+    // exit check
+    if(L.x>=exit.x&&L.x<=exit.x+exit.w&&L.y>=exit.y&&L.y<=exit.y+exit.h){
+      L.saved=true;saved++;score+=100;
+    }
+    // out of bounds
+    if(L.y>H+30){L.alive=false}
+  });
+  // win/loss
+  if(spawned>=total&&lemmings.every(L=>!L.alive||L.saved)){
+    if(saved>=need){
+      score+=saved*50+(level*200);
+      level++;
+      if(level>LEVELS.length){endGame(true)}
+      else startLevel();
+    }else{
+      endGame(false);
+    }
+  }
+  hudL.textContent='LV'+level+' · IN '+spawned+'/'+total+' · OUT '+saved;
+  hudR.textContent='Need '+need+' · '+(saved>=need?'✓':'')+' · Score '+score;
+}
+
+function draw(){
+  x.fillStyle='#0a0a15';x.fillRect(0,0,W,H);
+  // sky gradient
+  const grd=x.createLinearGradient(0,0,0,H);
+  grd.addColorStop(0,'#0f1c2c');grd.addColorStop(1,'#0a0a15');x.fillStyle=grd;x.fillRect(0,0,W,H);
+  // map
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const v=map[r][c];if(!v)continue;
+    if(v===1){x.fillStyle='#3a5520';x.fillRect(c*TW,r*TH,TW,TH);x.fillStyle='#4a6530';x.fillRect(c*TW,r*TH,TW,2)}
+    else{x.fillStyle='#a0826d';x.fillRect(c*TW,r*TH,TW,TH)}
+  }
+  // entry/exit
+  x.fillStyle='#fbbf24';x.fillRect(entry.x,entry.y,18,12);x.fillStyle='#000';x.font='10px monospace';x.textAlign='center';x.fillText('IN',entry.x+9,entry.y+10);
+  x.fillStyle='#22c55e';x.fillRect(exit.x,exit.y,exit.w,exit.h);x.fillStyle='#000';x.fillText('OUT',exit.x+exit.w/2,exit.y+exit.h/2+4);
+  // lemmings
+  lemmings.forEach(L=>{
+    if(!L.alive||L.saved)return;
+    x.save();x.translate(L.x,L.y);
+    // body
+    const col=L.job==='blocker'?'#ef4444':L.job==='bomber'?'#fbbf24':L.job==='digger'?'#a855f7':L.job==='builder'?'#22d3ee':L.job==='climber'?'#22c55e':L.job==='floater'?'#06b6d4':'#eaeaea';
+    x.fillStyle=col;x.fillRect(-3,-8,6,8);
+    // hair
+    x.fillStyle='#22d3ee';x.fillRect(-3,-10,6,2);
+    // legs
+    x.fillStyle='#3a5520';x.fillRect(-2,0,2,2);x.fillRect(0,0,2,2);
+    if(L.job==='floater'&&L.vy>0){
+      x.fillStyle='#fbbf24';x.beginPath();x.arc(0,-12,8,Math.PI,0);x.fill();
+    }
+    if(L.job==='bomber'){
+      const t=Math.floor(L.jobT/30);
+      x.fillStyle='#fff';x.font='bold 10px monospace';x.textAlign='center';
+      x.fillText((4-t),0,-12);
+    }
+    x.restore();
+  });
+  if(paused){x.fillStyle='rgba(0,0,0,.7)';x.fillRect(0,0,W,H);x.fillStyle='#22d3ee';x.font='bold 28px monospace';x.textAlign='center';x.fillText('PAUSED',W/2,H/2)}
+}
+
+cv.onclick=(e)=>{
+  if(paused||gameOver)return;
+  const r=cv.getBoundingClientRect();
+  const px=(e.clientX-r.left)*(W/r.width),py=(e.clientY-r.top)*(H/r.height);
+  if(activeTool==='walk')return;
+  // find nearest lemming
+  let target=null,bd=20;
+  lemmings.forEach(L=>{
+    if(!L.alive||L.saved)return;
+    const d=Math.hypot(L.x-px,L.y-py);
+    if(d<bd){bd=d;target=L}
+  });
+  if(target&&tools[activeTool]>0){
+    target.job=activeTool;target.jobT=0;target.builderSteps=0;
+    tools[activeTool]--;rebuildToolbar();
+  }
+};
+
+function endGame(won){
+  gameOver=true;
+  if(score>best){best=score;localStorage.setItem(BEST_KEY,best);bestEl.textContent=best}
+  ov.classList.remove('hide');
+  ov.querySelector('h2').textContent=won?'COMPLETE!':'GAME OVER';
+  ov.querySelector('button').textContent='REPLAY';
+  const ps=ov.querySelectorAll('p');ps[0].textContent='Score: '+score+' · Saved: '+saved+'/'+need;ps[1].textContent='Best: '+best;
+}
+
+function loop(){update();draw();requestAnimationFrame(loop)}
+
+startBtn.onclick=()=>{ov.classList.add('hide');reset();started=true};
+addEventListener('keydown',e=>{if(e.key==='p'||e.key==='P')paused=!paused;if(e.key==='r'||e.key==='R'){ov.classList.add('hide');reset()}});
+loop();
+})();
+</script>
+</body>
+</html>

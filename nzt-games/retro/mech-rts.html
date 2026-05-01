@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NZT-48 · Mech RTS</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a15;color:#eaeaea;font-family:'Courier New',monospace;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow:hidden}
+header{padding:8px 16px;display:flex;justify-content:space-between;width:100%;max-width:880px;color:#22d3ee;font-size:14px;font-weight:700}
+header a{color:#fbbf24;text-decoration:none;border:1px solid #fbbf24;padding:2px 8px;border-radius:4px}
+.wrap{position:relative;margin:auto 0}
+canvas{display:block;background:#0f1c2c;border:2px solid #1e1e3a;border-radius:6px;cursor:default}
+.hud{position:absolute;top:6px;left:8px;right:8px;display:flex;justify-content:space-between;font-size:12px;color:#22d3ee;font-weight:700;text-shadow:0 0 4px #000;pointer-events:none}
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,5,.85);text-align:center;padding:20px;backdrop-filter:blur(4px)}
+.overlay.hide{display:none}
+.overlay h2{color:#22d3ee;font-size:36px;margin-bottom:14px;letter-spacing:4px}
+.overlay p{margin:4px 0;font-size:13px;line-height:1.5}
+.overlay button{margin-top:18px;padding:10px 24px;background:#22d3ee;color:#000;border:none;border-radius:4px;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:2px}
+.overlay button:hover{background:#fbbf24}
+.controls{margin-top:8px;font-size:11px;color:#6b7280;text-align:center;max-width:840px;line-height:1.5}
+</style>
+</head>
+<body>
+<header><span>◀ NZT-48 · Mech RTS</span><a href="../index.html">Меню</a></header>
+<div class="wrap">
+  <canvas id="cv" width="880" height="500"></canvas>
+  <div class="hud">
+    <span id="hudL">Robots: 0 / 0</span>
+    <span style="color:#fbbf24" id="hudR">Factories: 0 / 0</span>
+  </div>
+  <div class="overlay" id="ov">
+    <h2>MECH RTS</h2>
+    <p>Захватите фабрики противника · фабрика производит роботов своего типа</p>
+    <p>ЛКМ — выделить юнита/группу · ПКМ или клик — отправить</p>
+    <p>Клик на фабрику — направить туда робота для захвата</p>
+    <p>3 типа: Скаут (быстрый, лёгкий) · Стрелок (средний) · Танк (медленный, тяжёлый)</p>
+    <p>Победа: захватить базу противника · Поражение: потерять свою</p>
+    <button id="startBtn">START</button>
+  </div>
+</div>
+<div class="controls">Лучшее: <span id="best">0</span> · 6 фабрик: 1 твоя + 1 врага + 4 нейтральных · Начни с захвата ближайших</div>
+<script>
+(()=>{
+const cv=document.getElementById('cv'),x=cv.getContext('2d'),W=880,H=500;
+const ov=document.getElementById('ov'),startBtn=document.getElementById('startBtn');
+const hudL=document.getElementById('hudL'),hudR=document.getElementById('hudR'),bestEl=document.getElementById('best');
+const BEST_KEY='nzt_mech_best';let best=parseInt(localStorage.getItem(BEST_KEY)||'0');bestEl.textContent=best;
+
+const TYPES={
+  scout:{name:'Scout',hp:25,atk:6,range:35,speed:1.6,build:240,color:'#22d3ee',size:8},
+  gunner:{name:'Gunner',hp:50,atk:12,range:55,speed:1.0,build:360,color:'#fbbf24',size:10},
+  tank:{name:'Tank',hp:120,atk:25,range:50,speed:0.55,build:600,color:'#a855f7',size:13},
+};
+const TYPE_KEYS=Object.keys(TYPES);
+
+let factories,robots,bullets,particles,selected,score,paused,gameOver,started,frame;
+
+const PLAYER=1,ENEMY=-1,NEUTRAL=0;
+const OWNER_COLOR={[PLAYER]:'#22d3ee',[ENEMY]:'#ef4444',[NEUTRAL]:'#6b7280'};
+
+function reset(){
+  score=0;paused=false;gameOver=false;frame=0;
+  factories=[
+    {id:0,x:80,y:H/2,owner:PLAYER,type:'scout',progress:0,hp:300,maxHp:300},
+    {id:1,x:W-80,y:H/2,owner:ENEMY,type:'tank',progress:0,hp:300,maxHp:300},
+    {id:2,x:W/2-180,y:120,owner:NEUTRAL,type:'gunner',progress:0,hp:200,maxHp:200},
+    {id:3,x:W/2+180,y:120,owner:NEUTRAL,type:'tank',progress:0,hp:200,maxHp:200},
+    {id:4,x:W/2-180,y:H-120,owner:NEUTRAL,type:'scout',progress:0,hp:200,maxHp:200},
+    {id:5,x:W/2+180,y:H-120,owner:NEUTRAL,type:'gunner',progress:0,hp:200,maxHp:200},
+  ];
+  robots=[];bullets=[];particles=[];selected=new Set();
+  // initial robot for each side
+  spawnRobot(factories[0]);
+  spawnRobot(factories[1]);
+  // enemy AI memory
+  enemyState={cool:60,target:null};
+}
+
+let enemyState={cool:60,target:null};
+
+function spawnRobot(f){
+  const t=TYPES[f.type];
+  // place near factory
+  const ang=Math.random()*Math.PI*2;
+  robots.push({
+    x:f.x+Math.cos(ang)*30,y:f.y+Math.sin(ang)*30,
+    owner:f.owner,type:f.type,
+    hp:t.hp,maxHp:t.hp,
+    target:null,            // {x,y} move target
+    captureTarget:null,     // factory id to capture
+    attackCool:0,fireRange:t.range
+  });
+}
+
+function update(){
+  if(paused||gameOver)return;
+  frame++;
+  // factory production
+  factories.forEach(f=>{
+    if(f.owner===NEUTRAL)return;
+    f.progress++;
+    const t=TYPES[f.type];
+    if(f.progress>=t.build){
+      f.progress=0;
+      spawnRobot(f);
+    }
+  });
+  // robots
+  robots.forEach(r=>{
+    if(r.attackCool>0)r.attackCool--;
+    const t=TYPES[r.type];
+    // find enemy in range
+    let targetEnemy=null,bd=t.range;
+    robots.forEach(o=>{
+      if(o.owner===r.owner||o.hp<=0)return;
+      const d=Math.hypot(o.x-r.x,o.y-r.y);
+      if(d<bd){bd=d;targetEnemy=o}
+    });
+    if(targetEnemy&&r.attackCool<=0){
+      // shoot
+      bullets.push({x:r.x,y:r.y,tx:targetEnemy.x,ty:targetEnemy.y,owner:r.owner,dmg:t.atk,life:20,target:targetEnemy});
+      r.attackCool=60;
+    }
+    // move
+    if(r.captureTarget!==null){
+      const f=factories[r.captureTarget];
+      const d=Math.hypot(f.x-r.x,f.y-r.y);
+      if(d<35){
+        // capture in progress: damage factory if enemy/neutral
+        if(f.owner!==r.owner){
+          f.hp-=0.4;
+          if(f.hp<=0){
+            // change ownership
+            const wasEnemy=f.owner===ENEMY;
+            f.owner=r.owner;
+            f.hp=f.maxHp;f.progress=0;
+            score+=wasEnemy?500:200;
+            r.captureTarget=null;
+          }
+        }else{
+          r.captureTarget=null;
+        }
+      }else{
+        const dx=f.x-r.x,dy=f.y-r.y,dd=Math.hypot(dx,dy);
+        r.x+=dx/dd*t.speed;r.y+=dy/dd*t.speed;
+      }
+    }else if(r.target){
+      const dx=r.target.x-r.x,dy=r.target.y-r.y,d=Math.hypot(dx,dy);
+      if(d<5){r.target=null}else{r.x+=dx/d*t.speed;r.y+=dy/d*t.speed}
+    }
+  });
+  // bullets
+  bullets=bullets.filter(b=>{
+    b.life--;
+    if(b.life<=0){
+      // hit
+      if(b.target&&b.target.hp>0){
+        b.target.hp-=b.dmg;
+        burst(b.target.x,b.target.y,'#ff6b6b',6);
+        if(b.target.hp<=0)burst(b.target.x,b.target.y,b.owner===PLAYER?'#22d3ee':'#ef4444',16);
+      }
+      return false;
+    }
+    return true;
+  });
+  robots=robots.filter(r=>r.hp>0);
+  particles=particles.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.life--;return p.life>0});
+  // enemy AI
+  enemyState.cool--;
+  if(enemyState.cool<=0){
+    enemyState.cool=120;
+    // pick random enemy robot, send to capture nearest non-enemy factory
+    const enemies=robots.filter(r=>r.owner===ENEMY&&!r.captureTarget);
+    if(enemies.length){
+      const r=enemies[Math.floor(Math.random()*enemies.length)];
+      // find target: prefer player base, otherwise nearest neutral
+      const candidates=factories.filter(f=>f.owner!==ENEMY);
+      if(candidates.length){
+        candidates.sort((a,b)=>{
+          // prefer player base
+          if(a.owner===PLAYER&&b.owner!==PLAYER)return -1;
+          if(b.owner===PLAYER&&a.owner!==PLAYER)return 1;
+          return Math.hypot(a.x-r.x,a.y-r.y)-Math.hypot(b.x-r.x,b.y-r.y);
+        });
+        r.captureTarget=candidates[0].id;
+      }
+    }
+  }
+  // win/loss
+  const playerBase=factories[0],enemyBase=factories[1];
+  if(playerBase.owner!==PLAYER){endGame(false)}
+  else if(enemyBase.owner===PLAYER){endGame(true)}
+  // bonuses for elimination
+  hudL.textContent='Robots: '+robots.filter(r=>r.owner===PLAYER).length+' / '+robots.filter(r=>r.owner===ENEMY).length;
+  hudR.textContent='Factories: '+factories.filter(f=>f.owner===PLAYER).length+' / '+factories.filter(f=>f.owner===ENEMY).length+' · Score '+score;
+}
+
+function burst(x,y,c,n){
+  for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4,life:20+Math.random()*15,c});
+}
+
+function draw(){
+  x.fillStyle='#0f1c2c';x.fillRect(0,0,W,H);
+  // grid
+  x.strokeStyle='rgba(34,211,238,.05)';x.lineWidth=1;
+  for(let i=0;i<W;i+=40){x.beginPath();x.moveTo(i,0);x.lineTo(i,H);x.stroke()}
+  for(let i=0;i<H;i+=40){x.beginPath();x.moveTo(0,i);x.lineTo(W,i);x.stroke()}
+  // factories
+  factories.forEach(f=>{
+    const t=TYPES[f.type];
+    x.save();x.translate(f.x,f.y);
+    // base
+    x.strokeStyle=OWNER_COLOR[f.owner];x.lineWidth=3;
+    x.strokeRect(-30,-30,60,60);
+    x.fillStyle=f.owner===NEUTRAL?'#1c1c40':OWNER_COLOR[f.owner]+'33';
+    x.fillRect(-28,-28,56,56);
+    // factory icon (type)
+    x.fillStyle=t.color;
+    if(f.type==='scout'){x.fillRect(-8,-8,16,16)}
+    else if(f.type==='gunner'){x.beginPath();x.moveTo(0,-12);x.lineTo(12,8);x.lineTo(-12,8);x.closePath();x.fill()}
+    else{x.fillRect(-12,-10,24,20)}
+    // hp bar
+    x.fillStyle='#1a1a2e';x.fillRect(-30,-40,60,5);
+    x.fillStyle=f.owner===NEUTRAL?'#fbbf24':OWNER_COLOR[f.owner];
+    x.fillRect(-30,-40,60*f.hp/f.maxHp,5);
+    // production progress
+    if(f.owner!==NEUTRAL){
+      x.fillStyle='#1a1a2e';x.fillRect(-30,32,60,4);
+      x.fillStyle=t.color;x.fillRect(-30,32,60*f.progress/t.build,4);
+    }
+    x.restore();
+  });
+  // bullets
+  bullets.forEach(b=>{
+    const a=b.life/20;
+    x.strokeStyle=b.owner===PLAYER?'#22d3ee':'#ef4444';
+    x.lineWidth=2;x.globalAlpha=a;
+    x.beginPath();x.moveTo(b.x,b.y);x.lineTo(b.x+(b.tx-b.x)*(1-a),b.y+(b.ty-b.y)*(1-a));x.stroke();
+    x.globalAlpha=1;
+  });
+  // robots
+  robots.forEach(r=>{
+    const t=TYPES[r.type];
+    x.save();x.translate(r.x,r.y);
+    if(selected.has(r))x.strokeStyle='#fbbf24',x.lineWidth=2,x.beginPath(),x.arc(0,0,t.size+4,0,Math.PI*2),x.stroke();
+    x.fillStyle=t.color;
+    if(r.type==='scout'){x.fillRect(-t.size/2,-t.size/2,t.size,t.size)}
+    else if(r.type==='gunner'){x.beginPath();x.arc(0,0,t.size,0,Math.PI*2);x.fill()}
+    else{x.fillRect(-t.size,-t.size*0.7,t.size*2,t.size*1.4)}
+    // owner ring
+    x.strokeStyle=OWNER_COLOR[r.owner];x.lineWidth=2;
+    x.beginPath();x.arc(0,0,t.size+1,0,Math.PI*2);x.stroke();
+    // hp bar
+    if(r.hp<r.maxHp){
+      x.fillStyle='#1a1a2e';x.fillRect(-t.size,-t.size-6,t.size*2,3);
+      x.fillStyle=OWNER_COLOR[r.owner];x.fillRect(-t.size,-t.size-6,t.size*2*r.hp/r.maxHp,3);
+    }
+    x.restore();
+  });
+  particles.forEach(p=>{x.fillStyle=p.c;x.globalAlpha=p.life/35;x.fillRect(p.x,p.y,2,2)});
+  x.globalAlpha=1;
+  if(paused){x.fillStyle='rgba(0,0,0,.7)';x.fillRect(0,0,W,H);x.fillStyle='#22d3ee';x.font='bold 28px monospace';x.textAlign='center';x.fillText('PAUSED',W/2,H/2)}
+}
+
+cv.addEventListener('mousedown',(e)=>{
+  if(paused||gameOver)return;
+  e.preventDefault();
+  const r=cv.getBoundingClientRect();
+  const px=(e.clientX-r.left)*(W/r.width),py=(e.clientY-r.top)*(H/r.height);
+  if(e.button===0){
+    // left click: select / command
+    // first try clicking on factory: if you have a selected robot — send to capture
+    let clickedFactory=null;
+    factories.forEach(f=>{if(Math.abs(f.x-px)<32&&Math.abs(f.y-py)<32)clickedFactory=f});
+    if(clickedFactory&&selected.size>0){
+      selected.forEach(rb=>{rb.captureTarget=clickedFactory.id;rb.target=null});
+      return;
+    }
+    // try selecting a robot
+    let near=null,bd=20;
+    robots.forEach(rb=>{
+      if(rb.owner!==PLAYER)return;
+      const d=Math.hypot(rb.x-px,rb.y-py);
+      if(d<bd){bd=d;near=rb}
+    });
+    selected=new Set();
+    if(near)selected.add(near);
+    else if(selected.size>0){
+      // empty click with selection: move
+      selected.forEach(rb=>{rb.target={x:px,y:py};rb.captureTarget=null});
+    }
+  }
+});
+cv.addEventListener('contextmenu',(e)=>{
+  e.preventDefault();
+  if(paused||gameOver||selected.size===0)return;
+  const r=cv.getBoundingClientRect();
+  const px=(e.clientX-r.left)*(W/r.width),py=(e.clientY-r.top)*(H/r.height);
+  let clickedFactory=null;
+  factories.forEach(f=>{if(Math.abs(f.x-px)<32&&Math.abs(f.y-py)<32)clickedFactory=f});
+  if(clickedFactory){selected.forEach(rb=>{rb.captureTarget=clickedFactory.id;rb.target=null})}
+  else{selected.forEach(rb=>{rb.target={x:px,y:py};rb.captureTarget=null})}
+});
+// drag-select
+let dragStart=null;
+cv.addEventListener('mousedown',(e)=>{
+  if(e.button!==0)return;
+  const r=cv.getBoundingClientRect();
+  dragStart={x:(e.clientX-r.left)*(W/r.width),y:(e.clientY-r.top)*(H/r.height),time:Date.now()};
+});
+cv.addEventListener('mouseup',(e)=>{
+  if(e.button!==0||!dragStart)return;
+  const r=cv.getBoundingClientRect();
+  const px=(e.clientX-r.left)*(W/r.width),py=(e.clientY-r.top)*(H/r.height);
+  if(Math.hypot(px-dragStart.x,py-dragStart.y)>10&&Date.now()-dragStart.time<800){
+    // box select
+    const x1=Math.min(px,dragStart.x),x2=Math.max(px,dragStart.x);
+    const y1=Math.min(py,dragStart.y),y2=Math.max(py,dragStart.y);
+    selected=new Set();
+    robots.forEach(rb=>{if(rb.owner===PLAYER&&rb.x>=x1&&rb.x<=x2&&rb.y>=y1&&rb.y<=y2)selected.add(rb)});
+  }
+  dragStart=null;
+});
+
+function endGame(won){
+  gameOver=true;
+  if(won)score+=1000;
+  if(score>best){best=score;localStorage.setItem(BEST_KEY,best);bestEl.textContent=best}
+  ov.classList.remove('hide');
+  ov.querySelector('h2').textContent=won?'VICTORY':'DEFEAT';
+  ov.querySelector('button').textContent='REPLAY';
+  const ps=ov.querySelectorAll('p');ps[0].textContent='Score: '+score;ps[1].textContent='Best: '+best;
+}
+
+function loop(){update();draw();requestAnimationFrame(loop)}
+
+startBtn.onclick=()=>{ov.classList.add('hide');reset();started=true};
+addEventListener('keydown',e=>{if(e.key==='p'||e.key==='P')paused=!paused;if(e.key==='r'||e.key==='R'){ov.classList.add('hide');reset()}});
+loop();
+})();
+</script>
+</body>
+</html>
