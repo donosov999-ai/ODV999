@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NZT-48 — Полная карта биохакинга v3.1</title>
+<style>
+:root{--bg:#fff;--bg2:#f5f5f0;--bg3:#ebebeb;--text:#1a1a1a;--text2:#666;--text3:#999;--border:#e0e0e0;--info:#378ADD;--danger:#E24B4A;--radius:12px}
+@media(prefers-color-scheme:dark){:root{--bg:#1a1a1a;--bg2:#2a2a2a;--bg3:#333;--text:#e0e0e0;--text2:#aaa;--text3:#777;--border:#444;--info:#85B7EB;--danger:#F09595}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);padding:16px;max-width:900px;margin:0 auto;font-size:13px}
+h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.sub{font-size:11px;color:var(--text3);margin-bottom:14px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:10px}
+.tab{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text2);transition:all .2s;white-space:nowrap}
+.tab:hover{border-color:var(--info);color:var(--info)}
+.tab.active{background:var(--info);color:#fff;border-color:var(--info)}
+.section{display:none}.section.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-bottom:10px}
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px;cursor:pointer;transition:all .15s}
+.card:hover{border-color:var(--info);transform:translateY(-1px)}
+.card.active{border:2px solid var(--info)}
+.cn{font-size:9px;font-weight:600;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+.cname{font-size:13px;font-weight:600;margin-bottom:2px}
+.cdesc{font-size:10px;color:var(--text2);line-height:1.3;margin-bottom:4px}
+.pill{display:inline-block;font-size:9px;padding:1px 5px;border-radius:5px;margin:1px 1px 0 0}
+.det{background:var(--bg2);border-radius:var(--radius);padding:14px;margin:8px 0 14px;display:none;animation:fi .2s}
+.det.show{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.det h3{font-size:14px;font-weight:600;margin-bottom:8px}
+.det table{width:100%;font-size:11px;border-collapse:collapse}
+.det td{padding:4px 6px;border-bottom:1px solid var(--border);vertical-align:top}
+.det td:first-child{font-weight:600;white-space:nowrap;width:20%;color:var(--text)}
+.det td:last-child{color:var(--text2);line-height:1.4}
+.stag{font-size:9px;padding:2px 6px;border-radius:5px;display:inline-block;margin:1px}
+.pct-row{display:flex;align-items:center;gap:5px;margin:2px 0;font-size:10px}
+.pct-bar{height:5px;border-radius:3px;flex-shrink:0}
+.pct-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text2)}
+.pct-val{font-weight:600;min-width:24px;text-align:right;font-size:9px}
+.wg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media(max-width:600px){.wg{grid-template-columns:1fr}}
+.w{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:11px;line-height:1.5}
+.wt{font-weight:600;color:var(--danger);margin-bottom:2px;font-size:11px}
+.lt{width:100%;font-size:11px;border-collapse:collapse}
+.lt th{text-align:left;padding:5px;background:var(--bg2);font-weight:600;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.lt td{padding:4px 6px;border-bottom:1px solid var(--border)}
+.lt .ok{color:#1D9E75;font-weight:600}
+.ft{margin-top:20px;font-size:9px;color:var(--text3);text-align:center;border-top:1px solid var(--border);padding-top:8px}
+.histo-section{margin-top:20px;padding-top:14px;border-top:1px solid var(--border)}
+.histo-title{font-size:13px;font-weight:600;margin-bottom:10px}
+.histo-row{display:flex;align-items:center;gap:6px;margin:3px 0}
+.histo-label{width:120px;font-size:10px;text-align:right;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
+.histo-bar-bg{flex:1;height:14px;background:var(--bg3);border-radius:4px;overflow:hidden;position:relative}
+.histo-bar-fill{height:100%;border-radius:4px;transition:width .6s;display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:9px;font-weight:600;color:#fff;min-width:20px}
+.histo-score{min-width:32px;font-size:10px;font-weight:600;text-align:left;margin-left:4px}
+.summary-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.summary-card h4{font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text)}
+.top-badge{display:inline-block;font-size:9px;padding:2px 6px;border-radius:4px;margin-right:4px;font-weight:600}
+.c1{background:#EEEDFE;color:#3C3489}.c2{background:#E1F5EE;color:#085041}.c3{background:#FAECE7;color:#712B13}
+.c4{background:#E6F1FB;color:#0C447C}.c5{background:#FAEEDA;color:#633806}.c6{background:#FBEAF0;color:#72243E}
+.c7{background:#EAF3DE;color:#27500A}.c8{background:#FCEBEB;color:#791F1F}.c9{background:#F1EFE8;color:#444441}
+.cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:16px}
+.cal-day{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px;min-height:90px;font-size:10px}
+.cal-day.off{background:var(--bg2);opacity:.7}
+.cal-dname{font-weight:600;font-size:11px;text-align:center;margin-bottom:4px;color:var(--text)}
+.cal-item{padding:3px 5px;border-radius:5px;margin-bottom:2px;font-size:9px;line-height:1.2}
+.cal-monthly{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:16px}
+.cal-mcard{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px}
+.cal-mcard h4{font-size:12px;font-weight:600;margin-bottom:6px}
+.cal-mcard .cal-item{margin-bottom:3px}
+.cal-yearly{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px}
+.cal-ycard{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center}
+.cal-ycard .month{font-size:11px;font-weight:600;margin-bottom:4px}
+.cal-ycard .items{font-size:9px;color:var(--text2);line-height:1.5}
+.cal-ycard .active-item{color:var(--text);font-weight:500}
+.cal-legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;font-size:10px;color:var(--text2)}
+.cal-legend span{display:flex;align-items:center;gap:3px}
+.cal-ldot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+@media(prefers-color-scheme:dark){
+.c1{background:#3C3489;color:#CECBF6}.c2{background:#085041;color:#9FE1CB}.c3{background:#712B13;color:#F5C4B3}
+.c4{background:#0C447C;color:#B5D4F4}.c5{background:#633806;color:#FAC775}.c6{background:#72243E;color:#F4C0D1}
+.c7{background:#27500A;color:#C0DD97}.c8{background:#791F1F;color:#F7C1C1}.c9{background:#444441;color:#D3D1C7}
+.histo-bar-fill{color:#fff!important}
+}
+</style>
+</head>
+<body>
+<h1>NZT-48 v3.1 — Полная карта биохакинга</h1>
+<p class="sub">Denis Onosov (ODV999) | 188/100кг, АД ~135 | v3.8 МАР 2026</p>
+<div class="tabs" id="tabs"></div>
+<div id="sections"></div>
+<div class="ft">Автор: Denis Onosov (ODV999) | v3.1 от 28.03.2026 | Конфиденциально</div>
+
+<script>
+const colors={c1:'#7F77DD',c2:'#1D9E75',c3:'#D85A30',c4:'#378ADD',c5:'#BA7517',c6:'#D4537E',c7:'#639922',c8:'#E24B4A',c9:'#888780'};
+
+// Normalize substance names for aggregation
+function normName(n){
+ return n.replace(/\s*назально$/,'').replace(/\s*\d+мг.*$/,'').replace(/\s*GraFLab.*$/,'')
+  .replace(/\s*100:1$/,'').replace(/\s*50%$/,'').replace(/\s*3%$/,'').replace(/\s*20%$/,'')
+  .replace(/\s*10:1$/,'').replace(/\s*6-в-1$/,'').trim();
+}
+
+const D={
+brain:{tab:'\u{1F9E0} Мозг (7)',title:'7 нейросистем мозга NZT (v3.8)',items:[
+{name:'Дофамин',cls:'c1',icon:'\u26A1',desc:'Мотивация, фокус',
+ subs:[{n:'Фенотропил',p:30,d:'100мг\u00D72'},{n:'Семакс назально',p:25,d:'400мкг'},{n:'Тирозин',p:20,d:'500мг'},{n:'Родиола',p:15,d:'200мг'},{n:'Мукуна',p:10,d:'200мг 20%'}],
+ mech:'Синтез/рециклинг дофамина в ПФК и VTA',effect:'Фокус 4\u20136ч, мотивация, скорость решений',
+ rules:'Мукуна ТОЛЬКО обед. Фенотропил до 14:00 с едой. Ротация 2ON/1OFF. Вс=OFF'},
+{name:'Ацетилхолин',cls:'c2',icon:'\u{1F9E0}',desc:'Память, обучение',
+ subs:[{n:'Цитиколин',p:22,d:'250мг'},{n:'Alpha-GPC',p:22,d:'300мг'},{n:'Huperzine-A',p:18,d:'100мкг'},{n:'Фенотропил',p:15,d:'100мг'},{n:'Лецитин',p:13,d:'3г (порошок)'},{n:'Ноопепт',p:10,d:'20мг'}],
+ mech:'Цитиколин+GPC+Лецитин=три источника холина. Huperzine-A=AChE\u2193. Лецитин 3г=из утреннего порошка SUNRISE BASE',effect:'Рабочая память, запоминание, скорость обучения',
+ rules:'Huperzine-A через день! Холин\u22641000мг (GPC\u00D70.40+CDP\u00D70.18). Лецитин подсолнечный (НЕ соевый)'},
+{name:'BDNF / NGF',cls:'c3',icon:'\u{1F331}',desc:'Нейрогенез',
+ subs:[{n:'Дигекса',p:30,d:'10мг ч/д'},{n:'Семакс',p:30,d:'400мкг'},{n:'Львиная грива',p:25,d:'600мг 3%'},{n:'Кардио',p:15,d:'3\u00D7/нед'}],
+ mech:'Тройной нейрогенез: Дигекса=строительство, Семакс=выживание, Львиная грива=рост',effect:'Нейропластичность, восстановление',
+ rules:'Дигекса hsCRP каждые 8 нед. Ежовик=ТОЛЬКО Amazonica 3%'},
+{name:'Кровоток мозга',cls:'c4',icon:'\u{1FA78}',desc:'O\u2082 и нутриенты',
+ subs:[{n:'Гинкго 175мг',p:30,d:'GraFLab 6-в-1'},{n:'Пикногенол',p:25,d:'150мг'},{n:'NMN',p:25,d:'500мг'},{n:'Свёкла',p:20,d:'5г'}],
+ mech:'eNOS\u2192NO\u2192вазодилатация. Гинкго 175мг (v3.8 \u2191с 120)',effect:'Ясность, \u2193brain fog',
+ rules:'5 антикоагулянтов! Коагулограмма обязательна'},
+{name:'Энергия нейронов',cls:'c5',icon:'\u{1F50B}',desc:'Митохондрии, ATP',
+ subs:[{n:'NMN',p:18,d:'500мг'},{n:'CoQ10',p:14,d:'200мг'},{n:'Кордицепс',p:14,d:'1.5г'},{n:'Креатин',p:12,d:'5г'},{n:'MCT C8',p:12,d:'7\u201310мл'},{n:'NR',p:10,d:'300мг'},{n:'PQQ',p:10,d:'20мг'},{n:'R-ALA',p:10,d:'450мг'}],
+ mech:'NAD+\u2191\u2192мито\u2191\u2192ATP\u2191. MCT C8\u2192кетоны для NZT-блока (v3.8)',effect:'Когнитивная выносливость',
+ rules:'R-ALA\u2264600мг тёмные капсулы. NMN=GraFLab. MCT утром 06:30'},
+{name:'Синапт. пластичность',cls:'c6',icon:'\u{1F517}',desc:'Гибкость синапсов',
+ subs:[{n:'Анирацетам',p:25,d:'750мг\u00D72'},{n:'Mg-L-треонат',p:25,d:'2000мг'},{n:'Омега-3 DHA',p:20,d:'~1000мг'},{n:'Маитаке',p:15,d:'600мг'},{n:'Ресвератрол',p:15,d:'300мг'}],
+ mech:'AMPA-модуляция+NMDA(MgLT)+мембранная текучесть(DHA)',effect:'Скорость обучения, креативность, \u00ABозарение\u00BB',
+ rules:'Анирацетам ТОЛЬКО с жирами! MgLT цель 2000мг. Маитаке=5-й антикоагулянт'},
+{name:'Нейропротекция',cls:'c7',icon:'\u{1F6E1}\uFE0F',desc:'Защита нервов (v3.8)',
+ subs:[{n:'Бенфотиамин',p:30,d:'330мг GraFLab'},{n:'Бакопа',p:25,d:'100мг'},{n:'Готу Кола',p:20,d:'75мг'},{n:'Литий оротат',p:15,d:'1мг микродоза'},{n:'Таурин',p:10,d:'250мг'}],
+ mech:'Бенфотиамин=\u2193AGE при HbA1c 5.20%. Бакопа=память +12%. Готу Кола=NGF+дендриты. Литий 1мг=\u2191BDNF+\u2191серое вещество (микродоза, не ЛС)',effect:'\u2193Гликация, \u2191нейрорегенерация, \u2191долгосрочная защита',
+ rules:'Бенфотиамин+Бакопа+Готу Кола = GraFLab комбо 6-в-1. Литий 1мг = таблетку в кружку, НЕ в банку'}
+]},
+
+potency:{tab:'\u{1F525} Либидо/T (5)',title:'5 систем мужского здоровья',items:[
+{name:'NO-система',cls:'c3',icon:'\u{1FA78}',desc:'NO \u2192 эрекция',
+ subs:[{n:'Цитруллин',p:25,d:'6г'},{n:'Пикногенол',p:20,d:'150мг'},{n:'Икариин',p:20,d:'500мг'},{n:'Гинкго 175мг',p:15,d:''},{n:'BPC-157',p:10,d:'курс'},{n:'Свёкла',p:10,d:'5г'}],
+ mech:'eNOS\u2192NO\u2192cGMP\u2192расслабление гладких мышц',effect:'Качество эрекции',
+ rules:'\u274C Пикногенол+Икариин+Цитруллин+Виагра = коллапс!'},
+{name:'Тестостерон',cls:'c5',icon:'\u{1F4AA}',desc:'Синтез T',
+ subs:[{n:'Тонгкат 100:1',p:20,d:'400мг'},{n:'Ашваганда',p:15,d:'600мг'},{n:'Кисспептин-54',p:15,d:'курс'},{n:'Цинк',p:10,d:'30мг'},{n:'Бор',p:10,d:'10мг'},{n:'D3',p:10,d:'5000МЕ'},{n:'Мумиё',p:10,d:'250мг'},{n:'DIM',p:5,d:'100мг'},{n:'Крапива',p:5,d:'60мг 10:1'}],
+ mech:'Тонгкат=T+37%. Ашваганда=кортизол\u221227%\u2192T\u2191. DIM=\u2193ароматаза',effect:'\u2191Свободный T, либидо, мышцы',
+ rules:'Цинк\u226440мг. E2=23.9 (идеал, DIM оставить 100мг)'},
+{name:'Дофамин (либидо)',cls:'c1',icon:'\u26A1',desc:'Желание',
+ subs:[{n:'Мукуна',p:25,d:'200мг 20%'},{n:'PT-141',p:25,d:'курс'},{n:'Тирозин',p:20,d:'500мг'},{n:'Анирацетам',p:15,d:'750мг'},{n:'Родиола',p:15,d:'200мг'}],
+ mech:'Дофамин гипоталамуса. PT-141=MC4R\u2192центральное возбуждение',effect:'Спонтанное желание, яркость оргазма',
+ rules:'\u274C PT-141+Виагра! \u274C PT-141+NO-стек!'},
+{name:'Кровоток',cls:'c4',icon:'\u{1F6E1}\uFE0F',desc:'Микроциркуляция',
+ subs:[{n:'Наттокиназа',p:25,d:'100мг 2000FU'},{n:'Берберин',p:25,d:'500мг'},{n:'Омега-3',p:20,d:'2100мг'},{n:'Гинкго',p:15,d:'175мг'},{n:'Кардио',p:15,d:'3\u00D7/нед'}],
+ mech:'Антикоагулянт+вазодилатация+\u2193вязкость',effect:'Стабильный кровоток малого таза',
+ rules:'Коагулограмма! \u274C Берберин>100мг+пиперин=гипогликемия'},
+{name:'Антиэстроген',cls:'c7',icon:'\u{1F6E1}\uFE0F',desc:'Контроль E2',
+ subs:[{n:'DIM',p:30,d:'100мг'},{n:'Цинк',p:25,d:'30мг'},{n:'Берберин',p:25,d:'500мг'},{n:'\u2193Жир',p:20,d:'BMI 28\u219227'}],
+ mech:'Ароматаза в жире\u2192T\u2192E2. DIM+Цинк=\u2193ароматаза',effect:'\u2193E2, \u2191T/E2',
+ rules:'МК-677 ЗАПРЕЩЁН BMI>27'}
+]},
+
+youth:{tab:'\u{1F331} Молодость (7)',title:'7 направлений антистарения (v3.8)',items:[
+{name:'NAD\u207A',cls:'c5',icon:'\u{1F50B}',desc:'Клеточная энергия',
+ subs:[{n:'NMN',p:60,d:'500мг'},{n:'NR',p:40,d:'300мг'}],
+ mech:'NMN+NR\u2192\u2191NAD+\u2192\u2191SIRT1\u20137+репарация ДНК',effect:'Замедление клеточного старения',rules:'NMN=GraFLab. Сублингвально'},
+{name:'Сиртуины',cls:'c1',icon:'\u{1F52C}',desc:'Гены долголетия',
+ subs:[{n:'Ресвератрол',p:60,d:'300мг 98%'},{n:'Берберин',p:40,d:'500мг'}],
+ mech:'SIRT1\u2191\u2192аутофагия+репарация',effect:'Замедление эпигенетического старения',rules:'Транс-ресвератрол 98%! НЕ молотый виноград'},
+{name:'Теломеры',cls:'c2',icon:'\u{1F9EC}',desc:'Концы хромосом',
+ subs:[{n:'Эпиталон',p:60,d:'2\u00D7/год'},{n:'Астаксантин',p:40,d:'12мг'}],
+ mech:'Эпиталон\u2192\u2191теломераза. Астаксантин\u2192\u2193окисление',effect:'Замедление укорочения теломер',rules:'Астаксантин 6+6=12мг (v7.3)'},
+{name:'Сенолитики',cls:'c3',icon:'\u{1F9F9}',desc:'Уничтожение старых клеток',
+ subs:[{n:'Физетин',p:40,d:'500мг'},{n:'Кверцетин',p:35,d:'500мг'},{n:'Спермидин',p:25,d:'1мг (порошок)'}],
+ mech:'Физетин+Кверцетин=сенолитики (3д/мес). Спермидин=аутофагия без голодания (ежедневно)',effect:'\u2193Воспаление, \u2193биовозраст, \u2191клеточное обновление',rules:'Сенолитики: 3 дня/мес натощак+олив.масло. Спермидин: вскрыть капсулу в шейкер'},
+{name:'Генная перезагрузка',cls:'c4',icon:'\u{1F9EC}',desc:'~4000 генов',
+ subs:[{n:'GHK-Cu',p:100,d:'2\u00D7/год'}],
+ mech:'Переключение генов к паттерну молодости',effect:'\u2191Коллаген, заживление, кожа',rules:'Весна+осень курсами'},
+{name:'Детокс',cls:'c7',icon:'\u{1F9EA}',desc:'Очищение + метилирование',
+ subs:[{n:'NAC',p:25,d:'600мг Сб/Вс'},{n:'TMG (бетаин)',p:20,d:'2.5г (порошок)'},{n:'Золушка',p:20,d:'2\u00D7/год'},{n:'Лаеннек',p:20,d:'2\u00D7/год'},{n:'Силимарин',p:15,d:'300мг'}],
+ mech:'NAC\u2192\u2191глутатион. TMG\u2192метилирование+\u2193гомоцистеин. Силимарин=гепатопротекция',effect:'Чистая печень, \u2193оксидативный стресс, \u2193гомоцистеин',rules:'АЛТ/АСТ каждые 8 нед! TMG\u2260HCl!'},
+{name:'Метаболизм (v3.8)',cls:'c9',icon:'\u{2696}\uFE0F',desc:'Инсулиночувствительность',
+ subs:[{n:'Маитаке',p:30,d:'600мг'},{n:'Берберин',p:30,d:'500мг'},{n:'Хром',p:20,d:'200мкг'},{n:'R-ALA',p:20,d:'450мг'}],
+ mech:'D-фракция\u2192\u2191инсулиночувствительность. AMPK\u2191',effect:'\u2193HOMA-IR, \u2193инсулин (9.53)',rules:'Маитаке=5-й антикоагулянт! CGM Libre 3\u2191приоритет'}
+]},
+
+strength:{tab:'\u{1F4AA} Сила (4)',title:'Сила, суставы, восстановление',items:[
+{name:'Мышцы',cls:'c3',icon:'\u{1F4AA}',desc:'Жим 100\u00D720',
+ subs:[{n:'Силовые',p:20,d:'4\u20136\u00D7/нед'},{n:'Цитруллин',p:20,d:'6г перед залом'},{n:'Креатин',p:18,d:'5г'},{n:'Белок',p:17,d:'2г/кг'},{n:'Бета-аланин',p:10,d:'3.2г (ночн.)'},{n:'HMB',p:8,d:'1.5г'},{n:'L-Карнитин',p:7,d:'1.5г'}],
+ mech:'Цитруллин 6г=NO\u2191\u2192пампинг +35%+\u2193АД. Креатин=\u2191ATP. Бета-аланин=\u2191карнозин. HMB=\u2193катаболизм',effect:'\u2191Сила, пампинг, выносливость, восстановление',rules:'Цитруллин Пн/Ср/Пт 18:30 (Сб перед кардио). Deload 4нед. НЕ бег >95кг'},
+{name:'Суставы',cls:'c2',icon:'\u{1F9B4}',desc:'100кг+самбо',
+ subs:[{n:'MSM',p:20,d:'1500мг'},{n:'Коллаген',p:20,d:'5\u201310г'},{n:'Глюкозамин',p:20,d:'750мг'},{n:'BPC-157',p:20,d:'курс'},{n:'Хондроитин',p:10,d:'600мг'},{n:'TB-500',p:10,d:'курс'}],
+ mech:'Коллаген=материал. BPC-157=ангиогенез+заживление',effect:'\u2193Боль, \u2191подвижность',rules:'Суставной блок ОБЯЗАТЕЛЕН'},
+{name:'Восстановление',cls:'c4',icon:'\u{1F4A4}',desc:'Сон, GH, кортизол',
+ subs:[{n:'БИПАП',p:30,d:'\u2705 КУПЛЕН'},{n:'Ашваганда',p:20,d:'600мг'},{n:'Магний',p:15,d:'MgLT+глицинат'},{n:'Рейши',p:15,d:'1.5г'},{n:'Глицин',p:10,d:'3000мг'},{n:'Мелатонин',p:10,d:'0.3мг!'}],
+ mech:'БИПАП\u2192\u2193гипоксия\u2192GH-пик. Ашваганда=кортизол\u221227%',effect:'\u2191Сон, \u2191восстановление',rules:'БИПАП КУПЛЕН! Маска 01.04. Мелатонин 0.3мг!'},
+{name:'Композиция тела',cls:'c5',icon:'\u{2696}\uFE0F',desc:'BMI 28.3\u219227',
+ subs:[{n:'Кардио',p:25,d:'3\u00D7/нед'},{n:'IF 16:8',p:20,d:''},{n:'Маитаке',p:15,d:'600мг'},{n:'Калий цитрат',p:15,d:'1г (порошок)'},{n:'DIM',p:15,d:'100мг'},{n:'Дефицит ккал',p:10,d:''}],
+ mech:'\u2193Жир\u2192\u2193ароматаза\u2192\u2191T. Калий=Na:K баланс\u2192\u2193АД 3\u20135мм',effect:'BMI<27 разблокирует МК-677. Калий\u2192\u2193АД',rules:'МК-677 ЗАПРЕЩЁН BMI>27. Калий цель 4000\u20134700мг. CJC+Ипа ТОЛЬКО АД<135/85'}
+]},
+
+vision:{tab:'\u{1F441}\uFE0F Зрение (3)',title:'Защита сетчатки',items:[
+{name:'Антиоксиданты',cls:'c5',icon:'\u{1F441}\uFE0F',desc:'Экраны весь день',
+ subs:[{n:'Лютеин',p:25,d:'20мг'},{n:'Астаксантин',p:25,d:'6+6мг'},{n:'Омега-3 DHA',p:20,d:'~1000мг'},{n:'Зеаксантин',p:15,d:'4мг'},{n:'Черника',p:15,d:'100мг'}],
+ mech:'Лютеин+зеаксантин=макулярный пигмент',effect:'\u2193Усталость глаз, \u2191контрастность',rules:'Астаксантин 12мг (6+6 v7.3). С жирами!'},
+{name:'Кровоток глаз',cls:'c4',icon:'\u{1FA78}',desc:'Зрительный нерв',
+ subs:[{n:'Гинкго',p:40,d:'175мг'},{n:'Пикногенол',p:30,d:'150мг'},{n:'NMN',p:30,d:'500мг'}],
+ mech:'\u2191NO\u2192\u2191перфузия сетчатки',effect:'\u2191Питание фоторецепторов',rules:'Двойной эффект: мозг+глаза'},
+{name:'Нейропротекция',cls:'c2',icon:'\u{1F9E0}',desc:'Ганглиозные клетки',
+ subs:[{n:'Цитиколин',p:35,d:'250мг'},{n:'Семакс',p:30,d:'400мкг'},{n:'Бакопа',p:20,d:'100мг'},{n:'Готу Кола',p:15,d:'75мг'}],
+ mech:'Цитиколин=фосфолипиды мембран. Семакс=BDNF',effect:'Защита зрительного нерва',rules:'Синергия с мозговым стеком'}
+]},
+
+mushrooms:{tab:'\u{1F344} Грибы (7)',title:'Грибной стек (v3.8)',items:[
+{name:'Львиная грива',cls:'c7',icon:'\u{1F344}',desc:'NGF\u2191',
+ subs:[{n:'Amazonica 3%',p:100,d:'600мг'}],mech:'Эринацины\u2192\u2191NGF',effect:'Нейрогенез, память',rules:'\u2705 В стеке. НЕ мицелий на зерне!'},
+{name:'Рейши',cls:'c9',icon:'\u{1F344}',desc:'\u2193Кортизол, сон',
+ subs:[{n:'GribFarm',p:100,d:'1.5г ночь'}],mech:'Тритерпены\u2192ГАМК-А',effect:'\u2191Сон, \u2193тревожность',rules:'\u2705 В REPAIR BASE'},
+{name:'Кордицепс',cls:'c5',icon:'\u{1F344}',desc:'VO\u2082max, ATP',
+ subs:[{n:'GribFarm militaris',p:100,d:'1.5г утро'}],mech:'Кордицепин\u2192\u2191ATP',effect:'\u2191Выносливость, энергия',rules:'\u2705 В NZT BOOST. До 14:00'},
+{name:'Маитаке (v3.8)',cls:'c3',icon:'\u{1F344}',desc:'Инсулин, иммунитет',
+ subs:[{n:'Amazonica 50%',p:100,d:'600мг'}],mech:'D-фракция\u2192инсулин',effect:'\u2193Инсулин, иммунитет',rules:'\u{1F6D1} Заказан. 5-й антикоагулянт!'},
+{name:'Чага',cls:'c9',icon:'\u{1F344}',desc:'Для Вали (КТ)',
+ subs:[{n:'Рассмотреть',p:100,d:''}],mech:'ORAC высший',effect:'Антиоксидант',rules:'\u{1F7E1}'},
+{name:'Turkey Tail',cls:'c9',icon:'\u{1F344}',desc:'Для Вали (ЖКТ)',
+ subs:[{n:'Рассмотреть',p:100,d:''}],mech:'PSK+PSP',effect:'Микробиом',rules:'\u{1F7E1}'},
+{name:'Шиитаке',cls:'c9',icon:'\u{1F344}',desc:'Для Дениса (\u2193ЛПНП)',
+ subs:[{n:'Рассмотреть',p:100,d:''}],mech:'Эритаденин',effect:'\u2193ЛПНП 4.03',rules:'\u{1F7E1}'}
+]},
+
+safety:{tab:'\u26A0\uFE0F Безопасность',title:'',custom:true},
+calendar:{tab:'\u{1F4C5} Календарь',title:'',calendar:true},
+summary:{tab:'\u{1F3C6} Сводный рейтинг',title:'',summary:true}
+};
+
+// Build global substance scores
+function buildGlobalScores(){
+const scores={};
+['brain','potency','youth','strength','vision'].forEach(k=>{
+ D[k].items.forEach(sys=>{
+  sys.subs.forEach(s=>{
+   if(!s.n||s.n==='Рассмотреть'||!s.p)return;
+   const key=normName(s.n);
+   if(!scores[key])scores[key]={total:0,sections:{},dose:s.d};
+   scores[key].total+=s.p;
+   if(!scores[key].sections[k])scores[key].sections[k]=0;
+   scores[key].sections[k]+=s.p;
+  });
+ });
+});
+return Object.entries(scores).sort((a,b)=>b[1].total-a[1].total);
+}
+
+const tabs=document.getElementById('tabs'),secs=document.getElementById('sections');
+let aCards={};
+Object.keys(D).forEach(k=>{const t=document.createElement('div');t.className='tab'+(k==='brain'?' active':'');t.textContent=D[k].tab;t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.getElementById('s-'+k).classList.add('active')};t.id='t-'+k;tabs.appendChild(t)});
+
+Object.keys(D).forEach(k=>{const s=document.createElement('div');s.className='section'+(k==='brain'?' active':'');s.id='s-'+k;
+if(D[k].custom)s.innerHTML=bSafety();
+else if(D[k].summary)s.innerHTML=bSummary();
+else if(D[k].calendar)s.innerHTML=bCalendar();
+else s.innerHTML=bCards(k,D[k])+bHistoSection(k,D[k]);
+secs.appendChild(s)});
+
+function bCards(k,d){let h='<div style="font-size:13px;font-weight:600;margin-bottom:8px">'+d.title+'</div><div class="grid">';
+d.items.forEach((s,i)=>{h+='<div class="card" id="c-'+k+'-'+i+'" onclick="tC(\''+k+'\','+i+')"><div class="cn">'+(i+1)+'</div><div class="cname">'+s.icon+' '+s.name+'</div><div class="cdesc">'+s.desc+'</div><div>'+s.subs.slice(0,4).map(x=>'<span class="pill '+s.cls+'">'+(x.n||x)+'</span>').join('')+(s.subs.length>4?'<span class="pill c9">+'+(s.subs.length-4)+'</span>':'')+'</div></div>'});
+return h+'</div><div class="det" id="d-'+k+'"></div>'}
+
+function tC(k,i){const s=D[k].items[i],det=document.getElementById('d-'+k);
+document.querySelectorAll('#s-'+k+' .card').forEach(c=>c.classList.remove('active'));
+if(aCards[k]===i){aCards[k]=null;det.classList.remove('show');return}
+aCards[k]=i;document.getElementById('c-'+k+'-'+i).classList.add('active');
+const col=colors[s.cls]||'#888';
+let pctHtml=s.subs.map(x=>{if(!x.p)return'';return'<div class="pct-row"><div class="pct-bar" style="width:'+x.p+'px;background:'+col+'"></div><span class="pct-name">'+x.n+(x.d?' '+x.d:'')+'</span><span class="pct-val">'+x.p+'%</span></div>'}).join('');
+det.innerHTML='<h3>'+s.icon+' '+s.name+'</h3><table><tr><td>Механизм</td><td>'+s.mech+'</td></tr><tr><td>Эффект</td><td>'+s.effect+'</td></tr><tr><td>Вклад</td><td>'+pctHtml+'</td></tr><tr><td>Правила</td><td>'+s.rules+'</td></tr></table>';
+det.classList.add('show');det.scrollIntoView({behavior:'smooth',block:'nearest'})}
+
+function bHistoSection(k,d){
+// Aggregate same substance across systems using normalized name
+const agg={};
+d.items.forEach(sys=>{sys.subs.forEach(s=>{
+ if(!s.p||!s.n||s.n==='Рассмотреть')return;
+ const key=normName(s.n);
+ if(!agg[key]){agg[key]={total:0,parts:[],dose:s.d,display:key}}
+ agg[key].total+=s.p;
+ agg[key].parts.push({sys:sys.name,p:s.p,cls:sys.cls});
+})});
+const sorted=Object.entries(agg).sort((a,b)=>b[1].total-a[1].total);
+const maxP=sorted[0]?sorted[0][1].total:1;
+const sectionNames={brain:'Мозг',potency:'Либидо/T',youth:'Молодость',strength:'Сила/Тело',vision:'Зрение',mushrooms:'Грибы'};
+let h='<div class="histo-section"><div class="histo-title">\u{1F4CA} Рейтинг добавок: '+(sectionNames[k]||k)+' (суммарный вклад через все системы)</div>';
+sorted.forEach(([name,data],idx)=>{
+ const w=Math.round(data.total/maxP*100);
+ // Build stacked bar segments
+ let segs='';
+ data.parts.forEach(p=>{
+  const sw=Math.round(p.p/maxP*100);
+  const col=colors[p.cls]||'#888';
+  segs+='<div style="width:'+sw+'%;height:100%;background:'+col+';display:inline-block" title="'+p.sys+' '+p.p+'%"></div>';
+ });
+ const sysLabel=data.parts.map(p=>p.sys+' '+p.p+'%').join(' + ');
+ const medal=idx<3?['\u{1F947}','\u{1F948}','\u{1F949}'][idx]+' ':'';
+ h+='<div class="histo-row"><div class="histo-label" style="'+(idx<3?'font-weight:600;color:var(--text)':'')+'" title="'+sysLabel+'">'+medal+name+'</div>';
+ h+='<div class="histo-bar-bg" style="display:flex;overflow:hidden">'+segs+'</div>';
+ h+='<div class="histo-score">'+data.total+(data.parts.length>1?' <span style="font-size:9px;color:var(--text3)">('+data.parts.length+' сист.)</span>':'')+'</div></div>';
+});
+return h+'</div>'}
+
+function bSummary(){
+const global=buildGlobalScores();
+const maxT=global[0][1].total;
+const secNames={brain:'\u{1F9E0}',potency:'\u{1F525}',youth:'\u{1F331}',strength:'\u{1F4AA}',vision:'\u{1F441}\uFE0F'};
+let h='<div style="font-size:13px;font-weight:600;margin-bottom:10px">\u{1F3C6} Топ добавок по суммарному вкладу (все системы)</div>';
+h+='<p style="font-size:10px;color:var(--text3);margin-bottom:12px">Баллы = сумма % вклада во все системы. Чем выше — тем больше систем поддерживает добавка одновременно.</p>';
+
+global.forEach(([name,data],idx)=>{
+ const w=Math.round(data.total/maxT*100);
+ const secIcons=Object.keys(data.sections).map(k=>secNames[k]||'').join(' ');
+ const barCol=idx<3?'#1D9E75':idx<10?'#378ADD':'#888780';
+ h+='<div class="histo-row"><div class="histo-label" style="'+(idx<3?'font-weight:600;color:var(--text)':'')+'">'+
+  (idx<3?'\u{1F947}\u{1F948}\u{1F949}'[idx]+' ':'')+name+'</div>'+
+  '<div class="histo-bar-bg"><div class="histo-bar-fill" style="width:'+w+'%;background:'+barCol+'">'+data.total+'</div></div>'+
+  '<div class="histo-score">'+secIcons+'</div></div>';
+});
+
+// Summary insights
+h+='<div class="summary-card" style="margin-top:16px"><h4>\u{1F4A1} Выводы</h4><div style="font-size:11px;color:var(--text2);line-height:1.7">';
+h+='<b>Мультисистемные лидеры:</b> NMN, Гинкго 175мг, Пикногенол, Семакс, Омега-3 DHA — работают сразу на 3\u20135 систем. Максимальный ROI на капсулу.<br>';
+h+='<b>Узкие специалисты:</b> Эпиталон, GHK-Cu, PT-141, Физетин — мощные в одной системе, но не универсальные.<br>';
+h+='<b>Скрытые герои v3.8:</b> Маитаке (пластичность + метаболизм + антиэстроген), Бенфотиамин (нейропротекция, новая 7-я система), Готу Кола (NGF + коллаген + дендриты).<br>';
+h+='<b>БИПАП = мультипликатор:</b> Усиливает ВСЕ системы через качество сна и \u2193гипоксию. Без него стек работает на ~60%.';
+h+='</div></div>';
+
+return h}
+
+function bCalendar(){
+const clr={stim:'#7F77DD',noot:'#1D9E75',pept:'#D85A30',seno:'#378ADD',detox:'#639922',gh:'#BA7517',regen:'#D4537E',off:'#888780'};
+let h='<div style="font-size:13px;font-weight:600;margin-bottom:6px">Недельный цикл (что принимать по дням)</div>';
+h+='<div class="cal-legend">';
+h+='<span><span class="cal-ldot" style="background:'+clr.stim+'"></span>Стимуляторы</span>';
+h+='<span><span class="cal-ldot" style="background:'+clr.noot+'"></span>Ноотропы</span>';
+h+='<span><span class="cal-ldot" style="background:'+clr.pept+'"></span>Пептиды</span>';
+h+='<span><span class="cal-ldot" style="background:'+clr.detox+'"></span>Детокс</span>';
+h+='<span><span class="cal-ldot" style="background:'+clr.off+'"></span>OFF</span>';
+h+='</div>';
+
+const week=[
+{d:'Пн',items:[
+ {t:'Фенотропил 100\u00D72',c:clr.stim},{t:'Дигекса 10мг',c:clr.noot},{t:'Huperzine-A 100мкг',c:clr.noot},
+ {t:'Ноопепт 20мг (ON-нед: Вт/Чт)',c:clr.noot},{t:'Семакс 400мкг (если курс)',c:clr.pept}]},
+{d:'Вт',items:[
+ {t:'Ноопепт 20мг',c:clr.noot},{t:'Фенотропил OFF',c:clr.off}]},
+{d:'Ср',items:[
+ {t:'Фенотропил 100\u00D72',c:clr.stim},{t:'Дигекса 10мг',c:clr.noot},{t:'Huperzine-A 100мкг',c:clr.noot}]},
+{d:'Чт',items:[
+ {t:'Ноопепт 20мг',c:clr.noot},{t:'Фенотропил OFF',c:clr.off}]},
+{d:'Пт',items:[
+ {t:'Фенотропил 100\u00D72',c:clr.stim},{t:'Дигекса 10мг',c:clr.noot},{t:'Huperzine-A 100мкг',c:clr.noot}]},
+{d:'Сб',items:[
+ {t:'NAC 600мг',c:clr.detox},{t:'L-Глутамин 200мг',c:clr.detox},{t:'Стимуляторы OFF',c:clr.off}]},
+{d:'Вс',items:[
+ {t:'ПОЛНЫЙ OFF',c:clr.off},{t:'NAC 600мг',c:clr.detox},{t:'Пробиотики',c:clr.detox},{t:'Только базовые (NMN, R-ALA)',c:clr.off}]}
+];
+
+h+='<div class="cal-week">';
+week.forEach(day=>{
+ h+='<div class="cal-day'+(day.d==='Вс'?' off':'')+'"><div class="cal-dname">'+day.d+'</div>';
+ day.items.forEach(it=>{h+='<div class="cal-item" style="background:'+it.c+'22;color:'+it.c+';border-left:2px solid '+it.c+'">'+it.t+'</div>'});
+ h+='</div>'});
+h+='</div>';
+
+h+='<div style="font-size:13px;font-weight:600;margin:4px 0 8px">Ротация Фенотропил / Ноопепт</div>';
+h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:16px">';
+h+='<div class="cal-mcard" style="border-left:3px solid '+clr.stim+'"><h4>Нед 1\u20132 (ON)</h4><div style="font-size:10px;color:var(--text2);line-height:1.6">Пн/Ср/Пт: Фенотропил 100\u00D72<br>Вт/Чт: Ноопепт 20мг<br>Сб/Вс: OFF</div></div>';
+h+='<div class="cal-mcard" style="border-left:3px solid '+clr.noot+'"><h4>Нед 3 (OFF Фен)</h4><div style="font-size:10px;color:var(--text2);line-height:1.6">Пн\u2013Пт: Ноопепт 20мг ежедн.<br>Сб/Вс: OFF<br>Фенотропил = 0</div></div>';
+h+='<div class="cal-mcard" style="border-left:3px solid '+clr.stim+'"><h4>Нед 4 (ON)</h4><div style="font-size:10px;color:var(--text2);line-height:1.6">Повтор недели 1<br>Цикл: 2 ON / 1 OFF</div></div>';
+h+='</div>';
+
+h+='<div style="font-size:13px;font-weight:600;margin:4px 0 8px">Ежемесячные курсы</div>';
+h+='<div class="cal-monthly">';
+h+='<div class="cal-mcard" style="border-left:3px solid '+clr.seno+'"><h4>Сенолитики (3 дня/мес)</h4>';
+h+='<div class="cal-item" style="background:'+clr.seno+'22;color:'+clr.seno+'">Физетин 500мг + Кверцетин 500мг</div>';
+h+='<div style="font-size:9px;color:var(--text3);margin-top:4px">Натощак + олив. масло, 3 дня подряд, потом 27 дней перерыв</div></div>';
+
+h+='<div class="cal-mcard" style="border-left:3px solid '+clr.detox+'"><h4>Детокс (каждые выходные)</h4>';
+h+='<div class="cal-item" style="background:'+clr.detox+'22;color:'+clr.detox+'">NAC 600мг + L-Глутамин 200мг</div>';
+h+='<div style="font-size:9px;color:var(--text3);margin-top:4px">Сб и Вс натощак. Глутатион + кишечник</div></div>';
+
+h+='<div class="cal-mcard" style="border-left:3px solid '+clr.detox+'"><h4>Пробиотики (воскресенье)</h4>';
+h+='<div class="cal-item" style="background:'+clr.detox+'22;color:'+clr.detox+'">10\u201350 млрд CFU</div>';
+h+='<div style="font-size:9px;color:var(--text3);margin-top:4px">Вс = OFF стимуляторов, идеальный день для микробиома</div></div>';
+
+h+='<div class="cal-mcard" style="border-left:3px solid '+clr.noot+'"><h4>Анализы (каждые 8 нед)</h4>';
+h+='<div class="cal-item" style="background:'+clr.noot+'22;color:'+clr.noot+'">АЛТ/АСТ + hsCRP</div>';
+h+='<div style="font-size:9px;color:var(--text3);margin-top:4px">Печень (Анирацетам+Фенотропил+Берберин) + Дигекса контроль</div></div>';
+h+='</div>';
+
+h+='<div style="font-size:13px;font-weight:600;margin:4px 0 8px">Пептидные курсы (ON/OFF)</div>';
+h+='<div class="cal-monthly">';
+const pepts=[
+{name:'Семакс',on:'14д',off:'14\u201328д',dose:'400мкг назально',note:'BDNF \u00D73\u20134. Лунный цикл: новолуние ON',c:clr.pept},
+{name:'Селанк',on:'14\u201321д',off:'14\u201328д',dose:'300\u2013500мкг назально',note:'\u2193Тревога, ГАМК. Полнолуние ON',c:clr.pept},
+{name:'Эпиталон',on:'10\u201320д',off:'остаток года',dose:'п/к',note:'\u2191Теломераза. 2\u00D7/год (весна+осень)',c:clr.regen},
+{name:'GHK-Cu',on:'курс',off:'остаток года',dose:'п/к',note:'~4000 генов. 2\u00D7/год (весна+осень)',c:clr.regen},
+{name:'BPC-157',on:'4\u20138 нед',off:'4 нед',dose:'п/к или перорально',note:'Суставы, ЖКТ. Ангиогенез',c:clr.pept},
+{name:'Ипаморелин',on:'8\u201312 нед',off:'4 нед',dose:'200\u2013300мкг п/к ночь',note:'GH\u2191. С CJC-1295',c:clr.gh},
+{name:'CJC-1295 DAC',on:'курс',off:'',dose:'2мг п/к 1\u00D7/нед',note:'\u26A0\uFE0F ТОЛЬКО АД <135/85!',c:clr.gh}
+];
+pepts.forEach(p=>{
+ h+='<div class="cal-mcard" style="border-left:3px solid '+p.c+'"><h4>'+p.name+'</h4>';
+ h+='<div style="font-size:10px;color:var(--text2);line-height:1.6">';
+ h+='<b>ON:</b> '+p.on+' <b>OFF:</b> '+p.off+'<br>';
+ h+='<b>Доза:</b> '+p.dose+'<br>';
+ h+='<span style="font-size:9px;color:var(--text3)">'+p.note+'</span>';
+ h+='</div></div>'});
+h+='</div>';
+
+h+='<div style="font-size:13px;font-weight:600;margin:8px 0 8px">Годовой план (12 месяцев)</div>';
+const months=['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+const yearly={
+ '\u{1F9EC} Эпиталон':[3,4,9,10],'\u{1F9EC} GHK-Cu':[4,5,10,11],
+ '\u{1F9EA} Золушка':[3,9],'\u{1F9EA} Лаеннек':[4,10],
+ '\u{1F9F9} Сенолитики':[0,1,2,3,4,5,6,7,8,9,10,11],
+ '\u{1F50B} Анирацетам ON':[0,1,3,4,6,7,9,10],'\u{1F50B} Анирацетам OFF':[2,5,8,11],
+ '\u{1F6E1}\uFE0F BPC-157':[1,2,7,8],
+ '\u{1F52C} Анализы 12нед':[2,5,8,11]
+};
+h+='<div class="cal-yearly">';
+months.forEach((m,mi)=>{
+ h+='<div class="cal-ycard"><div class="month">'+m+'</div><div class="items">';
+ Object.entries(yearly).forEach(([name,mths])=>{
+  if(mths.includes(mi))h+='<div class="active-item">'+name+'</div>';
+ });
+ h+='</div></div>'});
+h+='</div>';
+
+h+='<div style="margin-top:12px;padding:10px 12px;background:var(--bg2);border-radius:10px;font-size:10px;color:var(--text2);line-height:1.6">';
+h+='<b>Правило:</b> Воскресенье = ПОЛНЫЙ OFF (Фенотропил, кофеин, Тирозин, Родиола, Huperzine-A, Кордицепс, Анирацетам, Ноопепт). ';
+h+='Остаётся: NMN + R-ALA + NAC + пробиотики + базовые витамины. ';
+h+='<b>Лунные циклы (для Юлии):</b> Новолуние \u2192 Семакс 14д ON. Полнолуние \u2192 Селанк 14д ON.';
+h+='</div>';
+
+return h}
+
+function bSafety(){return`
+<div style="font-size:13px;font-weight:600;margin-bottom:8px">\u274C Запрещённые комбинации</div>
+<div class="wg">
+<div class="w"><div class="wt">\u274C Гипотензивный коллапс</div>Пикногенол+Икариин+Цитруллин+Виагра</div>
+<div class="w"><div class="wt">\u274C Гипертонический риск</div>Фенотропил+кофеин >50мг</div>
+<div class="w"><div class="wt">\u274C Серотониновый синдром</div>5-HTP/Триптофан+СИОЗС</div>
+<div class="w"><div class="wt">\u274C Опасно</div>PT-141+Виагра</div>
+<div class="w"><div class="wt">\u274C Побочные</div>PT-141+полный NO-стек</div>
+<div class="w"><div class="wt">\u274C Гипогликемия</div>Берберин>100мг+пиперин</div>
+<div class="w"><div class="wt">\u274C Категорически</div>Стойка в ванне со льдом</div>
+<div class="w"><div class="wt">\u274C Вим Хоф</div>ТОЛЬКО при АД <150/95!</div>
+</div>
+<div style="font-size:13px;font-weight:600;margin:14px 0 8px">\u{1F6D1} Кардинальные запреты</div>
+<div class="wg">
+<div class="w">Кофеин \u226450мг/приём \u2264200мг/день. Эфедрин/синефрин/DMAA=запрет</div>
+<div class="w">Стимуляторы до 14:00. Мукуна=обед. Фенотропил=с едой. Анирацетам=с жирами</div>
+<div class="w">CJC+Ипа ТОЛЬКО АД<135/85. МК-677 ЗАПРЕЩЁН BMI>27</div>
+<div class="w">Мелатонин 0.3мг! Воскресенье=ПОЛНЫЙ OFF</div>
+</div>
+<div style="font-size:13px;font-weight:600;margin:14px 0 8px">\u{1F4CA} Лимиты (14)</div>
+<table class="lt"><tr><th>Параметр</th><th>Лимит</th><th>Сейчас</th><th></th></tr>
+<tr><td>Кофеин</td><td>\u2264200мг</td><td>\u226470</td><td class="ok">\u2713</td></tr>
+<tr><td>Пиперин</td><td>\u226440мг</td><td>~39</td><td class="ok">\u2713</td></tr>
+<tr><td>D3</td><td>\u226410000МЕ</td><td>5000</td><td class="ok">\u2713</td></tr>
+<tr><td>Цинк</td><td>\u226440мг</td><td>~33</td><td class="ok">\u2713</td></tr>
+<tr><td>Вит.C</td><td>\u22642000мг</td><td>~1750</td><td class="ok">\u2713</td></tr>
+<tr><td>MgLT</td><td>2000мг</td><td>2000</td><td class="ok">\u2713</td></tr>
+<tr><td>Селен</td><td>\u2264400мкг</td><td>~250</td><td class="ok">\u2713</td></tr>
+<tr><td>R-ALA</td><td>\u2264600мг</td><td>450</td><td class="ok">\u2713</td></tr>
+<tr><td>Ресвератрол</td><td>\u22641000мг</td><td>300</td><td class="ok">\u2713</td></tr>
+<tr><td>Астаксантин</td><td>\u226424мг</td><td>12</td><td class="ok">\u2713</td></tr>
+<tr><td>Анирацетам</td><td>750\u20131500</td><td>1500</td><td class="ok">\u2713</td></tr>
+<tr><td>Дигекса</td><td>10\u201320 ч/д</td><td>10</td><td class="ok">\u2713</td></tr>
+<tr><td>Холин</td><td>\u22641000мг</td><td>~165</td><td class="ok">\u2713</td></tr>
+<tr><td>Калий</td><td>4000\u20134700</td><td>~3900</td><td class="ok">\u2713</td></tr>
+</table>
+<div style="font-size:13px;font-weight:600;margin:14px 0 8px">\u{1F6A8} Предупреждения</div>
+<div class="wg">
+<div class="w"><div class="wt">5 антикоагулянтов!</div>Наттокиназа+Ресвератрол+Омега-3+Гинкго 175мг+Маитаке \u2192 коагулограмма!</div>
+<div class="w"><div class="wt">Печень (8 нед!)</div>Анирацетам+Фенотропил+Берберин+Пиперин \u2192 АЛТ/АСТ. Силимарин 300мг</div>
+<div class="w"><div class="wt">Дигекса</div>Эксперимент. hsCRP 8 нед. \u00AB10\u2077\u00BB=in vitro!</div>
+<div class="w"><div class="wt">Жиры v3.8</div>Подсолнечное УБРАТЬ. EVOO основа. Кокосовое/авокадо для готовки</div>
+</div>`}
+</script>
+<script src="../assets/inject-overlay.js"></script>
+</body>
+</html>

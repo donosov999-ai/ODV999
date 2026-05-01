@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NZT-48 Skincare · Денис v4.0</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0a0b;--s1:#131316;--s2:#1a1a1f;--s3:#222228;
+--bd:#2a2a32;--bd2:#35353f;
+--t1:#e8e6e3;--t2:#9d9b97;--t3:#6b6966;
+--acc:#c8f56e;--accD:#3a4a1a;
+--red:#ff6b6b;--redB:#2a1515;
+--blue:#6bc5ff;--blueB:#152030;
+--purple:#b694ff;--purpleB:#201a30;
+--amber:#ffb86b;--amberB:#2a2015;
+--pink:#ff94c8;--pinkB:#2a1525;
+--teal:#6bf5c8;--tealB:#152a22;
+--gray:#888;--grayB:#1a1a1a;
+--orange:#ff9b6b;--orangeB:#2a1a15
+}
+body{background:var(--bg);color:var(--t1);font-family:'Outfit',sans-serif;padding:16px;max-width:920px;margin:0 auto;-webkit-font-smoothing:antialiased}
+.mono{font-family:'JetBrains Mono',monospace}
+.hdr{display:flex;align-items:center;gap:10px;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.hdr h1{font-size:20px;font-weight:600;letter-spacing:-.5px}
+.hdr .tg{font-size:10px;background:var(--accD);color:var(--acc);padding:2px 10px;border-radius:20px;font-weight:500}
+.hdr .v{font-size:11px;color:var(--t3);margin-left:auto}
+.stit{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.stit .d{width:5px;height:5px;border-radius:50%;background:var(--acc)}
+.sec{margin-bottom:24px}
+.hint{font-size:12px;color:var(--t3);background:var(--s1);border:1px dashed var(--bd);border-radius:10px;padding:10px 14px;margin-bottom:16px;text-align:center}
+.hint b{color:var(--acc)}
+
+.prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:6px}
+.prod{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:10px;cursor:pointer;transition:all .15s;position:relative;user-select:none}
+.prod:hover{border-color:var(--bd2);background:var(--s2)}
+.prod.active{border-color:var(--acc);box-shadow:0 0 16px rgba(200,245,110,.08)}
+.prod .ico{font-size:20px;margin-bottom:4px}
+.prod .nm{font-size:12px;font-weight:500;line-height:1.3}
+.prod .su{font-size:10px;color:var(--t3);margin-top:2px;line-height:1.3}
+.prod .bg{position:absolute;top:6px;right:6px;font-size:9px;padding:1px 6px;border-radius:8px;font-weight:500}
+.bo{background:#1a2a15;color:#8bf56b}
+.bn{background:var(--blueB);color:var(--blue)}
+
+.eff{margin-top:6px;display:flex;align-items:center;gap:6px}
+.eff-bar{flex:1;height:4px;background:var(--s3);border-radius:2px;overflow:hidden}
+.eff-fill{height:100%;border-radius:2px;transition:width .4s}
+.eff-val{font-size:10px;font-weight:600;min-width:28px;text-align:right}
+.eff-lo .eff-fill{background:#6b8844}
+.eff-md .eff-fill{background:#a5d94a}
+.eff-hi .eff-fill{background:var(--acc)}
+.eff-lo .eff-val{color:#6b8844}
+.eff-md .eff-val{color:#a5d94a}
+.eff-hi .eff-val{color:var(--acc)}
+
+.prod .dl{display:none;font-size:9px;margin-top:6px;padding:4px 0 0;border-top:1px solid var(--bd);color:var(--acc);font-weight:500;letter-spacing:.3px}
+.prod.active .dl{display:block}
+.prod .why{display:none;font-size:9px;color:var(--t2);margin-top:3px;line-height:1.3;font-style:italic}
+.prod.active .why{display:block}
+
+.morning{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:4px;transition:all .25s}
+.morning.lit{border-color:var(--acc);background:#0f1008}
+.morning.dim{opacity:.25}
+.morning .lbl{font-size:10px;color:var(--t3);margin-bottom:6px}
+.mst{display:flex;gap:6px;flex-wrap:wrap}
+.ms{font-size:11px;padding:5px 10px;border-radius:7px;border:1px solid var(--bd);display:flex;align-items:center;gap:5px;transition:all .2s}
+.ms .n{font-size:9px;font-weight:600;color:var(--t3);width:16px;height:16px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid var(--bd2)}
+.ms.hl{border-color:var(--acc)!important;box-shadow:0 0 8px rgba(200,245,110,.15);transform:scale(1.04)}
+.ms.fade{opacity:.2}
+.mc{border-color:#2a4a3a;color:var(--teal)}
+.md{border-color:#4a3a1a;color:var(--amber)}
+.mf{border-color:#3a4a2a;color:var(--acc)}
+
+.sched{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:4px}
+@media(max-width:650px){.sched{grid-template-columns:repeat(4,1fr)}}
+.dc{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:8px;transition:all .25s;min-height:190px}
+.dc.lit{border-color:var(--acc);background:#0f1008;box-shadow:0 0 20px rgba(200,245,110,.04)}
+.dc.dim{opacity:.25}
+.dn{font-size:12px;font-weight:600;text-align:center;margin-bottom:6px}
+.dn .ds{font-size:9px;color:var(--t3);font-weight:400;display:block;margin-top:1px}
+.dn.td{color:var(--acc)}
+.st{font-size:10px;padding:5px 6px;border-radius:6px;margin-bottom:3px;border:1px solid transparent;line-height:1.25;transition:all .2s}
+.st .sn{font-weight:600;opacity:.4;margin-right:2px}
+.st.hl{transform:scale(1.04);box-shadow:0 0 8px rgba(200,245,110,.15);border-color:var(--acc)!important;z-index:1}
+.st.fade{opacity:.2}
+.ar{text-align:center;color:var(--t3);font-size:8px;margin:1px 0;transition:opacity .2s}
+.ar.fade{opacity:.2}
+.cc{background:var(--tealB);color:var(--teal);border-color:#1a3a2a}
+.co{background:var(--amberB);color:var(--amber);border-color:#4a3520}
+.cb{background:var(--purpleB);color:var(--purple);border-color:#352a50}
+.cr{background:var(--orangeB);color:var(--orange);border-color:#4a2a1a}
+.cm{background:var(--pinkB);color:var(--pink);border-color:#4a2030}
+.cp{background:var(--pinkB);color:var(--pink);border-color:#4a2030}
+.c9{background:#202a30;color:var(--blue);border-color:#2a3a4a}
+.c23{background:var(--amberB);color:var(--amber);border-color:#4a3520}
+.cn{background:var(--grayB);color:var(--gray);border-color:#2a2a2a}
+.cpl{background:var(--redB);color:var(--red);border-color:#4a2020}
+
+.rm{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.ri{font-size:10px;padding:4px 8px;border-radius:6px;background:var(--redB);color:var(--red);border:1px solid #4a2020}
+.tb{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-top:8px}
+.tb .tl{font-size:11px;color:var(--t3)}
+.tb .tt{font-size:20px;font-weight:300;letter-spacing:1px;min-width:60px}
+.tb .tt.go{color:var(--acc)}
+.tb .tt.sp{color:var(--red);animation:pls 1s infinite}
+@keyframes pls{0%,100%{opacity:1}50%{opacity:.4}}
+.tbn{padding:5px 16px;border-radius:6px;border:1px solid var(--bd2);background:var(--s2);color:var(--t1);font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s}
+.tbn:hover{background:var(--s3);border-color:var(--acc)}
+.tbn.on{background:var(--accD);border-color:var(--acc);color:var(--acc)}
+
+.total-bar{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:14px 16px;margin-top:12px;display:flex;align-items:center;gap:12px}
+.total-bar .lab{font-size:11px;color:var(--t3);min-width:100px}
+.total-bar .bar{flex:1;height:6px;background:var(--s3);border-radius:3px;overflow:hidden}
+.total-bar .fill{height:100%;background:linear-gradient(90deg,#6b8844,var(--acc));border-radius:3px;width:0;transition:width 1s}
+.total-bar .pct{font-size:16px;font-weight:600;color:var(--acc);min-width:40px;text-align:right}
+
+.ft{text-align:center;padding:16px 0;font-size:10px;color:var(--t3)}
+.note{font-size:10px;color:var(--t3);text-align:center;margin-top:6px;font-style:italic}
+
+.change{background:var(--accD);border:1px solid var(--acc);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--t1)}
+.change b{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="hdr"><h1>NZT-48 Skincare</h1><span class="tg">ДЕНИС</span><span class="v mono">v4.1 · 18.04.2026</span></div>
+
+<div class="change">🎉 <b>Новое 18.04:</b> SPF 50 ART&FACT пришёл · The Act мужской крем 90мл · The Act гель для умывания (вместо CeraVe) · №7 + №9 добавлены · Avene для «пшика»</div>
+
+<div class="hint">Нажми на <b>продукт</b> → подсветятся дни + объяснение эффективности</div>
+
+<div class="sec"><div class="stit"><span class="d"></span>Продукты · антиэйдж эффект (11 позиций)</div><div class="prods" id="pr"></div>
+<div class="note">% = вклад в антистарение кожи по силе доказательной базы (мета-анализы > RCT > in vitro)</div>
+</div>
+
+<div class="sec" id="totalSec">
+<div class="total-bar"><span class="lab">Общая система</span><div class="bar"><div class="fill" id="totalFill"></div></div><span class="pct mono" id="totalPct">0%</span></div>
+<div class="note" id="totalNote"></div>
+</div>
+
+<div class="sec"><div class="stit"><span class="d"></span>Утро — каждый день (3 шага)</div>
+<div class="morning" id="mo"><div class="lbl">06:50 после контрастного душа</div>
+<div class="mst">
+<div class="ms mc" data-p="actgel"><span class="n">1</span>The Act гель</div>
+<div class="ms md" data-p="actmen"><span class="n">2</span>The Act мужской</div>
+<div class="ms mf" data-p="spf"><span class="n">3</span>SPF 50 ART&FACT</div>
+</div></div></div>
+
+<div class="sec"><div class="stit"><span class="d"></span>Вечер — недельный график (4 шага)</div><div class="sched" id="sc"></div>
+<div class="note">№7 масло сначала → растворяет SPF и кожное сало. Без него SPF забьёт поры</div>
+</div>
+
+<div class="sec"><div class="stit"><span class="d" style="background:var(--red)"></span>Запреты</div>
+<div class="rm">
+<span class="ri">✕ BHA + пептиды в один вечер</span>
+<span class="ri">✕ BHA + ретинол в один вечер</span>
+<span class="ri">✕ Ретинол + вит.С вечером</span>
+<span class="ri">✕ Пилинг макс 1р/нед 10мин</span>
+<span class="ri">✕ Ретинол на влажную кожу — ждать 10 мин после умывания</span>
+<span class="ri">✕ SPF спать не ложиться — только днём</span>
+</div></div>
+
+<div class="sec"><div class="stit"><span class="d"></span>Таймер пилинга (Вс)</div>
+<div class="tb"><span class="tl">ART&FACT AHA 10% + BHA 0.1%</span><span class="tt mono" id="tm">10:00</span><button class="tbn" id="tbb" onclick="togT()">старт</button></div></div>
+
+<div class="ft">NZT-48 Skincare Denis v4.0 · Denis Onosov (ODV999) · Конфиденциально</div>
+
+<script>
+const P=[
+{id:'spf',nm:'SPF 50 ART&FACT',su:'150мл · ГЛАВНЫЙ антиэйдж',ico:'🛡️',st:'bo',sT:'✅ 18.04',mo:1,ev:[],lb:'Пн–Вс утро',
+ pct:95,tier:'hi',why:'Без SPF всё остальное бесполезно. Блокирует 97% UVB. Предотвращает 90% фотостарения. Десятки мета-анализов. После ретинола/кислот кожа фоточувствительна 48-72ч — SPF критичен.'},
+{id:'ret',nm:'Retinol 0.5%',su:'The Ordinary 30мл',ico:'💧',st:'bo',sT:'✅ есть',mo:0,ev:[0,2,4],lb:'Пн, Ср, Пт вечер',
+ pct:92,tier:'hi',why:'Золотой стандарт. 40+ лет исследований. ↑Коллаген I/III, ↑клеточный оборот, ↓морщины на 20-30% за 12 нед. Ретиноевая кислота — единственная молекула с доказанным ремоделированием дермы.'},
+{id:'matrixyl',nm:'Matrixyl 15%',su:'Derma Factory 30мл',ico:'🔬',st:'bo',sT:'✅ 16.04',mo:0,ev:[0,4],lb:'Пн, Пт вечер',
+ pct:82,tier:'hi',why:'Matrixyl 3000 15% + Argireline 2% + карнозин. RCT ↓морщин 15-25% за 8 нед. Argireline = ботокс-миметик (↓мимические). 15% — топовая дозировка на рынке.'},
+{id:'pdrn',nm:'PDRN 4%',su:'Derma Factory 30мл',ico:'🧪',st:'bo',sT:'✅ 16.04',mo:0,ev:[2,5],lb:'Ср, Сб вечер',
+ pct:78,tier:'md',why:'Полинуклеотиды (ДНК лосося). Трендовый ингредиент 2024-2026. ↑Регенерация, ↑коллаген. В инъекциях — сильная база. Топикально 4% — хорошая концентрация.'},
+{id:'bha',nm:'Cos De Baha BHA S2',su:'120мл · BHA 2% + ниацинамид',ico:'⚗️',st:'bo',sT:'✅ 13.04',mo:0,ev:[1,3],lb:'Вт, Чт вечер',
+ pct:75,tier:'md',why:'Салициловая 2% = очищение пор до дна (жирорастворимая). ↓Акне, ↓воспаление, выравнивание текстуры. + Ниацинамид 2% = ↓поры, ↑барьер. Основа текстурного ухода.'},
+{id:'cream23',nm:'2Doctors №23',su:'50мл · мультипептидный',ico:'🧬',st:'bo',sT:'✅ 12.04',mo:0,ev:[5,6],lb:'Сб, Вс вечер',
+ pct:76,tier:'md',why:'3 пептида: Synthe\'6 (коллаген VI), Tripeptide-5 (TGF-β миметик), Hexapeptide-8 (ботокс-эффект). + Ферменты Cu/Zn/Fe/Mg. Нового поколения > старый Matrixyl.'},
+{id:'cream9',nm:'2Doctors №9',su:'50мл · GHK-Cu + гиалуронка',ico:'💎',st:'bo',sT:'✅ 13.04',mo:0,ev:[1,3],lb:'Вт, Чт вечер',
+ pct:72,tier:'md',why:'GHK-Cu + Argireline + MSM + гиалуронка. GHK-Cu активирует ~4000 генов ремонта ДНК. В BHA-дни апгрейд The Act ночного — пептиды вместо базового крема.'},
+{id:'peel',nm:'ART&FACT пилинг',su:'30мл · AHA 10% + BHA 0.1%',ico:'⚡',st:'bo',sT:'✅ 16.04',mo:0,ev:[6],lb:'Вс вечер (10мин!)',
+ pct:70,tier:'md',why:'Еженедельный химический пилинг. Гликолевая 10% = основа, BHA 0.1% символически (не заменяет настоящий BHA Вт/Чт). Кумулятивный эффект: текстура, тон, сияние. 1р/нед = безопасный ритм.'},
+{id:'oil7',nm:'2Doctors №7',su:'100мл · масло GHK-Cu',ico:'💧',st:'bo',sT:'✅ 13.04',mo:0,ev:[0,1,2,3,4,5],lb:'Пн–Сб вечер',
+ pct:55,tier:'lo',why:'Гидрофильное масло + GHK-Cu. Двойное очищение: снимает SPF 50 (иначе поры забьёт) + сало после тренировки. Без №7 SPF не смывается пенкой. Вс не нужен — пилинг-день.'},
+{id:'actgel',nm:'The Act гель',su:'150мл · очищение',ico:'🧴',st:'bo',sT:'✅ 18.04',mo:1,ev:[0,1,2,3,4,5,6],lb:'Пн–Вс утро + вечер',
+ pct:55,tier:'lo',why:'Очищающий гель, сужает поры, матирует. Замена CeraVe. Без церамидов → барьер хуже восстанавливается после ретинола/BHA. Если появится сухость/раздражение — смотреть в сторону CeraVe или La Roche Toleriane.'},
+{id:'actmen',nm:'The Act мужской',su:'90мл · увлажнение + отёки',ico:'☀️',st:'bo',sT:'✅ 18.04',mo:1,ev:[],lb:'Пн–Вс только утро',
+ pct:50,tier:'lo',why:'Базовое увлажнение + снятие отёков (мужская формула). Удерживает воду в эпидермисе. Создаёт плёнку под SPF. Заменяет The Act дневной из набора (более подходящая формула для тебя).'},
+{id:'actnight',nm:'The Act ночной',su:'65мл · восстановление',ico:'🌙',st:'bo',sT:'✅ есть',mo:0,ev:[],lb:'Резерв (№9 в приоритете)',
+ pct:45,tier:'lo',why:'Резерв на случай раздражения от №9. Окклюзия + увлажнение. Базовая формула — ниже приоритет чем №9 с GHK-Cu. Вт/Чт теперь №9.'}
+];
+
+const D=[
+{nm:'Пн',ds:'рет+сыв',s:[{p:'oil7',t:'№7 масло',c:'co'},{p:'actgel',t:'The Act гель',c:'cc'},{p:'matrixyl',t:'Matrixyl 15%',c:'cm'},{p:'ret',t:'Ретинол 0.5%',c:'cr'}]},
+{nm:'Вт',ds:'BHA',s:[{p:'oil7',t:'№7 масло',c:'co'},{p:'actgel',t:'The Act гель',c:'cc'},{p:'bha',t:'BHA 2%',c:'cb'},{p:'cream9',t:'№9 крем',c:'c9'}]},
+{nm:'Ср',ds:'рет+сыв',s:[{p:'oil7',t:'№7 масло',c:'co'},{p:'actgel',t:'The Act гель',c:'cc'},{p:'pdrn',t:'PDRN 4%',c:'cp'},{p:'ret',t:'Ретинол 0.5%',c:'cr'}]},
+{nm:'Чт',ds:'BHA',s:[{p:'oil7',t:'№7 масло',c:'co'},{p:'actgel',t:'The Act гель',c:'cc'},{p:'bha',t:'BHA 2%',c:'cb'},{p:'cream9',t:'№9 крем',c:'c9'}]},
+{nm:'Пт',ds:'рет+сыв',s:[{p:'oil7',t:'№7 масло',c:'co'},{p:'actgel',t:'The Act гель',c:'cc'},{p:'matrixyl',t:'Matrixyl 15%',c:'cm'},{p:'ret',t:'Ретинол 0.5%',c:'cr'}]},
+{nm:'Сб',ds:'пептиды',s:[{p:'oil7',t:'№7 масло',c:'co'},{p:'actgel',t:'The Act гель',c:'cc'},{p:'pdrn',t:'PDRN 4%',c:'cp'},{p:'cream23',t:'Крем №23',c:'c23'}]},
+{nm:'Вс',ds:'пилинг',s:[{p:'actgel',t:'The Act гель',c:'cc'},{p:'peel',t:'Пилинг→смыть',c:'cpl'},{p:'cream23',t:'Крем №23',c:'c23'}]}
+];
+
+const tM=[6,0,1,2,3,4,5],tI=tM[new Date().getDay()];
+let aP=null;
+
+const pE=document.getElementById('pr');
+P.sort((a,b)=>b.pct-a.pct);
+P.forEach(p=>{
+ const d=document.createElement('div');d.className='prod';d.dataset.p=p.id;
+ d.innerHTML=`<div class="ico">${p.ico}</div><div class="nm">${p.nm}</div><div class="su">${p.su}</div><span class="bg ${p.st}">${p.sT}</span><div class="eff eff-${p.tier}"><div class="eff-bar"><div class="eff-fill" style="width:${p.pct}%"></div></div><span class="eff-val mono">${p.pct}%</span></div><div class="dl">${p.lb}</div><div class="why">${p.why}</div>`;
+ d.onclick=()=>tog(p.id);pE.appendChild(d);
+});
+
+const totalPct=Math.round(P.reduce((s,p)=>s+p.pct,0)/P.length);
+document.getElementById('totalFill').style.width=totalPct+'%';
+document.getElementById('totalPct').textContent=totalPct+'%';
+document.getElementById('totalNote').textContent='✅ Все продукты на месте. SPF 50 пришёл 18.04 — система замкнулась';
+
+const sE=document.getElementById('sc');
+D.forEach((d,i)=>{const c=document.createElement('div');c.className='dc';c.dataset.i=i;let h=`<div class="dn${i===tI?' td':''}">${d.nm}${i===tI?' ●':''}<span class="ds">${d.ds}</span></div>`;d.s.forEach((s,j)=>{h+=`<div class="st ${s.c}" data-p="${s.p}"><span class="sn">${j+1}.</span>${s.t}</div>`;if(j<d.s.length-1)h+=`<div class="ar">↓</div>`});c.innerHTML=h;sE.appendChild(c)});
+
+function tog(id){if(aP===id){aP=null;clr();return}aP=id;hl(id)}
+function clr(){document.querySelectorAll('.prod').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.dc').forEach(e=>e.classList.remove('lit','dim'));document.querySelectorAll('.st').forEach(e=>e.classList.remove('hl','fade'));document.querySelectorAll('.ar').forEach(e=>e.classList.remove('fade'));document.querySelectorAll('.ms').forEach(e=>e.classList.remove('hl','fade'));document.getElementById('mo').classList.remove('lit','dim')}
+function hl(id){clr();const p=P.find(x=>x.id===id);if(!p)return;document.querySelector(`.prod[data-p="${id}"]`).classList.add('active');const m=document.getElementById('mo');if(p.mo){m.classList.add('lit');document.querySelectorAll('.ms').forEach(s=>{s.dataset.p===id?s.classList.add('hl'):s.classList.add('fade')})}else{m.classList.add('dim');document.querySelectorAll('.ms').forEach(s=>s.classList.add('fade'))}document.querySelectorAll('.dc').forEach(c=>{const i=parseInt(c.dataset.i);if(p.ev.includes(i)){c.classList.add('lit');c.querySelectorAll('.st').forEach(s=>{s.dataset.p===id?s.classList.add('hl'):s.classList.add('fade')});c.querySelectorAll('.ar').forEach(a=>a.classList.add('fade'))}else c.classList.add('dim')})}
+
+let ti=null,tl=600,tr=false;
+function togT(){const b=document.getElementById('tbb'),d=document.getElementById('tm');if(!tr){tr=true;b.textContent='стоп';b.classList.add('on');d.classList.add('go');d.classList.remove('sp');ti=setInterval(()=>{tl--;if(tl<=0){clearInterval(ti);tr=false;b.textContent='сброс';b.classList.remove('on');d.classList.remove('go');d.classList.add('sp');d.textContent='СМЫТЬ!';return}d.textContent=`${String(Math.floor(tl/60)).padStart(2,'0')}:${String(tl%60).padStart(2,'0')}`},1000)}else{clearInterval(ti);tr=false;tl=600;b.textContent='старт';b.classList.remove('on');d.classList.remove('go','sp');d.textContent='10:00'}}
+</script>
+<script src="../assets/inject-overlay.js"></script>
+</body>
+</html>

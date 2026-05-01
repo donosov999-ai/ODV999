@@ -1,0 +1,213 @@
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+.wrap{font-family:var(--font-sans);padding:0.5rem 0}
+.hero{display:flex;align-items:center;gap:12px;margin-bottom:1.25rem}
+.hero-score{font-size:36px;font-weight:500;color:var(--color-text-primary)}
+.hero-lbl{font-size:13px;color:var(--color-text-secondary);line-height:1.4}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem}
+.stat{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;text-align:center}
+.stat .v{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.stat .l{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+@media(max-width:500px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+.card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;cursor:pointer;transition:border-color .15s;position:relative;overflow:hidden}
+.card:hover{border-color:var(--color-border-secondary)}
+.card.active{border-width:2px}
+.card-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.card-icon{font-size:16px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-name{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.card-tag{font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);font-weight:500}
+.card-desc{font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;line-height:1.4}
+.pills{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.pill{font-size:11px;padding:2px 7px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-secondary);white-space:nowrap}
+.pill.hi{background:var(--color-background-info);color:var(--color-text-info)}
+.pill.warn{background:var(--color-background-warning);color:var(--color-text-warning)}
+.pill.ok{background:var(--color-background-success);color:var(--color-text-success)}
+.detail{display:none;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary);font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+.card.active .detail{display:block}
+.detail b{color:var(--color-text-primary);font-weight:500}
+.detail .warn-box{background:var(--color-background-warning);color:var(--color-text-warning);padding:6px 10px;border-radius:var(--border-radius-md);margin-top:6px;font-size:11px}
+.synergy{margin-top:4px}
+.synergy-title{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px}
+.syn-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;color:var(--color-text-secondary)}
+.syn-row:last-child{border:none}
+.syn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.full-w{grid-column:1/-1}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;font-size:11px;color:var(--color-text-secondary)}
+.legend span{display:flex;align-items:center;gap:4px}
+.leg-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+</style>
+<div class="wrap">
+<div class="hero">
+<div class="hero-score">98%</div>
+<div class="hero-lbl">NZT-цель: мозг/когниция<br>7 нейросистем, 30+ веществ, 4 уровня архитектуры</div>
+</div>
+<div class="stats">
+<div class="stat"><div class="v">7</div><div class="l">Нейросистем</div></div>
+<div class="stat"><div class="v">30+</div><div class="l">Веществ</div></div>
+<div class="stat"><div class="v">4</div><div class="l">Уровня</div></div>
+<div class="stat"><div class="v">v3.8</div><div class="l">Версия стека</div></div>
+</div>
+<div class="legend">
+<span><span class="leg-dot" style="background:#7F77DD"></span> Драйвер</span>
+<span><span class="leg-dot" style="background:#1D9E75"></span> Топливо</span>
+<span><span class="leg-dot" style="background:#D85A30"></span> Строительство</span>
+<span><span class="leg-dot" style="background:#378ADD"></span> Снабжение</span>
+<span><span class="leg-dot" style="background:#BA7517"></span> Энергия</span>
+<span><span class="leg-dot" style="background:#D4537E"></span> Сигнал</span>
+<span><span class="leg-dot" style="background:#639922"></span> Защита</span>
+</div>
+<div class="grid" id="cards"></div>
+<div class="synergy" id="synergy"></div>
+</div>
+<script>
+const S=[
+{id:'dopamine',name:'Дофамин',icon:'DA',tag:'Драйвер',tagC:'#7F77DD',iconBg:'#EEEDFE',iconC:'#3C3489',
+desc:'Мотивация, скорость решений, фокус 4-6ч',
+subs:[
+{n:'Фенотропил',d:'100мг\u00D72',p:'hi',note:'Пн/Ср/Пт, строго до 14:00, С ЕДОЙ'},
+{n:'Семакс',d:'400мкг назально',p:'hi',note:'14д ON / 14-28д OFF'},
+{n:'Тирозин',d:'500мг',p:'',note:'Натощак 06:35, прекурсор'},
+{n:'Родиола 3%',d:'200мг',p:'',note:'MAO-B\u2193 \u2192 дофамин живёт дольше'},
+{n:'Мукуна 20%',d:'200мг (40мг L-DOPA)',p:'warn',note:'ТОЛЬКО обед 13:00, весы!'}
+],
+mech:'Синтез (тирозин\u2192L-DOPA\u2192DA) + рециклинг (MAO-B\u2193) + модуляция (D1/D2) в ПФК и VTA',
+warns:['Мукуна: ТОЛЬКО 13:00 с едой, precision scale','Фенотропил: 2 нед ON / 1 нед OFF, \u2264 14:00','Вс = полный OFF от всех стимуляторов'],
+cross:['ацетилхолин','bdnf']},
+
+{id:'acetylcholine',name:'Ацетилхолин',icon:'ACh',tag:'Топливо',tagC:'#1D9E75',iconBg:'#E1F5EE',iconC:'#085041',
+desc:'Рабочая память, запоминание, скорость обучения',
+subs:[
+{n:'Цитиколин (CDP)',d:'250мг',p:'hi',note:'Холин \u2192 АЦХ + мембраны'},
+{n:'Alpha-GPC 50%',d:'300мг',p:'hi',note:'Быстрый АЦХ. Холин=300\u00D70.40=120мг'},
+{n:'Huperzine-A',d:'100мкг',p:'warn',note:'ТОЛЬКО Пн/Ср/Пт! T\u00BD 10-14ч'},
+{n:'Фенотропил',d:'100мг',p:'',note:'Также \u2191АЦХ'},
+{n:'Ноопепт',d:'20мг',p:'',note:'OFF-нед Фен: ежедн. ON-нед: Вт/Чт'}
+],
+mech:'Три источника холина (CDP+GPC+Лецитин) + AChE\u2193 (Huperzine). Формула: GPC\u00D70.40 + CDP\u00D70.18 = ~165мг чистого холина (\u22641000мг лимит)',
+warns:['Huperzine-A: СТРОГО через день (накапливается!)','Холин все источники \u22641000мг/день','Лецитин подсолнечный, НЕ соевый'],
+cross:['dopamine','plasticity']},
+
+{id:'bdnf',name:'BDNF / NGF',icon:'GF',tag:'Строительство',tagC:'#D85A30',iconBg:'#FAECE7',iconC:'#712B13',
+desc:'Тройной нейрогенез: строительство + выживание + рост',
+subs:[
+{n:'Дигекса',d:'10мг Пн/Ср/Пт',p:'warn',note:'HGF/c-Met \u2192 НОВЫЕ синапсы. Экспериментальный!'},
+{n:'Семакс',d:'400мкг назально',p:'hi',note:'BDNF \u00D73-4 \u2192 выживание нейронов'},
+{n:'Львиная грива',d:'600мг 3% эринацинов',p:'hi',note:'NGF\u2191 \u2192 рост аксонов. Amazonica!'},
+{n:'Кардио',d:'3\u00D7/нед',p:'ok',note:'BDNF пик через 30-60мин'}
+],
+mech:'Дигекса=строительство (HGF/c-Met), Семакс=выживание (BDNF \u00D73-4), Львиная грива=рост (NGF). Уникальная тройная комбинация',
+warns:['Дигекса: hsCRP каждые 8 нед!','\"10\u2077 раз мощнее BDNF\" = in vitro, НЕ прямое сравнение','Ежовик: ТОЛЬКО Amazonica 3%, не молотый мицелий на зерне'],
+cross:['dopamine','blood','neuroprotection']},
+
+{id:'blood',name:'Кровоток мозга',icon:'O\u2082',tag:'Снабжение',tagC:'#378ADD',iconBg:'#E6F1FB',iconC:'#0C447C',
+desc:'Микроциркуляция \u2192 доставка O\u2082 и нутриентов',
+subs:[
+{n:'Гинкго',d:'175мг GraFLab 6-в-1',p:'hi',note:'+Бакопа 100 +Готу Кола 75 +Теанин 100 +CoQ10 50 +B12 1200мкг'},
+{n:'Пикногенол',d:'150мг',p:'hi',note:'eNOS\u2191 \u2192 NO\u2191 \u2192 вазодилатация'},
+{n:'NMN',d:'500мг',p:'',note:'eNOS через SIRT1'},
+{n:'Свёкла',d:'5г порошок',p:'ok',note:'NO пик через 2-3ч = NZT-блок 08:30'}
+],
+mech:'eNOS \u2192 NO \u2192 вазодилатация \u2192 \u2191кровоток. Гинкго 175мг (v3.8: \u2191с 120). GraFLab комбо = 6 веществ в 1 капсуле',
+warns:['\u26A0\uFE0F 5 антикоагулянтов в стеке: Наттокиназа + Ресвератрол + Омега-3 + Гинкго + Маитаке','Коагулограмма ОБЯЗАТЕЛЬНА до начала Маитаке'],
+cross:['energy','bdnf','plasticity']},
+
+{id:'energy',name:'Энергия нейронов',icon:'ATP',tag:'Топливо',tagC:'#BA7517',iconBg:'#FAEEDA',iconC:'#633806',
+desc:'Митохондрии мозга + АТФ = когнитивная выносливость',
+subs:[
+{n:'NMN',d:'500мг сублингв.',p:'hi',note:'NAD\u207A\u2191 40-60%, под язык 06:35'},
+{n:'CoQ10',d:'200мг',p:'',note:'Электронная цепь мито'},
+{n:'Кордицепс',d:'1.5г',p:'',note:'GribFarm militaris, VO\u2082max\u2191'},
+{n:'Креатин',d:'5г',p:'hi',note:'АТФ мозга +20%'},
+{n:'MCT C8',d:'7-10мл',p:'ok',note:'v3.8: кетоны (BHB 0.3-0.5) для NZT-блока'},
+{n:'NR',d:'300мг',p:'',note:'NAD\u207A альтернативный путь'},
+{n:'PQQ',d:'20мг',p:'',note:'Биогенез новых митохондрий'},
+{n:'R-ALA',d:'450мг',p:'warn',note:'\u2264600мг! Тёмные капсулы (светочувствительный)'}
+],
+mech:'NAD\u207A\u2191 \u2192 мито\u2191 \u2192 ATP\u2191. MCT C8 \u2192 кетоны для NZT-блока. Креатин = фосфокреатиновый буфер ATP в нейронах',
+warns:['R-ALA: \u2264600мг/день, тёмные капсулы обязательны','MCT C8: утром 06:30, начинать с 5мл','NMN: GraFLab 500мг, сублингвально 1-2 мин'],
+cross:['blood','plasticity']},
+
+{id:'plasticity',name:'Синапт. пластичность',icon:'SYN',tag:'Сигнал',tagC:'#D4537E',iconBg:'#FBEAF0',iconC:'#72243E',
+desc:'AMPA-модуляция, гибкость синапсов, креативность',
+subs:[
+{n:'Анирацетам',d:'750мг\u00D72',p:'hi',note:'AMPA\u2191 + серотонин\u2191. ТОЛЬКО С ЖИРАМИ!'},
+{n:'Mg-L-треонат',d:'2000мг',p:'hi',note:'Единственный Mg через ГЭБ. 500+500+1000'},
+{n:'Омега-3 DHA',d:'~1000мг',p:'',note:'Мембранная текучесть'},
+{n:'Маитаке',d:'600мг 50% полисах.',p:'warn',note:'AMPA-связь НЕ верифицирована (Amazonica, не PubMed)'},
+{n:'Ресвератрол',d:'300мг',p:'',note:'SIRT1 \u2192 LTP\u2191'}
+],
+mech:'AMPA-модуляция (Анирацетам) + NMDA через MgLT + мембранная текучесть (DHA). Скорость обучения, \"озарение\"',
+warns:['Анирацетам: ТОЛЬКО с жирами (жирорастворимый!)','АЛТ/АСТ каждые 8 нед (печень)','Маитаке = 5-й антикоагулянт, коагулограмма!','Маитаке/AMPA: источник Amazonica, не PubMed'],
+cross:['acetylcholine','energy','neuroprotection']},
+
+{id:'neuroprotection',name:'Нейропротекция',icon:'DEF',tag:'Защита v3.8',tagC:'#639922',iconBg:'#EAF3DE',iconC:'#27500A',
+desc:'\u2193Гликация нервов, \u2191нейрорегенерация, долгосрочная защита',
+subs:[
+{n:'Бенфотиамин',d:'330мг GraFLab',p:'hi',note:'\u2193AGE при HbA1c 5.20% + 100кг'},
+{n:'Бакопа',d:'100мг',p:'hi',note:'Память +12% за 12 нед'},
+{n:'Готу Кола',d:'75мг',p:'',note:'NGF\u2191 + рост дендритов'},
+{n:'Литий оротат',d:'1мг микродоза',p:'',note:'BDNF\u2191 + серое вещество (не ЛС!)'},
+{n:'Таурин',d:'250мг',p:'',note:'ГАМК-модуляция, осморегуляция'}
+],
+mech:'Бенфотиамин = \u2193AGE (гликация) при HbA1c 5.20%. Бакопа = антиоксидант + память. Бенфотиамин+Бакопа+Готу Кола = GraFLab комбо 6-в-1',
+warns:['Литий оротат 1мг = микродоза, не литий карбонат (ЛС)','Бенфотиамин: GraFLab комбо (+ALA 400мг, Теанин 100мг, CoQ10 50мг, B12 1200мкг)'],
+cross:['bdnf','plasticity','blood']}
+];
+
+const CROSS_NAMES={dopamine:'Дофамин',acetylcholine:'Ацетилхолин',bdnf:'BDNF/NGF',blood:'Кровоток',energy:'Энергия',plasticity:'Пластичность',neuroprotection:'Нейропротекция'};
+const CROSS_COLORS={dopamine:'#7F77DD',acetylcholine:'#1D9E75',bdnf:'#D85A30',blood:'#378ADD',energy:'#BA7517',plasticity:'#D4537E',neuroprotection:'#639922'};
+
+const SYNERGIES=[
+{from:'Фенотропил',sys:['Дофамин','Ацетилхолин'],note:'Двойной агент: \u2191DA + \u2191ACh одновременно'},
+{from:'Семакс',sys:['Дофамин','BDNF/NGF'],note:'Мотивация (DA) + нейрогенез (BDNF \u00D73-4)'},
+{from:'NMN',sys:['Кровоток','Энергия'],note:'eNOS (кровоток) + NAD\u207A (митохондрии)'},
+{from:'GraFLab 6-в-1',sys:['Кровоток','Нейропротекция'],note:'Гинкго 175 + Бакопа 100 + Готу Кола 75 = 2 системы в 1 капсуле'},
+{from:'Анирацетам',sys:['Пластичность','Ацетилхолин'],note:'AMPA\u2191 + АЦХ\u2191 в коре'},
+{from:'Кардио',sys:['BDNF/NGF','Кровоток','Энергия'],note:'BDNF пик + VO\u2082max + мито-биогенез'},
+{from:'Львиная грива',sys:['BDNF/NGF','Нейропротекция'],note:'NGF \u2192 рост + защита аксонов'}
+];
+
+let active=null;
+const cEl=document.getElementById('cards');
+const sEl=document.getElementById('synergy');
+
+S.forEach((s,i)=>{
+const c=document.createElement('div');
+c.className='card'+(i===6?' full-w':'');
+c.style.borderLeftColor=s.tagC;
+c.innerHTML=`
+<div class="card-top">
+  <div class="card-icon" style="background:${s.iconBg};color:${s.iconC};font-size:11px;font-weight:500">${s.icon}</div>
+  <div class="card-name">${s.name}</div>
+  <div class="card-tag" style="background:${s.iconBg};color:${s.iconC}">${s.tag}</div>
+</div>
+<div class="card-desc">${s.desc}</div>
+<div class="pills">${s.subs.map(x=>`<span class="pill ${x.p}">${x.n} ${x.d}</span>`).join('')}</div>
+<div class="detail">
+  <div><b>Механизм:</b> ${s.mech}</div>
+  <div style="margin-top:8px"><b>Вещества:</b></div>
+  ${s.subs.map(x=>`<div style="padding:3px 0">\u2022 <b>${x.n}</b> ${x.d} \u2014 ${x.note}</div>`).join('')}
+  ${s.warns.map(w=>`<div class="warn-box">\u26A0\uFE0F ${w}</div>`).join('')}
+  <div style="margin-top:8px"><b>Связи:</b> ${s.cross.map(c=>`<span style="color:${CROSS_COLORS[c]}">${CROSS_NAMES[c]}</span>`).join(', ')}</div>
+  <div style="margin-top:8px"><button onclick="sendPrompt('Расскажи подробнее про систему ${s.name} в NZT-стеке')" style="font-size:12px;cursor:pointer">\u2197 Подробнее про ${s.name}</button></div>
+</div>`;
+c.addEventListener('click',e=>{
+  if(e.target.tagName==='BUTTON') return;
+  if(active===c){c.classList.remove('active');active=null;return;}
+  if(active) active.classList.remove('active');
+  c.classList.add('active');c.style.borderColor=s.tagC;active=c;
+});
+cEl.appendChild(c);
+});
+
+let sh=`<div class="synergy-title">Кросс-системные синергии (вещества, работающие на 2+ системы)</div>`;
+SYNERGIES.forEach(s=>{
+sh+=`<div class="syn-row">
+  <span style="font-weight:500;color:var(--color-text-primary);min-width:110px">${s.from}</span>
+  <span style="flex:1">${s.sys.join(' + ')} \u2014 ${s.note}</span>
+</div>`;
+});
+sEl.innerHTML=sh;
+</script>

@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NZT-48 — Полная карта системы v4.0</title>
+<style>
+:root{
+  --bg:#0d0d0d;--bg2:#161616;--bg3:#1e1e1e;--bg4:#262626;
+  --text:#e8e8e8;--text2:#999;--text3:#666;
+  --border:#333;--border2:#444;
+  --accent:#00e5a0;--accent2:#00b87a;--accentBg:rgba(0,229,160,.08);
+  --red:#e24b4a;--redBg:rgba(226,75,74,.1);
+  --yellow:#f0c040;--yellowBg:rgba(240,192,64,.1);
+  --blue:#378add;--blueBg:rgba(55,138,221,.1);
+  --purple:#a78bfa;--purpleBg:rgba(167,139,250,.1);
+  --orange:#f97316;--orangeBg:rgba(249,115,22,.1);
+  --pink:#ec4899;--pinkBg:rgba(236,72,153,.1);
+  --cyan:#22d3ee;--cyanBg:rgba(34,211,238,.08);
+  --gold:#fbbf24;
+  --radius:10px;--radiusSm:6px;
+  --font:'Segoe UI',system-ui,-apple-system,sans-serif;
+  --mono:'SF Mono','Cascadia Code','Consolas',monospace;
+}
+@media(prefers-color-scheme:light){
+  :root{
+    --bg:#f8f8f6;--bg2:#fff;--bg3:#f0f0ec;--bg4:#e8e8e4;
+    --text:#1a1a1a;--text2:#666;--text3:#999;
+    --border:#ddd;--border2:#ccc;
+    --accent:#059669;--accent2:#047857;--accentBg:rgba(5,150,105,.06);
+    --redBg:rgba(226,75,74,.06);--yellowBg:rgba(240,192,64,.06);
+    --blueBg:rgba(55,138,221,.06);--purpleBg:rgba(167,139,250,.06);
+    --orangeBg:rgba(249,115,22,.06);--pinkBg:rgba(236,72,153,.06);
+    --cyanBg:rgba(34,211,238,.06);
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+.header{padding:20px 16px 0;text-align:center}
+.header h1{font-size:clamp(20px,4vw,28px);font-weight:800;letter-spacing:-.5px;margin-bottom:2px}
+.header h1 span{color:var(--accent)}
+.header .sub{color:var(--text2);font-size:12px}
+.tabs-wrap{position:sticky;top:0;z-index:100;background:var(--bg);padding:8px 0 0;border-bottom:1px solid var(--border)}
+.tabs{display:flex;overflow-x:auto;gap:2px;padding:0 12px 8px;scrollbar-width:none;-ms-overflow-style:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:7px 14px;border-radius:var(--radiusSm);font-size:12px;font-weight:600;cursor:pointer;background:transparent;border:none;color:var(--text2);transition:.15s;white-space:nowrap}
+.tab:hover{background:var(--bg3);color:var(--text)}
+.tab.active{background:var(--accent);color:#000}
+.content{padding:12px;max-width:1200px;margin:0 auto}
+.panel{display:none;animation:fadeIn .25s}
+.panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-bottom:16px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:.2s}
+.card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.card-icon{font-size:20px;flex-shrink:0}
+.card-title{font-weight:700;font-size:14px;flex:1}
+.card-badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600}
+.badge-ok{background:var(--accentBg);color:var(--accent)}
+.badge-red{background:var(--redBg);color:var(--red)}
+.badge-yellow{background:var(--yellowBg);color:var(--yellow)}
+.badge-blue{background:var(--blueBg);color:var(--blue)}
+.badge-purple{background:var(--purpleBg);color:var(--purple)}
+.badge-pink{background:var(--pinkBg);color:var(--pink)}
+.badge-orange{background:var(--orangeBg);color:var(--orange)}
+.card-desc{font-size:12px;color:var(--text2);margin-bottom:8px}
+.pills{display:flex;flex-wrap:wrap;gap:4px}
+.pill{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--bg3);color:var(--text2);border:1px solid var(--border);white-space:nowrap}
+.pill.accent{background:var(--accentBg);color:var(--accent);border-color:rgba(0,229,160,.2)}
+.pill.red{background:var(--redBg);color:var(--red);border-color:rgba(226,75,74,.2)}
+.pill.yellow{background:var(--yellowBg);color:var(--yellow);border-color:rgba(240,192,64,.2)}
+.pill.blue{background:var(--blueBg);color:var(--blue);border-color:rgba(55,138,221,.2)}
+.details{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--text2);line-height:1.6}
+.card.open .details{display:block}
+.card.open{border-color:var(--accent)}
+table.data{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
+table.data th{text-align:left;padding:6px 8px;background:var(--bg3);color:var(--text2);font-weight:600;border:1px solid var(--border);white-space:nowrap}
+table.data td{padding:6px 8px;border:1px solid var(--border);vertical-align:top}
+.histo-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:16px}
+.histo-title{font-weight:700;font-size:14px;margin-bottom:10px}
+.histo-bar{display:flex;align-items:center;margin-bottom:6px;gap:8px}
+.histo-label{width:120px;font-size:11px;font-weight:600;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.histo-track{flex:1;height:20px;background:var(--bg3);border-radius:4px;overflow:hidden;position:relative}
+.histo-fill{height:100%;border-radius:4px;transition:width .6s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:10px;font-weight:700;color:#000;min-width:24px}
+.histo-medal{width:20px;font-size:13px;text-align:center;flex-shrink:0}
+.histo-effect{font-size:10px;color:var(--text2);width:140px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.section-title{font-size:16px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-title span{color:var(--accent)}
+.stat-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.stat-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;flex:1;min-width:120px}
+.stat-box .val{font-size:20px;font-weight:800}
+.stat-box .lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.stat-box.red .val{color:var(--red)}
+.stat-box.yellow .val{color:var(--yellow)}
+.stat-box.green .val{color:var(--accent)}
+.timeline{position:relative;padding-left:20px;margin:12px 0}
+.timeline::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:2px;background:var(--border)}
+.tl-item{position:relative;margin-bottom:12px;padding-left:16px}
+.tl-item::before{content:'';position:absolute;left:-18px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
+.tl-item.red::before{background:var(--red)}
+.tl-item.yellow::before{background:var(--yellow)}
+.tl-time{font-size:11px;font-weight:700;color:var(--accent)}
+.tl-text{font-size:12px;color:var(--text2)}
+.schedule-grid{display:grid;grid-template-columns:60px repeat(7,1fr);gap:2px;font-size:10px;margin:10px 0}
+.schedule-grid .sh{font-weight:700;padding:4px;text-align:center;background:var(--bg3);border-radius:var(--radiusSm)}
+.schedule-grid .sc{padding:4px;text-align:center;background:var(--bg2);border-radius:var(--radiusSm);border:1px solid var(--border)}
+.schedule-grid .sc.on{background:var(--accentBg);border-color:rgba(0,229,160,.3);color:var(--accent);font-weight:600}
+.schedule-grid .sc.off{background:var(--redBg);border-color:rgba(226,75,74,.2);color:var(--red)}
+.family-card{display:flex;gap:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer;transition:.2s}
+.family-card:hover{border-color:var(--accent)}
+.family-card .av{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.family-card .info{flex:1}
+.family-card .name{font-weight:700;font-size:14px}
+.family-card .meta{font-size:11px;color:var(--text2)}
+.action-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
+.action-card .pri{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.action-card .pri.p1{background:var(--redBg);color:var(--red)}
+.action-card .pri.p2{background:var(--yellowBg);color:var(--yellow)}
+.action-card .pri.p3{background:var(--blueBg);color:var(--blue)}
+.action-card .act-text{flex:1}
+.action-card .act-title{font-weight:700;font-size:13px}
+.action-card .act-desc{font-size:11px;color:var(--text2)}
+.footer{text-align:center;padding:24px;font-size:10px;color:var(--text3)}
+@media(max-width:600px){
+  .grid{grid-template-columns:1fr}
+  .histo-label{width:80px;font-size:10px}
+  .histo-effect{display:none}
+  .stat-row{gap:6px}
+  .stat-box{min-width:90px;padding:8px}
+  .stat-box .val{font-size:16px}
+}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>💊 <span>NZT-48</span> — Полная карта</h1>
+<div class="sub">Денис Оносов | v4.1 | 28.03.2026 | 21 файл · 783К данных · 15 вкладок</div>
+</div>
+
+<div class="tabs-wrap">
+<div class="tabs" id="tabs"></div>
+</div>
+
+<div class="content" id="content"></div>
+
+<div class="footer">⚠️ Конфиденциально | Автор: Denis Onosov (ODV999) | NZT-48 Project</div>
+
+<script>
+const TABS=[
+{id:'brain',icon:'🧠',label:'Мозг NZT'},
+{id:'body',icon:'💪',label:'Тело'},
+{id:'age',icon:'🧬',label:'Молодость'},
+{id:'potency',icon:'🍆',label:'Потенция'},
+{id:'mushrooms',icon:'🍄',label:'Грибы'},
+{id:'cyborg',icon:'⚡',label:'Киборг'},
+{id:'labs',icon:'🔬',label:'Анализы'},
+{id:'family',icon:'👨‍👩‍👦',label:'Семья'},
+{id:'breath',icon:'🌬️',label:'Дыхание'},
+{id:'cognition',icon:'🧠',label:'Когниция'},
+{id:'exercises',icon:'🏋️',label:'Упражнения'},
+{id:'safety',icon:'⚠️',label:'Безопасность'},
+{id:'schedule',icon:'📅',label:'Расписание'},
+{id:'rating',icon:'📊',label:'Рейтинг'},
+{id:'plan',icon:'🗺️',label:'План'}
+];
+
+function pill(t,c=''){return`<span class="pill ${c}">${t}</span>`}
+function badge(t,c){return`<span class="card-badge badge-${c}">${t}</span>`}
+
+function histo(title,items){
+  let h=`<div class="histo-section"><div class="histo-title">${title}</div>`;
+  items.sort((a,b)=>b.s-a.s);
+  items.forEach((it,i)=>{
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    const w=Math.max(it.s,5);
+    h+=`<div class="histo-bar">
+      <div class="histo-medal">${medal}</div>
+      <div class="histo-label">${it.n}</div>
+      <div class="histo-track"><div class="histo-fill" style="width:${w}%;background:${it.c||'var(--accent)'}">${it.s}</div></div>
+      <div class="histo-effect">${it.t||''}</div>
+    </div>`;
+  });
+  return h+'</div>';
+}
+
+function card(icon,title,bdg,desc,pills,details){
+  return`<div class="card" onclick="this.classList.toggle('open')">
+    <div class="card-head"><span class="card-icon">${icon}</span><span class="card-title">${title}</span>${bdg}</div>
+    <div class="card-desc">${desc}</div>
+    <div class="pills">${pills}</div>
+    <div class="details">${details}</div>
+  </div>`;
+}
+
+const panels={};
+
+// ===== 🧠 МОЗГ =====
+panels.brain=()=>{
+  let h=`<div class="section-title">🧠 <span>7 нейросистем NZT-стека</span></div>`;
+  h+=`<div class="stat-row">
+    <div class="stat-box green"><div class="val">98%</div><div class="lbl">Закрытие цели</div></div>
+    <div class="stat-box"><div class="val">4</div><div class="lbl">Уровня архитектуры</div></div>
+    <div class="stat-box"><div class="val">18</div><div class="lbl">Веществ в стеке</div></div>
+    <div class="stat-box"><div class="val">7</div><div class="lbl">Нейросистем</div></div>
+  </div>`;
+  h+='<div class="grid">';
+  h+=card('⚡','ДОФАМИН',badge('ДРАЙВЕР','orange'),'Мотивация, скорость, фокус',
+    pill('Фенотропил 100мг×2','accent')+pill('Тирозин 500мг')+pill('Родиола 200мг')+pill('Семакс 400мкг','blue')+pill('Мукуна 200мг'),
+    'Фенотропил: 2 нед ON / 1 нед OFF, строго до 14:00. Мукуна: ТОЛЬКО обед 13:00. Родиола: MAO-B↓ → дофамин живёт дольше. Тирозин натощак 06:35.');
+  h+=card('🔋','АЦЕТИЛХОЛИН',badge('ТОПЛИВО','blue'),'Бензин для мозга — память, фокус',
+    pill('Цитиколин 250мг','accent')+pill('Alpha-GPC 300мг')+pill('Huperzine-A 100мкг','yellow')+pill('Фенотропил'),
+    'Холин всего ~165мг (GPC×0.40 + CDP×0.18). Huperzine-A ТОЛЬКО Пн/Ср/Пт (T½ 10–14ч!). Формула: Alpha-GPC мг × 0.40 + CDP-Choline мг × 0.18.');
+  h+=card('🌱','BDNF / NGF',badge('СТРОИТЕЛЬСТВО','purple'),'Нейрогенез — новые нейроны и синапсы',
+    pill('Семакс 400мкг','accent')+pill('Львиная грива 600мг','accent')+pill('Дигекса 10мг','red')+pill('Кардио'),
+    'Тройной нейрогенез: Дигекса (HGF/c-Met → новые синапсы) + Семакс (BDNF ×3–4 → выживание) + Львиная грива (NGF → рост аксонов). Дигекса — экспериментальный, hsCRP каждые 8 нед.');
+  h+=card('🩸','КРОВОТОК МОЗГА',badge('СНАБЖЕНИЕ','blue'),'Микроциркуляция → доставка кислорода',
+    pill('Гинкго 175мг','accent')+pill('Пикногенол 150мг')+pill('Свёкла 5г')+pill('NMN 500мг'),
+    'Гинкго GraFLab комбо 6-в-1 (175мг гинкго + бакопа 100мг + готу кола 75мг + теанин 100мг + CoQ10 50мг + B12 1200мкг). Свёкла → NO пик через 2–3ч = NZT-блок 08:30.');
+  h+=card('⛽','ЭНЕРГИЯ НЕЙРОНОВ',badge('ТОПЛИВО','orange'),'Митохондрии мозга + АТФ',
+    pill('NMN 500мг','accent')+pill('NR 300мг')+pill('CoQ10 200мг')+pill('PQQ 20мг')+pill('R-ALA 450мг')+pill('Кордицепс 1.5г')+pill('Креатин 5г')+pill('MCT C8 7–10мл','yellow'),
+    'NMN сублингвально 06:35. MCT C8 → кетоны (BHB 0.3–0.5) → топливо для NZT-блока. Креатин 5г — АТФ мозга +20%. Кордицепс: GribFarm militaris.');
+  h+=card('🔗','СИНАПТИЧЕСКАЯ ПЛАСТИЧНОСТЬ',badge('СИГНАЛ','purple'),'AMPA-модуляция, гибкость синапсов',
+    pill('MgLT 2000мг','accent')+pill('Омега-3 DHA')+pill('Ресвератрол 300мг')+pill('Анирацетам 1500мг','yellow')+pill('Маитаке 600мг','blue'),
+    'Анирацетам: AMPA↑ + серотонин↑. ТОЛЬКО с жирами! 750мг×2 (завтрак+обед). MgLT — единственный магний через ГЭБ. Маитаке: AMPA-связь не верифицирована (источник: Amazonica, не PubMed).');
+  h+=card('🛡️','НЕЙРОПРОТЕКЦИЯ',badge('v3.8','accent'),'Защита от гликации и оксидативного стресса',
+    pill('Бенфотиамин 330мг','accent')+pill('Бакопа 100мг')+pill('Готу Кола 75мг'),
+    'Бенфотиамин: ↓гликация нервов при HbA1c 5.20% + 100кг. GraFLab комбо (+ALA 400мг, Теанин 100мг, CoQ10 50мг, B12 1200мкг). Бакопа: память +12% за 12 нед.');
+  h+='</div>';
+  h+=histo('⚡ Рейтинг NZT-компонентов',[
+    {n:'Анирацетам',s:95,c:'var(--purple)',t:'AMPA↑, серотонин↑, 1500мг'},
+    {n:'Семакс',s:93,c:'var(--blue)',t:'BDNF ×3–4, 400мкг назально'},
+    {n:'Фенотропил',s:92,c:'var(--orange)',t:'Дофамин↑, фокус'},
+    {n:'NMN',s:90,c:'var(--accent)',t:'NAD⁺↑ 40–60%'},
+    {n:'Львиная грива',s:88,c:'var(--accent)',t:'NGF↑, нейрогенез'},
+    {n:'Дигекса',s:87,c:'var(--red)',t:'HGF/c-Met, эксперим.'},
+    {n:'MgLT',s:85,c:'var(--cyan)',t:'Единственный Mg через ГЭБ'},
+    {n:'Гинкго 175мг',s:83,c:'var(--blue)',t:'Микроциркуляция мозга'},
+    {n:'Цитиколин',s:80,c:'var(--blue)',t:'Холин → АЦХ'},
+    {n:'MCT C8',s:78,c:'var(--yellow)',t:'Кетоны для мозга'},
+    {n:'CoQ10',s:76,c:'var(--orange)',t:'Энергия мито + ↓АД'},
+    {n:'Бенфотиамин',s:74,c:'var(--accent)',t:'↓Гликация нервов'},
+  ]);
+  return h;
+};
+
+// ===== 💪 ТЕЛО =====
+panels.body=()=>{
+  let h=`<div class="section-title">💪 <span>Тело — сила, питание, метрики</span></div>`;
+  h+=`<div class="stat-row">
+    <div class="stat-box"><div class="val">100кг</div><div class="lbl">Вес</div></div>
+    <div class="stat-box yellow"><div class="val">28.3</div><div class="lbl">BMI</div></div>
+    <div class="stat-box"><div class="val">100×20</div><div class="lbl">Жим лёжа</div></div>
+    <div class="stat-box"><div class="val">2650</div><div class="lbl">ккал/день</div></div>
+  </div>`;
+  h+='<div class="grid">';
+  h+=card('🏋️','Тренировки',badge('6 дней','accent'),'Push/Pull/Full + Кардио зона 2',
+    pill('Пн: Push+Квадр')+pill('Вт: Кардио+Гибкость')+pill('Ср: Pull+Задняя')+pill('Чт: Кардио+Гибкость')+pill('Пт: Full Body')+pill('Сб: Длинное кардио')+pill('Вс: Мобильность','red'),
+    '<b>Предтреник TITAN (27г):</b> Цитруллин 6г + Бета-аланин 3.2г + Бетаин 2.5г + Таурин 2г + Калий 1г + Коллаген 10г + Вит.С 500мг. БЕЗ КОФЕИНА!<br><b>Deload:</b> каждые 4 нед (50% весов). НЕ бег при >95 кг!');
+  h+=card('🥩','Питание',badge('−400 ккал','yellow'),'200г белка / 100г жиров / 225г углеводов',
+    pill('Белок 200г')+pill('Вода ≥3л')+pill('Рыба 5р/нед','accent')+pill('Яйца 2шт')+pill('Говядина 2р/нед','yellow'),
+    '<b>5 продуктов КАЖДЫЙ ДЕНЬ:</b> Яйца 2шт, жирная рыба 200г, свёкла, чёрный чеснок, шоколад ≥85%.<br><b>v7.3:</b> яйца ↓с 3 до 2 (ЛПНП 4.03), говядина макс 2р/нед (ферритин 230), чай к обеду (↓Fe 60%).');
+  h+=card('🧪','Порошки',badge('4 банки','blue'),'SUNRISE BASE + NZT BOOST + REPAIR BASE + NZT NIGHT',
+    pill('Утро: 14г+22.5г')+pill('Ночь: 18г+7.4г')+pill('MCT C8 7–10мл','accent'),
+    '<b>SUNRISE BASE (14г):</b> Какао 5г + Креатин 3г + Инулин 3г + Лецитин 2г + Карнитин 1г<br><b>NZT BOOST (22.5г):</b> +Какао 5г + Креатин 2г + Свёкла 5г + MSM 1.5г + HMB 1.5г + Кордицепс 1.5г + Калий 1г + Тирозин 500мг<br><b>REPAIR BASE (18г):</b> Глицин + Рейши + Таурин + MgLT + Псиллиум<br><b>NZT NIGHT (7.4г):</b> Ашваганда + Триптофан + Апигенин + Теанин');
+  h+=card('🦴','Суставы',badge('ОБЯЗАТЕЛЬНО','red'),'100кг + силовые = нагрузка на суставы',
+    pill('Глюкозамин 750мг')+pill('Хондроитин 600мг')+pill('MSM 1500мг')+pill('Коллаген 10г')+pill('BPC-157 курс','blue'),
+    'Суставной блок обязателен ВСЕГДА при весе 100кг и силовых тренировках. BPC-157 500мкг перорально обед, 30д ON / 30д OFF. Коллаген в предтренике TITAN.');
+  h+=card('⚖️','Метаболизм',badge('v3.8','accent'),'Инсулинорезистентность + управление весом',
+    pill('Маитаке 600мг','blue')+pill('Берберин 500мг')+pill('Хром 200мкг')+pill('R-ALA 450мг')+pill('HOMA-IR 2.1','yellow'),
+    'Инсулин 9.53 (цель <8), HOMA-IR ~2.1 (цель <1.5). Берберин заменяет DHB (недоступен). Маитаке: D-фракция → ↑инсулиночувствительность. CGM Libre 3 — ↑приоритет покупки.');
+  h+='</div>';
+  h+=histo('💪 Рейтинг компонентов тела',[
+    {n:'Креатин 5г',s:95,c:'var(--accent)',t:'АТФ + мышцы + мозг'},
+    {n:'Омега-3 2000мг',s:93,c:'var(--blue)',t:'DHA мозг + EPA ↓воспаление'},
+    {n:'Берберин 500мг',s:88,c:'var(--yellow)',t:'AMPK↑, ↓ЛПНП, ↓глюкоза'},
+    {n:'Коллаген 10г',s:85,c:'var(--cyan)',t:'Суставы + кожа'},
+    {n:'Кордицепс 1.5г',s:83,c:'var(--orange)',t:'VO₂max↑, АТФ↑'},
+    {n:'Ашваганда 600мг',s:82,c:'var(--purple)',t:'T +17%, кортизол −27%'},
+    {n:'HMB 1.5г',s:75,c:'var(--accent)',t:'Антикатаболик'},
+    {n:'Свёкла 5г',s:78,c:'var(--red)',t:'NO↑ → ↓АД + кровоток'},
+  ]);
+  return h;
+};
+
+// ===== 🧬 МОЛОДОСТЬ =====
+panels.age=()=>{
+  let h=`<div class="section-title">🧬 <span>Антистарение — 7 направлений</span></div>`;
+  h+=`<div class="stat-row">
+    <div class="stat-box green"><div class="val">94%</div><div class="lbl">Закрытие цели</div></div>
+    <div class="stat-box"><div class="val">43→35</div><div class="lbl">Био vs Паспорт</div></div>
+    <div class="stat-box"><div class="val">3 покол.</div><div class="lbl">Генетика</div></div>
+    <div class="stat-box"><div class="val">7</div><div class="lbl">Направлений</div></div>
+  </div>`;
+  h+='<div class="grid">';
+  h+=card('🔋','NAD⁺',badge('ЯДРО','accent'),'Топливо клеточного ремонта',
+    pill('NMN 500мг','accent')+pill('NR 300мг')+pill('NAD⁺ в/в 2×/год','purple'),
+    'NMN сублингвально утром. NR в обед (синергия). NAD⁺ в/в: 2×/год ×4 сеанса (120–200К₽/год). В неделю в/в убрать пероральные NMN+NR.');
+  h+=card('🧬','Сиртуины',badge('SIRT1','blue'),'Гены долгожительства',
+    pill('Ресвератрол 300мг','accent')+pill('Берберин 500мг')+pill('Апигенин 100мг'),
+    'Ресвератрол транс-98%. Апигенин: CD38↓ → NAD⁺↑ + ГАМК-А (сон). Берберин: AMPK↑.');
+  h+=card('🧵','Теломеры',badge('ДЛИНА','purple'),'Защита концов хромосом',
+    pill('Эпиталон 2×/год','accent')+pill('Астаксантин 12мг')+pill('D3 5000МЕ'),
+    'Эпиталон: 10мг п/к ×10 дней, 2 курса/год (АПР+ОКТ). Стимуляция теломеразы. Астаксантин: 6мг утро + 6мг Vision вечер = 12мг.');
+  h+=card('💀','Сенолитики',badge('ОЧИСТКА','red'),'Удаление зомби-клеток',
+    pill('Физетин 500мг','accent')+pill('Кверцетин 500мг'),
+    '3 дня подряд, 1р/мес, натощак + оливковое масло. Уничтожают сенесцентные клетки. Кверцетин также в ежедневном стеке 250мг.');
+  h+=card('🧬','Генная перезагрузка',badge('GHK-Cu','blue'),'Реактивация генов молодости',
+    pill('GHK-Cu 2×/год','accent')+pill('300–400мкг п/к'),
+    '20 дней, 2 курса/год (МАЙ+ОКТ). Реактивирует >4000 генов. +Синтез коллагена, ↓воспаление.');
+  h+=card('🫧','Детокс',badge('ОЧИЩЕНИЕ','yellow'),'Глутатион + печень',
+    pill('Золушка 2×/год','accent')+pill('Лаеннек 2×/год')+pill('NAC Сб/Вс'),
+    'Золушка: глутатион+Вит.С+ALA в/в ×5 сеансов. Лаеннек: 2мл п/к через день ×10. NAC 600мг выходные натощак.');
+  h+=card('🔥','Метаболизм',badge('v3.8','accent'),'Инсулиночувствительность + HOMA-IR',
+    pill('Маитаке 600мг','blue')+pill('Берберин 500мг')+pill('Хром 200мкг')+pill('R-ALA 450мг'),
+    'Маитаке: D-фракция → ↑инсулиночувствительность. HOMA-IR 2.1 → цель <1.5. ⚠️ 5-й антикоагулянт — коагулограмма ДО начала!');
+  h+='</div>';
+  h+=histo('🧬 Рейтинг антистарения',[
+    {n:'NMN+NR',s:97,c:'var(--accent)',t:'NAD⁺ ↑40–60%'},
+    {n:'Эпиталон',s:93,c:'var(--purple)',t:'Теломераза↑'},
+    {n:'Ресвератрол',s:88,c:'var(--blue)',t:'SIRT1 + eNOS↑'},
+    {n:'GHK-Cu',s:87,c:'var(--cyan)',t:'>4000 генов'},
+    {n:'NAD⁺ в/в',s:92,c:'var(--orange)',t:'Мгновенный NAD⁺↑'},
+    {n:'Физетин+Кверцетин',s:85,c:'var(--red)',t:'Сенолитики'},
+    {n:'Маитаке',s:78,c:'var(--yellow)',t:'↑Инсулиночувств.'},
+    {n:'Астаксантин',s:80,c:'var(--pink)',t:'↓Оксидативный стресс'},
+  ]);
+  return h;
+};
+
+// ===== 🍆 ПОТЕНЦИЯ =====
+panels.potency=()=>{
+  let h=`<div class="section-title">🍆 <span>Потенция — 5 систем + 1 гормональный триггер</span></div>`;
+  h+=`<div class="stat-row">
+    <div class="stat-box red"><div class="val">323</div><div class="lbl">T нг/дл (цель >600)</div></div>
+    <div class="stat-box green"><div class="val">23.9</div><div class="lbl">E2 пг/мл (идеал)</div></div>
+    <div class="stat-box green"><div class="val">27.7</div><div class="lbl">SHBG нмоль/л</div></div>
+    <div class="stat-box yellow"><div class="val">94%</div><div class="lbl">Закрытие цели</div></div>
+  </div>`;
+  h+='<div class="grid">';
+  h+=card('💨','NO / Кровоток',badge('ЭРЕКЦИЯ','red'),'Оксид азота → вазодилатация',
+    pill('Цитруллин 6г','accent')+pill('Пикногенол 150мг')+pill('Икариин 500мг')+pill('Гинкго 175мг')+pill('Свёкла')+pill('BPC-157','blue'),
+    '⚠️ НЕ с Виагрой/Сиалисом! Гипотензивный коллапс! Цитруллин в предтренике TITAN.');
+  h+=card('🧬','Тестостерон',badge('T↑','orange'),'Стимуляция ГГН-оси',
+    pill('Тонгкат 400мг','accent')+pill('Бор 10мг')+pill('D3 5000МЕ')+pill('Мумиё 250мг')+pill('Цинк 30мг')+pill('DIM 100мг')+pill('Кисспептин-54','purple'),
+    'T 323 нг/дл — критически низкий (−46% от цели). БИПАП = главный рычаг. Кисспептин-54: 14д ON / 14д OFF, 4×/год. Тройной удар: Кисспептин (верх оси) + Тонгкат (↓SHBG) + Ашваганда (↓кортизол).');
+  h+=card('🧠','Дофамин-либидо',badge('ЖЕЛАНИЕ','purple'),'Центральное возбуждение',
+    pill('Тирозин 500мг')+pill('Мукуна 200мг','yellow')+pill('Родиола 200мг')+pill('Анирацетам')+pill('PT-141','red'),
+    'Мукуна: ТОЛЬКО обед 13:00, с едой. PT-141: 1.5–2мг п/к за 45мин до секса, макс 8×/мес. НЕ с Виагрой!');
+  h+=card('🩸','Кровоток',badge('ЦИРКУЛЯЦИЯ','blue'),'Вязкость крови + сосуды',
+    pill('Берберин 500мг')+pill('Наттокиназа 100мг')+pill('Омега-3 2000мг')+pill('Гинкго 175мг'),
+    'Наттокиназа: 21:15 натощак (с едой ↓эффект 40%). 4 антикоагулянта + Маитаке = 5-й → коагулограмма!');
+  h+=card('🛡️','Антиэстроген',badge('BMI 28','yellow'),'Контроль ароматизации',
+    pill('DIM 100мг','accent')+pill('Цинк 30мг')+pill('Берберин')+pill('↓Жир'),
+    'E2 = 23.9 (идеал). DIM снижен с 200 до 100мг. При E2 >30 → вернуть 200мг. BMI 28 = повышенная ароматизация.');
+  h+=card('🏋️','Тазовое дно',badge('КЕГЕЛИ','accent'),'Стойка + дыхание + Кегели',
+    pill('Стойка 15мин')+pill('Кегели 2×/день')+pill('BTL Emsella','blue'),
+    'Кегели в стойке: утро 06:41 + вечер 21:00. Прогрессия: нед 1–4 (10×5с), 5–8 (15×5с), 9+ (20×5с). BTL Emsella: 11 000 Кегеля / 28 мин (клиника).');
+  h+='</div>';
+  return h;
+};
+
+// ===== 🍄 ГРИБЫ =====
+panels.mushrooms=()=>{
+  let h=`<div class="section-title">🍄 <span>Грибной стек</span></div>`;
+  h+='<div class="grid">';
+  h+=card('🦁','Львиная грива',badge('✅ В СТЕКЕ','ok'),'NGF↑, нейрогенез',
+    pill('600мг утро','accent')+pill('Amazonica 3% эринацинов')+pill('🧠 Мозг'),
+    'Amazonica — единственный бренд со стандартизацией по эринацинам (3%). Молотый мицелий на зерне = крахмал с минимумом действующего вещества.');
+  h+=card('🍄','Рейши',badge('✅ В СТЕКЕ','ok'),'↓Кортизол, ГАМК-А, сон',
+    pill('1.5г ночь','accent')+pill('GribFarm плод. тело')+pill('😴 Сон'),
+    'В составе REPAIR BASE (ночной порошок). Плодовое тело содержит тритерпены (ганодерол, ганодерик кислота) → ГАМК-А модуляция.');
+  h+=card('🔥','Кордицепс',badge('✅ В СТЕКЕ','ok'),'VO₂max↑, АТФ, энергия',
+    pill('1.5г утро','accent')+pill('GribFarm militaris')+pill('⚡ Энергия'),
+    'В составе NZT BOOST (утренний порошок). Militaris (не sinensis!) — содержит кордицепин даже в мицелии. VO₂max улучшение 7–11%.');
+  h+=card('🌿','Маитаке',badge('🔜 ЗАКАЗАН','yellow'),'↑Инсулиночувствительность, D-фракция',
+    pill('600мг утро','blue')+pill('Amazonica 50% полисах.')+pill('🔥 Метаболизм'),
+    '⚠️ 5-й антикоагулянт в стеке — коагулограмма ДО начала! HOMA-IR 2.1 → цель <1.5. «Взаимодействие с AMPA» — НЕ верифицировано (источник: Amazonica, не PubMed).');
+  h+=card('🫖','Чага',badge('🟡 РАССМОТРЕТЬ','yellow'),'Антиоксидант',
+    pill('Для Вали после КТ')+pill('🛡️ Антиоксидант'),
+    '~100–200 мЗв от 10 КТ-сканирований → оксидативное повреждение ДНК. Чага = мощный антиоксидант (ORAC 146 700).');
+  h+=card('🦃','Turkey Tail',badge('🟡 РАССМОТРЕТЬ','yellow'),'Микробиом',
+    pill('Для Вали')+pill('🦠 ЖКТ'),
+    'PSK/PSP → иммуномодуляция + пребиотик. Валя: микробиом разрушен после перфорации кишечника.');
+  h+=card('🍄','Шиитаке',badge('🟡 РАССМОТРЕТЬ','yellow'),'↓ЛПНП',
+    pill('Для Дениса')+pill('❤️ Кардио'),
+    'Эритаденин → ↓ЛПНП. ЛПНП 4.03 (↑34% от цели). Дополнение к берберину, овсу, рыбе.');
+  h+='</div>';
+  h+=histo('🍄 Рейтинг грибов',[
+    {n:'Львиная грива',s:95,c:'var(--accent)',t:'NGF↑, нейрогенез'},
+    {n:'Кордицепс',s:90,c:'var(--orange)',t:'VO₂max↑, энергия'},
+    {n:'Рейши',s:88,c:'var(--purple)',t:'↓Кортизол, сон'},
+    {n:'Маитаке',s:82,c:'var(--yellow)',t:'Инсулиночувств.'},
+    {n:'Чага',s:70,c:'var(--red)',t:'Антиоксидант (Валя)'},
+    {n:'Turkey Tail',s:68,c:'var(--blue)',t:'Микробиом (Валя)'},
+    {n:'Шиитаке',s:65,c:'var(--cyan)',t:'↓ЛПНП (Денис)'},
+  ]);
+  return h;
+};
+
+// ===== ⚡ КИБОРГ =====
+panels.cyborg=()=>{
+  let h=`<div class="section-title">⚡ <span>Киборг-стек — гаджеты и технологии</span></div>`;
+  h+=`<div class="stat-row">
+    <div class="stat-box"><div class="val">55%</div><div class="lbl">Закрыто</div></div>
+    <div class="stat-box"><div class="val">5</div><div class="lbl">Устройств есть</div></div>
+    <div class="stat-box"><div class="val">7+</div><div class="lbl">Купить</div></div>
+  </div>`;
+  h+='<div class="grid">';
+  h+=card('😷','БИПАП ResMed',badge('✅ КУПЛЕН','ok'),'АД −5–10, T↑10–15%, NZT 100%',
+    pill('28.03.2026','accent')+pill('Маска 01.04')+pill('AHI цель <5'),
+    'AirSense 11 AutoSet. Маска назальная (DreamWear / AirFit N30i). Мониторинг: MyAir + Apple Watch SpO2. Если АД <130/85 через 2–4 нед → разблокирует CJC+Ипа.');
+  h+=card('⌚','Apple Watch Ultra',badge('✅ ЕСТЬ','ok'),'Пульс, HRV, тренировки',
+    pill('HRV базовый')+pill('SpO2 ночной')+pill('Будильник 06:30'),
+    'Апгрейд → Oura Ring 4 (HRV ночь 98%, t° тела, Readiness Score).');
+  h+=card('🎧','AirPods Pro 2',badge('✅ ЕСТЬ','ok'),'ANC для deep work, N-Back',
+    pill('Noise Cancel')+pill('N-Back аудио'),
+    'Для 4–6ч сессий рассмотреть Sony XM5.');
+  h+=card('📝','Plaud Note Pro',badge('✅ ЕСТЬ','ok'),'Запись звонков, AI-саммари',
+    pill('Все встречи')+pill('AI-обработка'),
+    'Достаточно для текущих задач. NotePin S — только если стройка.');
+  h+=card('🛏️','Nuga Best',badge('✅ ЕСТЬ','ok'),'NM-5000 кровать + NM-2500 мат + NM-55P',
+    pill('FIR прогрев')+pill('Массаж позвоночника')+pill('⚠️ Правила!','red'),
+    '38–40°C, 20–30 мин с таймером при засыпании. Дневная сауна: 60–70°C, 20–40 мин с водой. ⚠️ НЕЛЬЗЯ спать на 50°C+ — non-dipper эффект, ↑АД ночью!');
+  h+=card('⚡','Brainstorm tDCS',badge('🔴 КУПИТЬ','red'),'Фокус +20–40%, DARPA',
+    pill('~10 000₽','yellow')+pill('Лучший ROI'),
+    'tDCS (транскраниальная стимуляция постоянным током). Лучший ROI из всех гаджетов. Протоколы: F3-F4 для фокуса, F7 для речи.');
+  h+=card('💍','Oura Ring 4',badge('🔴 КУПИТЬ','red'),'HRV ночь 98%, сон, t°',
+    pill('~60 000₽','yellow')+pill('Readiness Score'),
+    'Единственное кольцо с точным ночным HRV. Температура тела → ранняя детекция болезней. Readiness Score для авторегуляции нагрузки.');
+  h+=card('📊','CGM Libre 3',badge('🔴 ↑ПРИОРИТЕТ','red'),'Глюкоза real-time',
+    pill('~6 000₽/шт','yellow')+pill('Инсулинорезистентность'),
+    'При HOMA-IR 2.1 и инсулине 9.53 — критически важно. Настройка low-carb + контроль глюкозы при маитаке.');
+  h+=card('🌞','Luminette 3 / Лампа',badge('🔴 КУПИТЬ','red'),'Циркадный ритм',
+    pill('8–28 000₽','yellow')+pill('Засыпание −15–30мин'),
+    'Лампа 10 000 люкс КУПЛЕНА. Luminette 3 — мобильная альтернатива для офиса.');
+  h+=card('📳','Apollo Neuro',badge('МЕСЯЦ 1','yellow'),'VNS: кортизол −22%, HRV↑11%',
+    pill('~35 000₽','yellow')+pill('Стимуляция вагуса'),
+    'Вибротактильная стимуляция блуждающего нерва. Режимы: фокус, сон, восстановление, социальный.');
+  h+='</div>';
+  return h;
+};
+
+// ===== 🔬 АНАЛИЗЫ =====
+panels.labs=()=>{
+  let h=`<div class="section-title">🔬 <span>Анализы — Хеликс 21.03.2026 (53 маркера)</span></div>`;
+  h+=`<div class="stat-row">
+    <div class="stat-box red"><div class="val">5</div><div class="lbl">🔴 Критичных</div></div>
+    <div class="stat-box yellow"><div class="val">8</div><div class="lbl">🟡 Жёлтых</div></div>
+    <div class="stat-box green"><div class="val">32</div><div class="lbl">✅ В норме</div></div>
+    <div class="stat-box red"><div class="val">8</div><div class="lbl">❌ Не сданы</div></div>
+  </div>`;
+  
+  h+=`<table class="data">
+    <tr><th>Маркер</th><th>Результат</th><th>Цель NZT</th><th>Статус</th><th>Действие</th></tr>
+    <tr style="background:var(--redBg)"><td><b>Тестостерон</b></td><td>323 нг/дл</td><td>>600</td><td>🔴 −46%</td><td>БИПАП, ЛГ/ФСГ, Кисспептин</td></tr>
+    <tr style="background:var(--redBg)"><td><b>ЛПНП</b></td><td>4.03</td><td><3.0</td><td>🔴 +34%</td><td>Берберин, ↓яйца, овёс, рыба 5×</td></tr>
+    <tr style="background:var(--redBg)"><td><b>Холестерол общий</b></td><td>5.82</td><td><5.2</td><td>🔴 +12%</td><td>Следствие ЛПНП</td></tr>
+    <tr style="background:var(--redBg)"><td><b>Коэфф. атерогенности</b></td><td>3.77</td><td><3.5</td><td>🔴 +8%</td><td>При ↓ЛПНП снизится</td></tr>
+    <tr style="background:var(--redBg)"><td><b>Не-ЛПВП</b></td><td>4.60</td><td><3.4</td><td>🔴 +35%</td><td>Главный таргет: ↓ЛПНП</td></tr>
+    <tr style="background:var(--yellowBg)"><td>Инсулин</td><td>9.53</td><td><8</td><td>🟡 +19%</td><td>Берберин, R-ALA, хром, −400</td></tr>
+    <tr style="background:var(--yellowBg)"><td>HOMA-IR</td><td>~2.1</td><td><1.5</td><td>🟡 +40%</td><td>ИР подтверждена</td></tr>
+    <tr style="background:var(--yellowBg)"><td>Гомоцистеин</td><td>10.73</td><td><8</td><td>🟡 +34%</td><td>Метилфолат 800мкг + B6 50мг</td></tr>
+    <tr style="background:var(--yellowBg)"><td>Ферритин</td><td>230</td><td>40–150</td><td>🟡 +53%</td><td>IP6, ↓говядина, донорство</td></tr>
+    <tr style="background:var(--yellowBg)"><td>АЛТ</td><td>41.9</td><td><40</td><td>🟡 +5%</td><td>Силимарин 300мг</td></tr>
+    <tr><td>hsCRP</td><td>0.36</td><td><1.0</td><td>✅ Отлично</td><td>Стек работает!</td></tr>
+    <tr><td>Витамин D</td><td>54.48</td><td>>40</td><td>✅ Идеал</td><td>D3 5000МЕ — верно</td></tr>
+    <tr><td>Эстрадиол E2</td><td>23.9</td><td>20–35</td><td>✅ Идеал</td><td>DIM ↓до 100мг</td></tr>
+    <tr><td>SHBG</td><td>27.7</td><td>20–40</td><td>✅</td><td>Бор+Крапива в балансе</td></tr>
+    <tr><td>ТТГ</td><td>2.03</td><td>0.4–2.5</td><td>✅</td><td>—</td></tr>
+    <tr><td>HbA1c</td><td>5.20%</td><td><5.5%</td><td>✅</td><td>Диабета нет</td></tr>
+    <tr><td>МНО</td><td>1.06</td><td>0.8–1.2</td><td>✅</td><td>4 антикоагулянта в балансе</td></tr>
+    <tr><td>ПСА</td><td>0.345</td><td><2.5</td><td>✅</td><td>Низкий риск</td></tr>
+    <tr><td>СОЭ</td><td>2</td><td>2–15</td><td>✅ Идеал</td><td>—</td></tr>
+  </table>`;
+  
+  h+=`<div class="histo-section"><div class="histo-title">❌ Не сданы — досдать СРОЧНО</div>
+    <table class="data">
+    <tr><th>Маркер</th><th>Зачем</th><th>Приоритет</th></tr>
+    <tr><td>ЛГ</td><td>Центральный vs периферический гипогонадизм → решение по Кисспептину</td><td>🔴</td></tr>
+    <tr><td>ФСГ</td><td>ГГН-ось + сперматогенез</td><td>🔴</td></tr>
+    <tr><td>Пролактин</td><td>Пролактинома? Допамин↓?</td><td>🔴</td></tr>
+    <tr><td>Кортизол утренний</td><td>2 года стресса → предполагаемый ↑</td><td>🔴</td></tr>
+    <tr><td>Калий сыворотки</td><td>Калий цитрат в стеке → контроль</td><td>🟡</td></tr>
+    <tr><td>Цистатин С</td><td>Истинная СКФ (креатинин ↑от креатина 5г)</td><td>🟡</td></tr>
+    <tr><td>ApoB</td><td>Точнее ЛПНП для кардиориска</td><td>🟡</td></tr>
+    <tr><td>Lp(a)</td><td>Генетический кардиориск</td><td>🟡</td></tr>
+    </table></div>`;
+  return h;
+};
+
+// ===== 👨‍👩‍👦 СЕМЬЯ =====
+panels.family=()=>{
+  let h=`<div class="section-title">👨‍👩‍👦 <span>Семья — профили и программы</span></div>`;
+  
+  h+=`<div class="family-card" onclick="this.querySelector('.details').style.display=this.querySelector('.details').style.display==='block'?'none':'block'">
+    <div class="av" style="background:var(--blueBg)">👨</div>
+    <div class="info"><div class="name">Денис</div><div class="meta">43г · 188/100 · АД ~135 · BMI 28.3 · 🧠 NZT-стек</div>
+    <div class="pills" style="margin-top:4px">${pill('БИПАП ✅','accent')+pill('T 323','red')+pill('ЛПНП 4.03','red')+pill('hsCRP 0.36','accent')}</div>
+    <div class="details">Бизнесмен, руководитель ГИДРОМАШ. 2 года хронического стресса. Цель: мозг↑ → прибыль↑ → долги↓ → ремонт Попова 18 кв.13. Жим лёжа 100кг×20 (элитный). Генетика: −8 лет биовозраст. Апноэ сна — БИПАП куплен 28.03.</div></div>
+  </div>`;
+  
+  h+=`<div class="family-card" onclick="this.querySelector('.details').style.display=this.querySelector('.details').style.display==='block'?'none':'block'">
+    <div class="av" style="background:var(--pinkBg)">👩</div>
+    <div class="info"><div class="name">Валя</div><div class="meta">36л · 165/58 · АД 117/73 · BMI 21.3 · Поул-дэнс · Файл: v1.8</div>
+    <div class="pills" style="margin-top:4px">${pill('🔴 Алкоголь','red')+pill('Перфорация ЖКТ','red')+pill('Пролактин 677','yellow')+pill('6 протрузий','yellow')}</div>
+    <div class="details"><b>Критичное:</b> Винный алкоголизм (~750мл/вечер) = ПРИОРИТЕТ №0. Перфорация кишечника (осень 2025) → микробиом разрушен. ~10 КТ (~100–200 мЗв). Пролактин +37%. 6 протрузий. Записывает курс по отношениям (видео).<br><b>Стек:</b> Омега-3, D3, B12+Фолат, Куркумин, Магний, Ашваганда. Добавить: Цитиколин 250мг, NAC 600мг, Силимарин 300мг.<br><b>Стиль:</b> Живой, дерзкий, с юмором. Стиль Грока/X.</div></div>
+  </div>`;
+  
+  h+=`<div class="family-card" onclick="this.querySelector('.details').style.display=this.querySelector('.details').style.display==='block'?'none':'block'">
+    <div class="av" style="background:var(--accentBg)">👦</div>
+    <div class="info"><div class="name">Алекс</div><div class="meta">7л · ~141/35 · Школа №1 · Каратэ + Шахматы + Go · Файл: v1.1.1</div>
+    <div class="pills" style="margin-top:4px">${pill('Омега-3','accent')+pill('D3 1000–2000МЕ','accent')+pill('Магний вечер','accent')+pill('❌ Ноотропы','red')}</div>
+    <div class="details"><b>Принцип:</b> НЕ МЕШАТЬ. Только 3 добавки: Омега-3, D3, Магний. Запрещено до 18: ноотропы, пептиды, креатин.<br><b>Секции:</b> Пн/Ср/Пт — каратэ кёкусинкай 18:00. Вт/Чт — шахматы 18:00. Go с папой Ср/Сб.<br><b>Развитие:</b> Слепая печать, велосипед, жонглирование, дворец памяти (5 станций), ментальная арифметика.</div></div>
+  </div>`;
+  
+  h+=`<div class="family-card" onclick="this.querySelector('.details').style.display=this.querySelector('.details').style.display==='block'?'none':'block'">
+    <div class="av" style="background:var(--purpleBg)">👩‍🦰</div>
+    <div class="info"><div class="name">Юлия (сестра)</div><div class="meta">48л · 165/55 · АД 90/65 (гипотония!) · Йога, лунные циклы · Файл: v1.2</div>
+    <div class="pills" style="margin-top:4px">${pill('Биовозраст ~30','accent')+pill('Гипотония','yellow')+pill('Почти веган')+pill('Энергокоуч')}</div>
+    <div class="details"><b>Генетика:</b> Биовозраст ~30 при 48 (−17–18 лет!). Тот же семейный паттерн.<br><b>Стек:</b> Фенотропил 50мг (Пн/Ср/Пт), Ноопепт 10мг (Вт/Чт), Семакс (растущая луна), Селанк (убывающая), Цитиколин 250мг, NMN 250мг, Элеутерококк 200мг, MgLT 1000мг.<br><b>Гипотония:</b> Ашваганда 150мг (не 300!), без мелатонина, утренняя соль, Элеутерококк.<br><b>Лунные циклы:</b> Новолуние → Семакс 14д. Полнолуние → Селанк 14д.<br><b>Стиль:</b> Аюрведа, энергия, циклы. «Прана», «Оджас», «расаяна».</div></div>
+  </div>`;
+  
+  h+=`<div class="family-card">
+    <div class="av" style="background:var(--bg3)">🐱</div>
+    <div class="info"><div class="name">Маркиз</div><div class="meta">~12л · ~7кг · Шотландский вислоухий · Валя аллергична → Кверцетин</div></div>
+  </div>`;
+  return h;
+};
+
+// ===== 🌬️ ДЫХАНИЕ + МЕДИТАЦИЯ =====
+panels.breath=()=>{
+  let h=`<div class="section-title">🌬️ <span>Дыхание + Медитация — 8 техник + 3 типа медитации</span></div>`;
+  h+=`<div class="stat-row">
+    <div class="stat-box"><div class="val">8</div><div class="lbl">Дыхательных техник</div></div>
+    <div class="stat-box"><div class="val">3</div><div class="lbl">Типа медитации</div></div>
+    <div class="stat-box"><div class="val">~3.5ч</div><div class="lbl">В неделю</div></div>
+    <div class="stat-box green"><div class="val">96%</div><div class="lbl">Стресс/АД закрытие</div></div>
+  </div>`;
+  h+='<div class="grid">';
+  h+=card('🧊','Вим Хоф',badge('06:37','accent'),'Замена кофеину. НА+530%, дофамин +250%',
+    pill('4 мин')+pill('3 раунда')+pill('⚠️ АД <150/95','red')+pill('PNAS 2014','blue'),
+    '30 мощных вдохов → задержка на выдохе 30–90с → глубокий вдох+задержка 15с. 3 раунда. Прогрессия: нед1 30–40с → мес3 90–150с. НЕ стоять! Лёжа/сидя. При АД >150/95 → заменить на 4-7-8.');
+  h+=card('🔥','Огненное дыхание',badge('18:20','orange'),'Энергия перед залом, без кофеина',
+    pill('5 мин')+pill('Через НОС')+pill('Акцент на выдохе'),
+    'Быстрые вдохи-выдохи через нос. Акцент на ВЫДОХЕ — резко втянуть живот. 3 раунда (60с + 30с задержка). Мягче Вим Хофа. Работает ТОЛЬКО живот. Не на полный желудок.');
+  h+=card('🔴','Даньтянь 6-3-9',badge('21:00','purple'),'Кровоток к тазу, потенция',
+    pill('10–15 мин')+pill('В стойке')+pill('+ Кегели')+pill('⏰ 6с-3с-9с'),
+    'Стойка всадника + язык на нёбо. Вдох 6с (живот расширяется) → пауза 3с → выдох 9с (живот втягивается). 1 цикл = 18с, ~33 цикла за 10 мин. + Кегели 10×5с каждую минуту. Через 2–3 нед = тепло ниже пупка.');
+  h+=card('☯️','МНЦ (小周天)',badge('21:15','purple'),'BDNF +30%, серое вещество↑',
+    pill('10–15 мин')+pill('36 циклов')+pill('Сидя')+pill('Кортизол −20%'),
+    '<b>Задний канал (вдох 6с):</b> Даньтянь → промежность → копчик → поясница → лопатки → макушка.<br><b>Передний канал (выдох 9с):</b> Макушка → лоб → ЯЗЫК (мост!) → грудь → Даньтянь.<br>1 мес: кортизол −20%, DHEA +15%. 3 мес: BDNF +30%. 6 мес: серое вещество↑.');
+  h+=card('💨','4-7-8',badge('ЭКСТРЕННО','red'),'АД −10–15мм за 3 мин',
+    pill('3 мин')+pill('Замена Вим Хофу')+pill('Перед сном'),
+    'Вдох через нос 4с → задержка 7с → выдох через рот «шшш» 8с. 8–10 циклов. Выдох в 2× длиннее вдоха → блуждающий нерв → ЧСС↓, АД↓. Скорая помощь при стрессе.');
+  h+=card('🫁','Резонансное 5.5/мин',badge('13:30','blue'),'HRV↑ +50–100% за 4 нед',
+    pill('5 мин')+pill('Обеденная прогулка')+pill('Вдох 5.5с = Выдох 5.5с'),
+    'Резонанс барорефлекса при ~5.5 вдохов/мин. Сердце и дыхание синхронизируются. Без пауз, плавный переход. HRV +50–100% за 4 недели. Можно на ходу.');
+  h+=card('😤','Физиологический вздох',badge('СИТУАЦИОННО','yellow'),'Мгновенный антистресс 15с',
+    pill('1–3 раза')+pill('Stanford 2023')+pill('Незаметно'),
+    'Двойной вдох через нос (80% + довдох 20%) → длинный выдох через рот. Обычно достаточно 1 раза. Незаметно для окружающих. Работает за 10–15 сек. Идеально на переговорах.');
+  h+=card('👃','Насика Шодхана',badge('ВС УТРО','blue'),'Баланс полушарий',
+    pill('5 мин')+pill('10 циклов')+pill('Попеременное ноздревое'),
+    'Правый палец на правую ноздрю, безымянный — на левую. Закрыть правую → вдох левой 4с → пауза 4с → выдох правой 4с → вдох правой 4с → пауза → выдох левой. 10 циклов. Только по воскресеньям.');
+  h+='</div>';
+  
+  h+=`<div class="histo-section"><div class="histo-title">🧘 Три типа медитации</div>`;
+  h+='<div class="grid">';
+  h+=card('🧘','СТАТИКА — МНЦ сидя',badge('21:15','purple'),'Префронтальная + островковая кора',
+    pill('Ежедневно')+pill('DMN активация')+pill('Альфа+тета волны'),
+    'Випассана, дзадзен, МНЦ, body scan. Тело неподвижно, внимание внутрь. Утолщает префронтальную кору (решения, самоконтроль) + островковую долю (ощущение тела). Кортизол↓, ГАМК↑.');
+  h+=card('⚔️','ГИБРИД — Стойка всадника',badge('21:00','orange'),'Моторная + префронтальная кора',
+    pill('Ежедневно')+pill('5–15 мин')+pill('BDNF от изометрии'),
+    'Тело под нагрузкой, но неподвижно. BDNF от мышечной работы + медитативное состояние. В Шаолине считается выше форм. Dual-Task: шахматы/Go/дворец памяти в стойке.');
+  h+=card('🌊','ДИНАМИКА — Тайцзи 24',badge('ДОБАВИТЬ','yellow'),'Моторная + мозжечок + теменная',
+    pill('Сб+Вс утро')+pill('АД −10–15мм/12нед')+pill('BDNF +30%')+pill('Flow state'),
+    '<b>Прогрессия:</b> Нед 1–4: формы 1–12 (15мин Сб+Вс) → Нед 5–8: формы 13–24 → Мес 3: полная форма → Мес 5+: flow state (2–3 повтора). Единственная практика, закрывающая 4 цели: АД↓ + BDNF↑ + баланс + медитация. Безопасно при любом АД.');
+  h+='</div></div>';
+
+  h+=`<div class="histo-section"><div class="histo-title">📅 Недельный план дыхания</div>
+  <div class="schedule-grid">
+    <div class="sh">День</div><div class="sh">06:37</div><div class="sh">13:30</div><div class="sh">18:20</div><div class="sh">21:00</div><div class="sh">21:15</div><div class="sh">Визуал.</div><div class="sh">Итого</div>
+    <div class="sh">Пн</div><div class="sc on">Вим Хоф</div><div class="sc on">Резонанс</div><div class="sc on">Огненное</div><div class="sc on">Даньтянь</div><div class="sc on">МНЦ</div><div class="sc">—</div><div class="sc">39м</div>
+    <div class="sh">Вт</div><div class="sc on">Вим Хоф</div><div class="sc on">Резонанс</div><div class="sc">—</div><div class="sc on">Даньтянь</div><div class="sc on">МНЦ</div><div class="sc">—</div><div class="sc">34м</div>
+    <div class="sh">Ср</div><div class="sc on">Вим Хоф</div><div class="sc on">Резонанс</div><div class="sc on">Огненное</div><div class="sc on">Даньтянь</div><div class="sc on">МНЦ</div><div class="sc on">Warrior</div><div class="sc">49м</div>
+    <div class="sh">Чт</div><div class="sc">4-7-8</div><div class="sc on">Резонанс</div><div class="sc">—</div><div class="sc on">Даньтянь</div><div class="sc on">МНЦ</div><div class="sc">—</div><div class="sc">33м</div>
+    <div class="sh">Пт</div><div class="sc on">Вим Хоф</div><div class="sc on">Резонанс</div><div class="sc on">Огненное</div><div class="sc on">Даньтянь</div><div class="sc on">МНЦ</div><div class="sc">—</div><div class="sc">39м</div>
+    <div class="sh">Сб</div><div class="sc">—</div><div class="sc">—</div><div class="sc">—</div><div class="sc on">Даньтянь</div><div class="sc on">МНЦ</div><div class="sc">Тайцзи</div><div class="sc">35м</div>
+    <div class="sh">Вс</div><div class="sc on">Насика</div><div class="sc">—</div><div class="sc">—</div><div class="sc">—</div><div class="sc on">Чистая 30м</div><div class="sc">—</div><div class="sc">35м</div>
+  </div></div>`;
+
+  h+=histo('🌬️ Рейтинг дыхательных/медитативных практик',[
+    {n:'МНЦ',s:97,c:'var(--purple)',t:'BDNF +30%, серое вещество'},
+    {n:'Стойка всадника',s:95,c:'var(--orange)',t:'BDNF + медитация + Кегели'},
+    {n:'Вим Хоф',s:93,c:'var(--cyan)',t:'НА +530%, дофамин +250%'},
+    {n:'Резонансное',s:90,c:'var(--blue)',t:'HRV +50–100%'},
+    {n:'Тайцзи 24',s:92,c:'var(--accent)',t:'АД −10–15мм + flow'},
+    {n:'Даньтянь 6-3-9',s:88,c:'var(--red)',t:'Кровоток таз, потенция'},
+    {n:'4-7-8',s:85,c:'var(--blue)',t:'АД −10–15мм за 3 мин'},
+    {n:'Физ. вздох',s:80,c:'var(--yellow)',t:'Антистресс 15 сек'},
+    {n:'Warrior Vision',s:78,c:'var(--orange)',t:'Визуализация целей'},
+    {n:'Насика Шодхана',s:72,c:'var(--accent)',t:'Баланс полушарий'},
+  ]);
+  return h;
+};
+
+// ===== 🧠 КОГНИЦИЯ =====
+panels.cognition=()=>{
+  let h=`<div class="section-title">🧠 <span>Когнитивные тренировки — мозг как мышца</span></div>`;
+  h+=`<div class="stat-row">
+    <div class="stat-box"><div class="val">9</div><div class="lbl">Типов тренировок</div></div>
+    <div class="stat-box"><div class="val">4–5ч</div><div class="lbl">В неделю</div></div>
+    <div class="stat-box"><div class="val">+6–10</div><div class="lbl">IQ пунктов (прогноз)</div></div>
+    <div class="stat-box"><div class="val">+45%</div><div class="lbl">BDNF (Dual-Task)</div></div>
+  </div>`;
+  h+='<div class="grid">';
+  h+=card('🎯','Dual N-Back',badge('IQ +3–4','accent'),'Единственный доказанный тренажёр IQ',
+    pill('Пн/Ср/Пт 07:30')+pill('10–20 мин')+pill('Jaeggi 2008')+pill('Рабочая память +40%','blue'),
+    '<b>Прогрессия:</b> 2-back (нед 1–2) → 3-back (3–4) → 4-back (мес 2) → 5-back (мес 3+, элита). Цель >70% точности на текущем уровне → переход. Brain Workshop (ПК). На пике NZT-стека (Фен+Анирацетам) = +20–30% эффективности. НЕ в стойке!');
+  h+=card('♟️','Шахматы',badge('Пн 21:00','blue'),'Паттерны + визуализация + расчёт',
+    pill('В стойке!')+pill('Lichess.org')+pill('Блиц-задачи 10–15мин'),
+    'Тренируют: распознавание паттернов, пространственную визуализацию, расчёт на 3–5 ходов, решения под давлением. В стойке = отвлечение от нагрузки + тренировка мозга. Рейтинг: 5/5.');
+  h+=card('⚫','Go (Вэйци)',badge('Ср/Сб','accent'),'Префронтальная кора +12%, связи +40%',
+    pill('С Алексом!')+pill('OGS online-go.com')+pill('Korea 2019 МРТ'),
+    'Мощнейшая пространственная игра. Ср вечер + Сб с Алексом. Связь отец-сын. Совмещение: блиц 5–10 мин на планшете в средней стойке. Бэкграунд самбо/дзюдо = +40–50% к скорости освоения.');
+  h+=card('🏛️','Дворец памяти',badge('Вт 21:00','purple'),'Память +500%',
+    pill('В стойке')+pill('12–15 мин')+pill('Попова 18 маршрут')+pill('Maguire 2003'),
+    '<b>Прогрессия:</b> 10 элементов (нед1) → 20 (нед2) → 30–40 (мес1) → 52 карты за 10 мин (мес3, элита). Маршрут: квартира Попова 18 кв.13 → путь на работу. Major System для чисел. PAO для больших объёмов. Практика: презентации без слайдов, цифры на переговорах.');
+  h+=card('🧮','Соробан',badge('Пт 21:00','orange'),'Визуализация +60%, концентрация +50%',
+    pill('В стойке')+pill('10–15 мин')+pill('Flash Anzan')+pill('Japan 2016'),
+    'Фаза 1 (2 нед): физический соробан → Фаза 2 (3–8 нед): визуализация абакуса в уме → Фаза 3 (мес3+): скоростные цепочки, аудио Flash Anzan. Серое вещество правой теменной доли +8%. ИДЕАЛЬНО со стойкой.');
+  h+=card('🔢','Мент. математика',badge('Пн/Ср 13:30','blue'),'Проценты в голове за секунды',
+    pill('10 мин')+pill('4 уровня')+pill('На переговорах!'),
+    '<b>Уровень 1:</b> 47+68, 134−78, 37×6 (3мин). <b>Ур.2:</b> 23×47 крест-накрест. <b>Ур.3:</b> 47²=50²−2(50×3)+3². <b>Ур.4:</b> 17% от 3680 — впечатляет на переговорах. Маржинальность, скидки, ROI в голове.');
+  h+=card('🔄','Mental Rotation / Stroop',badge('Вт 13:30','yellow'),'Пространство +30%, переключение +45%',
+    pill('10 мин')+pill('3D вращения')+pill('UC 2015'),
+    'Mental Rotation: 3D-объект повёрнут — тот же или другой? Прогрессия: 2D → 3D → несколько осей. Stroop: назвать ЦВЕТ слова (не прочитать). Task-Switching: 30 сессий → скорость +45%. NeuroNation, Elevate.');
+  h+=card('📖','Скорочтение RSVP',badge('Чт 13:30','blue'),'Скорость чтения +200–300%',
+    pill('10 мин')+pill('Spreeder.com')+pill('+ Таблицы Шульте'),
+    'SPRITZ: слова по одному в центре, глаза неподвижны. Старт 250 слов/мин → 1 мес 400–500 → 3 мес 600–800. Таблицы Шульте: 5×5, цифры 1–25 периферическим зрением. Периферическое зрение +40%.');
+  h+=card('🤸','Стойка + Dual-Task',badge('21:00','accent'),'BDNF +45% (1+1=3)',
+    pill('Каждый вечер')+pill('Illinois 2019')+pill('Физ+когнитив'),
+    '<b>Прогрессия:</b> 15° 5мин (нед1–2) → 20–25° 8мин → 25–30° 10–12мин → 30° 15мин (нед9+).<br><b>ТОП для стойки:</b> Шахматы/Go (5/5), Дворец памяти (5/5), Аудиокниги EN (5/5), Соробан (5/5), Мент. математика (4/5).');
+  h+='</div>';
+
+  h+=`<div class="histo-section"><div class="histo-title">📅 Недельная карта когнитивных тренировок</div>
+  <div class="schedule-grid">
+    <div class="sh">День</div><div class="sh">Дорога 07:30</div><div class="sh">Обед 13:30</div><div class="sh">Стойка 21:00</div><div class="sh">NZT-стек</div><div class="sh">Фокус</div><div class="sh">—</div><div class="sh">—</div>
+    <div class="sh">Пн</div><div class="sc on">N-Back 10м</div><div class="sc on">Мент.мат. ур.2</div><div class="sc on">Шахматы 10м</div><div class="sc on">Фен+Анир</div><div class="sc">Раб.память</div><div class="sc">—</div><div class="sc">—</div>
+    <div class="sh">Вт</div><div class="sc">Аудиокнига EN</div><div class="sc on">Rotation/Stroop</div><div class="sc on">Дворец 12м</div><div class="sc on">Анир+Бак</div><div class="sc">Простр-во</div><div class="sc">—</div><div class="sc">—</div>
+    <div class="sh">Ср</div><div class="sc on">N-Back 10м</div><div class="sc on">Мент.мат. ур.3</div><div class="sc on">Go+визуал</div><div class="sc on">Фен+Диг</div><div class="sc">Стратегия</div><div class="sc">—</div><div class="sc">—</div>
+    <div class="sh">Чт</div><div class="sc">Подкаст EN</div><div class="sc on">RSVP скорочт.</div><div class="sc on">Аудио+стойка</div><div class="sc on">Анир+Теан</div><div class="sc">Язык</div><div class="sc">—</div><div class="sc">—</div>
+    <div class="sh">Пт</div><div class="sc on">N-Back 10м</div><div class="sc on">Мент.мат. стойка</div><div class="sc on">Соробан 10м</div><div class="sc on">Фен+Диг</div><div class="sc">Вычисления</div><div class="sc">—</div><div class="sc">—</div>
+    <div class="sh">Сб</div><div class="sc">—</div><div class="sc on">Дворец+семья</div><div class="sc on">Go+Алекс 20м</div><div class="sc off">Без Фен</div><div class="sc">Семья</div><div class="sc">—</div><div class="sc">—</div>
+    <div class="sh">Вс</div><div class="sc off">—</div><div class="sc off">—</div><div class="sc off">—</div><div class="sc off">ALL OFF</div><div class="sc off">Отдых</div><div class="sc">—</div><div class="sc">—</div>
+  </div></div>`;
+
+  h+=histo('🧠 Рейтинг когнитивных тренировок',[
+    {n:'Dual N-Back',s:98,c:'var(--accent)',t:'IQ +3–4, раб. память +40%'},
+    {n:'Стойка+Dual-Task',s:96,c:'var(--orange)',t:'BDNF +45%, 1+1=3'},
+    {n:'Go (Вэйци)',s:92,c:'var(--blue)',t:'Префронт. +12%, связи +40%'},
+    {n:'Дворец памяти',s:93,c:'var(--purple)',t:'Память +500%'},
+    {n:'Шахматы',s:88,c:'var(--blue)',t:'Паттерны, визуализация'},
+    {n:'Соробан',s:86,c:'var(--orange)',t:'Визуализация +60%'},
+    {n:'Мент. математика',s:82,c:'var(--yellow)',t:'Вычисления ×3'},
+    {n:'Скорочтение RSVP',s:80,c:'var(--cyan)',t:'Скорость +200–300%'},
+    {n:'Mental Rotation',s:78,c:'var(--purple)',t:'Простр. мышление +30%'},
+    {n:'Таблицы Шульте',s:70,c:'var(--accent)',t:'Периф. зрение +40%'},
+  ]);
+
+  h+=`<div class="histo-section"><div class="histo-title">📈 Ожидаемые результаты за 6–12 мес</div>
+  <table class="data">
+    <tr><th>Метрика</th><th>Прогноз</th><th>Источник</th></tr>
+    <tr><td>Fluid IQ</td><td><b>+6–10 пунктов</b></td><td>N-Back + Go + пространственное</td></tr>
+    <tr><td>Рабочая память</td><td><b>+40–60%</b></td><td>N-Back + NZT-стек</td></tr>
+    <tr><td>Долгосрочная память</td><td><b>+200–500%</b></td><td>Дворец памяти + Бакопа</td></tr>
+    <tr><td>Скорость мышления</td><td><b>+25–35%</b></td><td>Фенотропил + Анирацетам + мент. мат.</td></tr>
+    <tr><td>BDNF</td><td><b>+45%</b></td><td>Стойка + Dual-Task + Семакс + зал</td></tr>
+    <tr><td>Скорость чтения</td><td><b>+200–300%</b></td><td>RSVP + Таблицы Шульте</td></tr>
+  </table></div>`;
+  return h;
+};
+
+// ===== 🏋️ УПРАЖНЕНИЯ =====
+panels.exercises=()=>{
+  let h=`<div class="section-title">🏋️ <span>Физические практики — Core, Кегели, стойка, мобильность</span></div>`;
+  h+=`<div class="stat-row">
+    <div class="stat-box"><div class="val">06:41</div><div class="lbl">Мобильность 8мин</div></div>
+    <div class="stat-box"><div class="val">21:00</div><div class="lbl">Стойка до 15мин</div></div>
+    <div class="stat-box"><div class="val">2×/день</div><div class="lbl">Кегели</div></div>
+    <div class="stat-box"><div class="val">Вт/Чт</div><div class="lbl">Core (грыжа)</div></div>
+  </div>`;
+  h+='<div class="grid">';
+  h+=card('🫁','Вакуум живота',badge('КАЖДЫЙ ДЕНЬ','accent'),'Поперечная мышца, ↓талия, грыжа',
+    pill('Утро 06:41')+pill('Прогрессия: 5×15с → 10×30с')+pill('⚠️ Грыжа <2см','yellow'),
+    'Глубокий выдох → максимально втянуть живот → удержать. Прогрессия: 5×15с → 8×20с → 10×30с. Укрепляет поперечную мышцу, уменьшает талию, стабилизирует грыжу. КАЖДЫЙ ДЕНЬ, включая воскресенье.');
+  h+=card('🐛','Dead Bug',badge('Вт/Чт','blue'),'Core без нагрузки на позвоночник',
+    pill('3×10 повторений')+pill('Лёжа на спине')+pill('Безопасно при грыже'),
+    'Лёжа на спине, руки вверх, колени 90°. Одновременно опустить правую руку за голову + выпрямить левую ногу. Вернуть, поменять. Поясница прижата к полу. Безопасно при эпигастральной грыже.');
+  h+=card('🐦','Bird-Dog',badge('Вт/Чт','blue'),'Баланс + стабилизация корпуса',
+    pill('3×10 повторений')+pill('На четвереньках')+pill('Антиротация'),
+    'Четвереньки → вытянуть правую руку + левую ногу → удержать 3–5 сек → вернуть. Поменять. Спина ровная, без прогиба. Тренирует антиротацию — критично при грыже.');
+  h+=card('📐','Планки',badge('Вт/Чт','blue'),'Изометрическая стабилизация core',
+    pill('Фронтальная 3×30с')+pill('Боковая 3×30с/бок')+pill('Прогрессия до 60с'),
+    'Фронтальная: на локтях, тело прямое. Боковая: на одном локте, таз вверх. Прогрессия: 3×20с → 3×30с → 3×45с → 3×60с. ⚠️ При грыже >2см — согласовать с хирургом.');
+  h+=card('💎','Кегели',badge('2×/ДЕНЬ','accent'),'Тазовое дно → эрекция +30–40%',
+    pill('06:41 утро')+pill('21:00 в стойке')+pill('Прогрессия 12 нед'),
+    '<b>Прогрессия:</b><br>Нед 1–4: 10 медленных × 5с + 20 быстрых + 5 длинных × 10с<br>Нед 5–8: 15×5с + 30 быстрых + 8×10с → Твёрдость +20%<br>Нед 9+: 20×5с + 50 быстрых + 10×15с → <b>Твёрдость +30–40%, контроль↑</b><br>BTL Emsella: 11 000 Кегеля / 28 мин (клиника).');
+  h+=card('🧍','Стойка всадника',badge('21:00','purple'),'Медитация + BDNF + тазовое дно',
+    pill('5–15 мин')+pill('+ Кегели')+pill('+ Dual-Task')+pill('Шаолинь'),
+    '<b>Прогрессия:</b> 15° 5мин (нед 1–2) → 20–25° 8мин (3–4) → 25–30° 10–12мин (5–8) → 30° 15мин (9+).<br>Язык на нёбо. Дыхание Даньтянь 6-3-9. Когнитивные задачи. В Шаолине Чжань Чжуан считается выше форм.');
+  h+=card('🤸','Мобильность 06:41',badge('КАЖДЫЙ ДЕНЬ','accent'),'8 мин растяжка + мобильность',
+    pill('Утро после дыхания')+pill('8 мин')+pill('Перед душем'),
+    'Ежедневная утренняя мобильность: суставная разминка, лёгкая растяжка. Подготовка тела к дню. Включает вакуум + Кегели. Перед контрастным душем.');
+  h+=card('🧘','Тайцзи 24 формы',badge('ДОБАВИТЬ','yellow'),'АД −10–15мм + Flow state',
+    pill('Сб+Вс утро')+pill('15–20 мин')+pill('Безопасно при любом АД'),
+    'Единственная динамическая медитация. Нед 1–4: формы 1–12. Нед 5–8: 13–24. Мес 3: полная форма. Мес 5+: flow state. BDNF +30%, баланс, координация. Бэкграунд самбо = быстрое освоение.');
+  h+=card('🔄','Продвинутые (на горизонте)',badge('ПОЗЖЕ','yellow'),'Даосское обратное дыхание, Crow pose',
+    pill('Чжань Чжуан')+pill('Iron Shirt Qigong')+pill('L-sit')+pill('Пассивный вис'),
+    'Даосское обратное дыхание, Zhan Zhuang (более глубокая стойка), Crow Pose, L-sit, пассивный вис (декомпрессия позвоночника, грыжа), Iron Shirt Qigong. Внедрять после стабилизации core программы.');
+  h+='</div>';
+
+  h+=`<div class="histo-section"><div class="histo-title">📋 Core-программа для эпигастральной грыжи</div>
+  <div class="schedule-grid">
+    <div class="sh">Упражнение</div><div class="sh">Пн</div><div class="sh">Вт</div><div class="sh">Ср</div><div class="sh">Чт</div><div class="sh">Пт</div><div class="sh">Сб</div><div class="sh">Вс</div>
+    <div class="sh">Вакуум</div><div class="sc on">✓</div><div class="sc on">✓</div><div class="sc on">✓</div><div class="sc on">✓</div><div class="sc on">✓</div><div class="sc on">✓</div><div class="sc on">✓</div>
+    <div class="sh">Бок. планка</div><div class="sc">—</div><div class="sc on">3×30с</div><div class="sc">—</div><div class="sc on">3×30с</div><div class="sc">—</div><div class="sc">—</div><div class="sc">—</div>
+    <div class="sh">Bird-Dog</div><div class="sc">—</div><div class="sc on">3×10</div><div class="sc">—</div><div class="sc on">3×10</div><div class="sc">—</div><div class="sc">—</div><div class="sc">—</div>
+    <div class="sh">Dead Bug</div><div class="sc">—</div><div class="sc on">3×10</div><div class="sc">—</div><div class="sc on">3×10</div><div class="sc">—</div><div class="sc">—</div><div class="sc">—</div>
+    <div class="sh">Кегели</div><div class="sc on">2×</div><div class="sc on">2×</div><div class="sc on">2×</div><div class="sc on">2×</div><div class="sc on">2×</div><div class="sc on">2×</div><div class="sc on">2×</div>
+    <div class="sh">Стойка</div><div class="sc on">✓</div><div class="sc on">✓</div><div class="sc on">✓</div><div class="sc on">✓</div><div class="sc on">✓</div><div class="sc on">✓</div><div class="sc off">—</div>
+  </div></div>`;
+
+  h+=histo('🏋️ Рейтинг физических практик',[
+    {n:'Стойка всадника',s:97,c:'var(--purple)',t:'Медитация + BDNF + тазовое'},
+    {n:'Кегели',s:95,c:'var(--accent)',t:'Эрекция +30–40%'},
+    {n:'Тайцзи 24',s:93,c:'var(--blue)',t:'АД↓ + BDNF + flow'},
+    {n:'Вакуум',s:90,c:'var(--accent)',t:'Поперечная мышца, грыжа'},
+    {n:'Контрастный душ',s:85,c:'var(--cyan)',t:'NO↑, бодрость, иммунитет'},
+    {n:'Мобильность 8мин',s:82,c:'var(--blue)',t:'Суставы, подготовка'},
+    {n:'Dead Bug',s:80,c:'var(--orange)',t:'Core без нагрузки на спину'},
+    {n:'Bird-Dog',s:78,c:'var(--orange)',t:'Антиротация + баланс'},
+    {n:'Планки',s:77,c:'var(--yellow)',t:'Изометрическая стабилизация'},
+    {n:'Пассивный вис',s:70,c:'var(--accent)',t:'Декомпрессия (на горизонте)'},
+  ]);
+  return h;
+};
+
+// ===== ⚠️ БЕЗОПАСНОСТЬ =====
+panels.safety=()=>{
+  let h=`<div class="section-title">⚠️ <span>Безопасность — запреты, лимиты, комбинации</span></div>`;
+  h+='<div class="grid">';
+  h+=card('🚫','Запрещённые комбинации',badge('КРИТИЧНО','red'),'Опасные взаимодействия',
+    pill('❌ Пикног+Икариин+Цитрул+PDE5','red')+pill('❌ PT-141+Виагра','red')+pill('❌ 5-HTP+СИОЗС','red'),
+    '❌ Пикногенол + Икариин + Цитруллин + PDE5-ингибитор → гипотензивный коллапс<br>❌ Фенотропил + кофеин >50мг при АД ~135 → гипертонический риск<br>❌ 5-HTP/Триптофан + СИОЗС → серотониновый синдром<br>❌ DHB >100мг + пиперин без контроля сахара → гипогликемия<br>❌ PT-141 + Виагра → опасно<br>❌ GH-пептиды (CJC+Ипа) — ТОЛЬКО при АД <135/85!<br>❌ МК-677 — ЗАПРЕЩЁН при BMI >27 (BMI 28.3)<br>❌ Стойка в ванне со льдом → категорически запрещено');
+  h+=card('💊','Дневные лимиты',badge('КОНТРОЛЬ','yellow'),'Максимальные суточные дозы',
+    pill('Кофеин ≤200мг/д')+pill('Пиперин ≤40мг')+pill('D3 ≤10 000МЕ')+pill('Цинк ≤40мг'),
+    '<table class="data"><tr><th>Параметр</th><th>Лимит</th><th>Текущий</th></tr><tr><td>Кофеин</td><td>≤200мг (≤50мг/приём!)</td><td>~70мг ✅</td></tr><tr><td>Пиперин</td><td>≤40мг</td><td>~39мг ✅</td></tr><tr><td>Цинк</td><td>≤40мг</td><td>~33мг ✅</td></tr><tr><td>Вит. С</td><td>≤2000мг</td><td>~1750мг ✅</td></tr><tr><td>MgLT</td><td>цель 2000мг</td><td>2000мг ✅</td></tr><tr><td>Анирацетам</td><td>750–1500мг</td><td>1500мг ✅</td></tr><tr><td>R-ALA</td><td>≤600мг</td><td>450мг ✅</td></tr><tr><td>Калий</td><td>4000–4700мг</td><td>~3700–4200мг ✅</td></tr></table>');
+  h+=card('🩸','Антикоагулянты',badge('5 ШТУК','red'),'Контроль коагулограммы обязателен!',
+    pill('Наттокиназа','red')+pill('Ресвератрол','red')+pill('Омега-3','red')+pill('Гинкго','red')+pill('Маитаке (5-й!)','red'),
+    'МНО текущий: 1.06 (норма). Маитаке = 5-й антикоагулянт → коагулограмму сдать ДО начала! При кровотечении (геморрой активный!) — обратиться к проктологу.');
+  h+=card('🫀','АД и сосуды',badge('~135','yellow'),'Все решения учитывают гипертензию',
+    pill('Цель <130/85','accent')+pill('Кофеин ≤50мг')+pill('БИПАП→АД −5–10'),
+    'АД ~135 систолическое (МАР 2026). Запрещены: эфедрин, синефрин, DMAA, любые вазоконстрикторы. Вим Хоф ТОЛЬКО при <150/95. CJC+Ипа: ТОЛЬКО при <135/85.');
+  h+=card('🕐','Тайминг-правила',badge('ВАЖНО','blue'),'Время приёма критично',
+    pill('Стимуляторы до 14:00','red')+pill('Мукуна = обед')+pill('Huperzine = ч/день')+pill('Вс = OFF','yellow'),
+    'ВСЕ стимуляторы строго до 14:00 (Фенотропил, кофеин, тирозин, родиола). Мукуна жгучая — ТОЛЬКО обед, НЕ после 17:00. Huperzine-A — через день (T½ 10–14ч). Фенотропил ТОЛЬКО с едой. Анирацетам ТОЛЬКО с жирами.');
+  h+=card('🔬','Мониторинг печени',badge('8 НЕД','orange'),'АЛТ/АСТ + hsCRP',
+    pill('Анирацетам')+pill('Фенотропил')+pill('Пиперин')+pill('Силимарин 300мг','accent'),
+    'АЛТ/АСТ каждые 8 нед (не 12!). hsCRP каждые 8 нед для Дигекса. Текущий АЛТ: 41.9 (чуть выше нормы). Силимарин 300мг — гепатопротекция обязательна.');
+  h+='</div>';
+  return h;
+};
+
+// ===== 📅 РАСПИСАНИЕ =====
+panels.schedule=()=>{
+  let h=`<div class="section-title">📅 <span>Расписание — день + пептидный календарь</span></div>`;
+  h+=`<div class="histo-section"><div class="histo-title">⏰ Типичный будний день</div>`;
+  h+=`<div class="timeline">
+    <div class="tl-item"><div class="tl-time">06:30</div><div class="tl-text">Подъём · Вода 500мл + соль · АД · MCT C8 + олив. масло</div></div>
+    <div class="tl-item"><div class="tl-time">06:35</div><div class="tl-text">НАТОЩАК: NMN 500мг + Тирозин + R-ALA + Семакс · Дигекса (Пн/Ср/Пт)</div></div>
+    <div class="tl-item"><div class="tl-time">06:37</div><div class="tl-text">Вим Хоф 4мин или 4-7-8</div></div>
+    <div class="tl-item"><div class="tl-time">06:41</div><div class="tl-text">Мобильность 8мин + Кегели + Core</div></div>
+    <div class="tl-item"><div class="tl-time">06:50</div><div class="tl-text">Контрастный душ</div></div>
+    <div class="tl-item accent"><div class="tl-time">07:00</div><div class="tl-text"><b>ЗАВТРАК</b> · Порошки (BASE+BOOST 36.5г) · 15+ капсул · Анирацетам 750мг (с MCT!)</div></div>
+    <div class="tl-item"><div class="tl-time">07:30</div><div class="tl-text">Школа (Алекс) → Офис</div></div>
+    <div class="tl-item accent"><div class="tl-time">08:30</div><div class="tl-text"><b>NZT MODE</b> — 4–6ч глубокой работы · Полный стек на пике</div></div>
+    <div class="tl-item"><div class="tl-time">10:30</div><div class="tl-text">Перекус: творог/протеин + орехи + какао-бобы</div></div>
+    <div class="tl-item accent"><div class="tl-time">13:00</div><div class="tl-text"><b>ОБЕД</b> · Анирацетам 750мг (с олив. маслом!) · Мукуна · Huperzine-A (Пн/Ср/Пт)</div></div>
+    <div class="tl-item"><div class="tl-time">13:30</div><div class="tl-text">Прогулка 10мин</div></div>
+    <div class="tl-item"><div class="tl-time">16:00</div><div class="tl-text">Перекус: творог + тыквенные семечки</div></div>
+    <div class="tl-item yellow"><div class="tl-time">17:30</div><div class="tl-text">IP6 500мг натощак (≥4ч до ночных минералов)</div></div>
+    <div class="tl-item accent"><div class="tl-time">18:30</div><div class="tl-text"><b>ПРЕДТРЕНИК TITAN</b> (Пн/Ср/Пт) + тренировка 50мин</div></div>
+    <div class="tl-item"><div class="tl-time">19:50</div><div class="tl-text">УЖИН · Берберин · DIM · Vision · Силимарин · Mg-L-треонат</div></div>
+    <div class="tl-item"><div class="tl-time">21:00</div><div class="tl-text">Стойка 5–15мин + Кегели + МНЦ 10мин</div></div>
+    <div class="tl-item"><div class="tl-time">21:15</div><div class="tl-text">Наттокиназа 100мг натощак</div></div>
+    <div class="tl-item"><div class="tl-time">21:30</div><div class="tl-text">НОЧНОЙ БЛОК: порошок REPAIR+NIGHT (25.4г) · Ашваганда · Триптофан · Селанк</div></div>
+    <div class="tl-item red"><div class="tl-time">22:00</div><div class="tl-text"><b>СОН</b> · 8ч · 18–19°C · Темно · БИПАП каждую ночь!</div></div>
+  </div></div>`;
+  
+  h+=`<div class="histo-section"><div class="histo-title">💉 Пептидный календарь МАР 2026 → ФЕВ 2027</div>
+  <table class="data">
+    <tr><th>Месяц</th><th>Пептиды</th><th>Процедуры</th></tr>
+    <tr><td><b>МАР</b></td><td>Семакс + Селанк + Дигекса СТАРТ + BPC</td><td>Золушка ×5</td></tr>
+    <tr><td>АПР</td><td>Дигекса + Эпиталон(10д) + Кисспептин(14д)⚠️</td><td>—</td></tr>
+    <tr><td>МАЙ</td><td>Семакс + GHK-Cu(20д) + Лаеннек</td><td>—</td></tr>
+    <tr><td>ИЮН</td><td>CJC+Ипа старт ⚠️ГЕЙТ АД + Селанк + BPC</td><td>—</td></tr>
+    <tr><td>ИЮЛ</td><td>CJC/Ипа + Семакс + Дигекса + Кисспептин(14д)</td><td>—</td></tr>
+    <tr><td>АВГ</td><td>CJC/Ипа окончание + TB-500 + BPC</td><td>—</td></tr>
+    <tr><td>СЕН</td><td>Церебролизин + Кортексин (Семакс убран!)</td><td>Золушка ×5</td></tr>
+    <tr><td>ОКТ</td><td>Эпиталон + GHK-Cu + Лаеннек + Кисспептин(14д)</td><td>—</td></tr>
+    <tr><td>НОЯ</td><td>CJC+Ипа повтор ⚠️ГЕЙТ АД + BPC + Селанк</td><td>—</td></tr>
+    <tr><td>ДЕК</td><td>Семакс + Пинеалон + Селанк</td><td>—</td></tr>
+    <tr><td>ЯНВ 27</td><td>Семакс + BPC + Дигекса + Кисспептин(14д)</td><td>—</td></tr>
+    <tr><td>ФЕВ 27</td><td>Дигекса + GHK-Cu + Церебролизин + Лаеннек</td><td>—</td></tr>
+  </table></div>`;
+
+  h+=`<div class="histo-section"><div class="histo-title">🔄 Ротации (недельный цикл)</div>
+  <div class="schedule-grid">
+    <div class="sh">Вещество</div><div class="sh">Пн</div><div class="sh">Вт</div><div class="sh">Ср</div><div class="sh">Чт</div><div class="sh">Пт</div><div class="sh">Сб</div><div class="sh">Вс</div>
+    <div class="sh">Фенотропил</div><div class="sc on">✓</div><div class="sc off">—</div><div class="sc on">✓</div><div class="sc off">—</div><div class="sc on">✓</div><div class="sc off">—</div><div class="sc off">OFF</div>
+    <div class="sh">Ноопепт</div><div class="sc off">—</div><div class="sc on">✓</div><div class="sc off">—</div><div class="sc on">✓</div><div class="sc off">—</div><div class="sc off">—</div><div class="sc off">OFF</div>
+    <div class="sh">Huperzine-A</div><div class="sc on">✓</div><div class="sc off">—</div><div class="sc on">✓</div><div class="sc off">—</div><div class="sc on">✓</div><div class="sc off">—</div><div class="sc off">OFF</div>
+    <div class="sh">Дигекса</div><div class="sc on">✓</div><div class="sc off">—</div><div class="sc on">✓</div><div class="sc off">—</div><div class="sc on">✓</div><div class="sc off">—</div><div class="sc off">OFF</div>
+    <div class="sh">NAC</div><div class="sc off">—</div><div class="sc off">—</div><div class="sc off">—</div><div class="sc off">—</div><div class="sc off">—</div><div class="sc on">✓</div><div class="sc on">✓</div>
+    <div class="sh">Стимуляторы</div><div class="sc on">✓</div><div class="sc on">✓</div><div class="sc on">✓</div><div class="sc on">✓</div><div class="sc on">✓</div><div class="sc on">✓</div><div class="sc off">OFF!</div>
+  </div></div>`;
+  return h;
+};
+
+// ===== 📊 РЕЙТИНГ =====
+panels.rating=()=>{
+  let h=`<div class="section-title">📊 <span>Сводный рейтинг — все системы</span></div>`;
+  h+=histo('🏆 ТОП-30 элементов NZT-48 (суммарный балл)',[
+    {n:'БИПАП',s:100,c:'var(--accent)',t:'Апноэ → T↑, АД↓, NZT 100%'},
+    {n:'Стойка+Dual-Task',s:98,c:'var(--purple)',t:'BDNF+медитация+когниция'},
+    {n:'Dual N-Back',s:97,c:'var(--accent)',t:'IQ +3–4, раб.память +40%'},
+    {n:'NMN + NR',s:97,c:'var(--accent)',t:'NAD⁺ ядро антистарения'},
+    {n:'МНЦ медитация',s:96,c:'var(--purple)',t:'BDNF +30%, серое вещество'},
+    {n:'Анирацетам',s:95,c:'var(--purple)',t:'AMPA↑ мозг + серотонин'},
+    {n:'Кегели',s:95,c:'var(--accent)',t:'Эрекция +30–40%'},
+    {n:'Омега-3',s:95,c:'var(--blue)',t:'DHA мозг + EPA ↓воспаление'},
+    {n:'Креатин',s:94,c:'var(--accent)',t:'АТФ мозг+мышцы'},
+    {n:'Семакс',s:93,c:'var(--blue)',t:'BDNF ×3–4'},
+    {n:'Тайцзи 24',s:93,c:'var(--blue)',t:'АД↓ + BDNF + flow'},
+    {n:'Вим Хоф',s:93,c:'var(--cyan)',t:'НА +530%, дофамин +250%'},
+    {n:'Фенотропил',s:92,c:'var(--orange)',t:'Дофамин+фокус'},
+    {n:'Эпиталон',s:92,c:'var(--purple)',t:'Теломераза'},
+    {n:'Дворец памяти',s:92,c:'var(--purple)',t:'Память +500%'},
+    {n:'NAD⁺ в/в',s:91,c:'var(--orange)',t:'Мгновенный NAD⁺'},
+    {n:'Go (Вэйци)',s:91,c:'var(--blue)',t:'Префронт. +12%'},
+    {n:'Резонансное дых.',s:90,c:'var(--blue)',t:'HRV +50–100%'},
+    {n:'Львиная грива',s:90,c:'var(--accent)',t:'NGF↑ нейрогенез'},
+    {n:'Кордицепс',s:90,c:'var(--orange)',t:'VO₂max + энергия'},
+    {n:'Вакуум живота',s:90,c:'var(--accent)',t:'Поперечная мышца, грыжа'},
+    {n:'Берберин',s:89,c:'var(--yellow)',t:'AMPK↑ ↓ЛПНП ↓глюкоза'},
+    {n:'Рейши',s:88,c:'var(--purple)',t:'↓Кортизол + сон'},
+    {n:'Ресвератрол',s:88,c:'var(--blue)',t:'SIRT1 + eNOS↑'},
+    {n:'Даньтянь 6-3-9',s:88,c:'var(--red)',t:'Кровоток таз, потенция'},
+    {n:'Шахматы',s:88,c:'var(--blue)',t:'Паттерны, визуализация'},
+    {n:'Дигекса',s:87,c:'var(--red)',t:'HGF/c-Met экспериментальный'},
+    {n:'GHK-Cu',s:87,c:'var(--cyan)',t:'>4000 генов'},
+    {n:'Соробан',s:86,c:'var(--orange)',t:'Визуализация +60%'},
+    {n:'MgLT',s:86,c:'var(--cyan)',t:'Единственный Mg через ГЭБ'},
+  ]);
+  
+  h+=`<div class="histo-section"><div class="histo-title">💡 Ключевые выводы</div>
+    <div style="font-size:13px;line-height:1.7;color:var(--text2)">
+    <b>1. БИПАП — единственный элемент с баллом 100.</b> Разблокирует T, АД, GH, когницию. Куплен 28.03, старт 01.04.<br>
+    <b>2. Стойка+Dual-Task — платформа №1.</b> Объединяет: BDNF +45%, медитацию МНЦ, Кегели, когнитивные тренировки (шахматы/Go/дворец/соробан). Один элемент закрывает 5 целей.<br>
+    <b>3. NAD⁺-ось + Нейрогенез-тройка</b> — биохимический фундамент. NMN+NR+NAD⁺ в/в + Дигекса+Семакс+Львиная грива.<br>
+    <b>4. Дыхание+медитация = ~3.5ч/нед.</b> 8 техник от Вим Хофа до МНЦ. Тайцзи 24 — единственная практика, закрывающая 4 цели (АД↓ + BDNF↑ + баланс + flow).<br>
+    <b>5. Когнитивные тренировки = 4–5ч/нед.</b> N-Back (IQ +3–4), дворец памяти (+500%), Go (префронт. +12%). Синхронизированы с NZT-стеком на пике ацетилхолина.
+    </div></div>`;
+  return h;
+};
+
+// ===== 🗺️ ПЛАН =====
+panels.plan=()=>{
+  let h=`<div class="section-title">🗺️ <span>План действий</span></div>`;
+  
+  h+=`<div class="histo-section"><div class="histo-title">🔴 СЕЙЧАС (эта неделя)</div>`;
+  h+=`<div class="action-card"><div class="pri p1">1</div><div class="act-text"><div class="act-title">Старт БИПАП 01.04.2026</div><div class="act-desc">Маска в пути. Первая ночь → AHI в MyAir, SpO2 в Apple Watch, АД утром. Цель: AHI <5.</div></div></div>`;
+  h+=`<div class="action-card"><div class="pri p1">2</div><div class="act-text"><div class="act-title">Досдать анализы: ЛГ, ФСГ, пролактин, кортизол</div><div class="act-desc">Решение по Кисспептин-54 зависит от ЛГ/ФСГ. Кортизол — подтвердить 2 года стресса.</div></div></div>`;
+  h+=`<div class="action-card"><div class="pri p1">3</div><div class="act-text"><div class="act-title">Коагулограмма перед Маитаке</div><div class="act-desc">5-й антикоагулянт. МНО 1.06 — проверить что баланс сохранится.</div></div></div>`;
+  h+='</div>';
+  
+  h+=`<div class="histo-section"><div class="histo-title">🟡 ЭТОТ МЕСЯЦ (апрель 2026)</div>`;
+  h+=`<div class="action-card"><div class="pri p2">4</div><div class="act-text"><div class="act-title">GraFLab закупка (4501₽, 13 мая)</div><div class="act-desc">Гинкго-комбо 6-в-1 + Бенфотиамин-комбо. Замена отдельных капсул.</div></div></div>`;
+  h+=`<div class="action-card"><div class="pri p2">5</div><div class="act-text"><div class="act-title">Прокторолог (геморрой)</div><div class="act-desc">Рецидив + активное кровотечение + 5 антикоагулянтов в стеке. Визит обязателен.</div></div></div>`;
+  h+=`<div class="action-card"><div class="pri p2">6</div><div class="act-text"><div class="act-title">Эпиталон курс (10 дней)</div><div class="act-desc">10мг п/к ×10д. Теломераза↑. По календарю — АПР.</div></div></div>`;
+  h+=`<div class="action-card"><div class="pri p2">7</div><div class="act-text"><div class="act-title">CGM Libre 3 — заказать</div><div class="act-desc">HOMA-IR 2.1 + инсулин 9.53. Real-time глюкоза для настройки питания.</div></div></div>`;
+  h+=`<div class="action-card"><div class="pri p2">8</div><div class="act-text"><div class="act-title">Brainstorm tDCS — купить</div><div class="act-desc">~10 000₽. Лучший ROI из всех гаджетов. Фокус +20–40%.</div></div></div>`;
+  h+='</div>';
+  
+  h+=`<div class="histo-section"><div class="histo-title">🟢 БЛИЖАЙШИЕ 3 МЕСЯЦА</div>`;
+  h+=`<div class="action-card"><div class="pri p3">9</div><div class="act-text"><div class="act-title">Оценка БИПАП через 4 нед → решение по CJC+Ипа</div><div class="act-desc">Если АД <130/85 стабильно → разблокирует GH-пептиды (ИЮН 2026)</div></div></div>`;
+  h+=`<div class="action-card"><div class="pri p3">10</div><div class="act-text"><div class="act-title">GHK-Cu курс (МАЙ) + Лаеннек</div><div class="act-desc">20 дней GHK-Cu п/к + Лаеннек 2мл п/к через день ×10. Регенерация + печень.</div></div></div>`;
+  h+=`<div class="action-card"><div class="pri p3">11</div><div class="act-text"><div class="act-title">Фабричные капсулы — оформить заказ</div><div class="act-desc">BRAIN+ADAPT 000 + NEURO+MINERAL 000. Снижение с ~55 до ~24 капсул/день.</div></div></div>`;
+  h+=`<div class="action-card"><div class="pri p3">12</div><div class="act-text"><div class="act-title">Повторные анализы (через 12 нед)</div><div class="act-desc">Контроль: T, ЛПНП, ферритин, АЛТ, инсулин, гомоцистеин. + Новые: ApoB, Lp(a), NMR.</div></div></div>`;
+  h+='</div>';
+  
+  h+=`<div class="histo-section"><div class="histo-title">🏆 СТРАТЕГИЧЕСКИЕ ЦЕЛИ</div>
+  <table class="data">
+    <tr><th>Цель</th><th>Метрика</th><th>Текущее</th><th>Target</th><th>Когда</th></tr>
+    <tr><td>АД</td><td>Систолическое</td><td>~135</td><td><130/85</td><td>МАЙ 2026 (БИПАП 4 нед)</td></tr>
+    <tr><td>Тестостерон</td><td>Общий T</td><td>323 нг/дл</td><td>>600</td><td>СЕН 2026 (БИПАП+Кисспептин)</td></tr>
+    <tr><td>ЛПНП</td><td>ммоль/л</td><td>4.03</td><td><3.0</td><td>ИЮН 2026 (берберин+диета)</td></tr>
+    <tr><td>Ферритин</td><td>мкг/л</td><td>230</td><td>40–150</td><td>ИЮН 2026 (IP6+донорство)</td></tr>
+    <tr><td>Инсулин</td><td>мкЕд/мл</td><td>9.53</td><td><8</td><td>ИЮН 2026 (берберин+маитаке)</td></tr>
+    <tr><td>BMI</td><td>кг/м²</td><td>28.3</td><td><27</td><td>ДЕК 2026 (−400 ккал + кардио)</td></tr>
+    <tr><td>Мозг</td><td>NZT-закрытие</td><td>98%</td><td>100%</td><td>Постоянно</td></tr>
+  </table></div>`;
+  return h;
+};
+
+// ===== RENDER =====
+function render(){
+  const tabsEl=document.getElementById('tabs');
+  const contentEl=document.getElementById('content');
+  tabsEl.innerHTML=TABS.map(t=>`<button class="tab" data-id="${t.id}">${t.icon} ${t.label}</button>`).join('');
+  
+  function activate(id){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.id===id));
+    contentEl.innerHTML=`<div class="panel active">${panels[id]()}</div>`;
+  }
+  
+  tabsEl.addEventListener('click',e=>{
+    const tab=e.target.closest('.tab');
+    if(tab)activate(tab.dataset.id);
+  });
+  
+  activate('brain');
+}
+
+render();
+</script>
+<script src="../assets/inject-overlay.js"></script>
+</body>
+</html>

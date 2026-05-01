@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NZT · Биохакинг · ODV999</title>
+<link rel="stylesheet" href="assets/dashboard-shared.css">
+<style>
+.intro { padding: 36px 28px 16px; max-width: 920px; margin: 0 auto; }
+.intro h1 { font-size: 32px; margin-bottom: 10px; }
+.intro .sub { color: var(--text-dim); font-size: 16px; margin-bottom: 14px; }
+.section-title { font-size: 14px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin: 28px 0 14px; padding: 0 28px; max-width: 920px; margin-left: auto; margin-right: auto; }
+.cards-wrap { padding: 0 28px; max-width: 920px; margin: 0 auto; }
+</style>
+</head>
+<body data-theme="light">
+
+<nav class="topnav">
+  <div class="topnav-brand">⌂ NZT · Биохакинг</div>
+  <select class="topnav-select" onchange="if(this.value) location.href='pages/'+this.value">
+    <option value="">— перейти к дашборду —</option>
+    <option value="stack-denis.html">💊 Стек Дениса по дням</option>
+    <option value="biohacking-map.html">🗺 Карта биохакинга v3.1</option>
+    <option value="nzt48-overview.html">🗺 NZT-48 — полная карта v4</option>
+    <option value="family.html">👪 Семейный (Денис/Валя/Юлия/Алекс)</option>
+    <option value="7-neurosystems.html">🧠 7 нейросистем мозга</option>
+    <option value="skincare-denis.html">🧴 Skincare Дениса</option>
+  </select>
+  <button class="topnav-theme" id="topnavTheme">🌙</button>
+</nav>
+
+<div class="intro">
+  <h1>NZT · Биохакинг</h1>
+  <p class="sub">Стек, карты, нейросистемы, семейные дашборды, skincare. Конфиденциально, для личного использования.</p>
+</div>
+
+<div class="section-title">📅 Стек и карты</div>
+<div class="cards-wrap">
+  <div class="grid">
+    <a class="grid-card" href="pages/stack-denis.html">
+      <h3>💊 Стек Дениса по дням</h3>
+      <p>Ежедневный стек добавок, разнесённый по времени. 4 банки порошков + капсулы.</p>
+    </a>
+    <a class="grid-card" href="pages/biohacking-map.html">
+      <h3>🗺 Карта биохакинга v3.1</h3>
+      <p>Полная карта системы — мозг, тело, антистарение, либидо, зрение.</p>
+    </a>
+    <a class="grid-card" href="pages/nzt48-overview.html">
+      <h3>🗺 NZT-48 v4 — полная карта</h3>
+      <p>Самая свежая итерация всей системы NZT-48.</p>
+    </a>
+  </div>
+</div>
+
+<div class="section-title">🧠 Биология · 👪 Семья · 🧴 Skincare</div>
+<div class="cards-wrap">
+  <div class="grid">
+    <a class="grid-card" href="pages/7-neurosystems.html">
+      <h3>🧠 7 нейросистем мозга</h3>
+      <p>Дофамин · Ацетилхолин · BDNF/NGF · Кровоток · Энергия · Пластичность · GABA.</p>
+    </a>
+    <a class="grid-card" href="pages/family.html">
+      <h3>👪 Семейный дашборд</h3>
+      <p>Денис · Валя · Юлия · Алекс. Возрастные ограничения, протоколы.</p>
+    </a>
+    <a class="grid-card" href="pages/skincare-denis.html">
+      <h3>🧴 Skincare Дениса v4</h3>
+      <p>Утренняя и вечерняя рутина. Арсенал, правила.</p>
+    </a>
+  </div>
+</div>
+
+<div class="footer">
+  Автор: Denis Onosov (ODV999) · ⚠ Конфиденциально<br>
+  Не является медицинским советом.<br>
+  <a href="../index.html" style="color:var(--blue);">← На главную ODV999</a>
+</div>
+
+<script>
+var btn = document.getElementById('topnavTheme');
+var stored = localStorage.getItem('theme') || 'light';
+document.body.dataset.theme = stored;
+btn.textContent = stored === 'dark' ? '☀' : '🌙';
+btn.addEventListener('click', function(){
+  var next = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.body.dataset.theme = next;
+  localStorage.setItem('theme', next);
+  btn.textContent = next === 'dark' ? '☀' : '🌙';
+});
+</script>
+</body>
+</html>
