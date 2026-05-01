@@ -1,49 +1,66 @@
-# ODV999 — Public Dashboards & Artifacts
+# NZT-48 Шпаргалка отношений
 
-Публичный репозиторий для дашбордов, отчётов и HTML-артефактов.
+> Только формулы и действия. Только подтверждённое исследованиями. Без воды.
 
-## 🌐 Опубликованные страницы
+Интерактивный single-file HTML-дашборд по шпаргалке отношений. Версия `v2.0.1` (30.04.2026).
 
-После включения GitHub Pages всё в этом репо доступно по адресу:
+**Автор:** Denis Onosov (ODV999)
 
-**https://donosov999-ai.github.io/ODV999/**
+## Возможности
 
-## 📁 Структура
+- 📑 Навигация по 6 основным разделам + кризис, ярлыки, словарь, источники
+- 🔍 Полнотекстовый поиск
+- 🏷 Фильтр по тегам (👩 ей / 👨 ему / обоим)
+- 🌙 Тёмная и светлая темы (запоминаются в браузере)
+- ✅ Чек-лист «Сегодня вечером» с автосбросом раз в сутки
+- 📱 Адаптивная вёрстка (mobile, tablet, desktop)
+- 0️⃣ Без зависимостей, без сборщиков, без сети — просто `index.html`
 
+## Открыть локально
+
+```bash
+open index.html        # macOS
+xdg-open index.html    # Linux
+start index.html       # Windows
 ```
-ODV999/
-├── index.html              ← главная страница со списком дашбордов
-├── dashboards/             ← сюда кладутся HTML-дашборды
-│   └── *.html
-├── data/                   ← json/csv для дашбордов (при необходимости)
-├── assets/
-│   ├── css/                ← общие стили
-│   └── js/                 ← общие скрипты
-└── README.md
-```
 
-## 🚀 Как добавить новый дашборд
+## Развернуть на GitHub Pages
 
-1. Создать `dashboards/<имя>.html` (любой одностраничный HTML)
-2. Добавить запись в `index.html` (раздел `<!-- DASHBOARDS LIST -->`)
-3. `git add . && git commit -m "Add <имя> dashboard" && git push`
-4. Через 1-2 минуты доступно по `https://donosov999-ai.github.io/ODV999/dashboards/<имя>.html`
+После `git push` в `main`:
 
-## 🔧 Включение GitHub Pages
-
-**Один раз после первого push:**
-
-1. Settings → Pages
+1. GitHub → репозиторий → **Settings → Pages**
 2. **Source:** Deploy from a branch
-3. **Branch:** `main` / `(root)`
-4. Save
-5. Через 1-2 минуты сайт онлайн по адресу выше
+3. **Branch:** `main` / `/ (root)`
+4. Save → ссылка появится через ~30 секунд
 
-## ⚠️ Что НЕ кладём сюда (репо публичный!)
+URL будет: `https://<username>.github.io/<repo-name>/`
 
-- API-ключи, токены, пароли
-- Чувствительные данные клиентов
-- Внутренние SQL-запросы / промпты бота
-- Закупочные цены поставщиков (внутренняя инфа)
+## Структура
 
-Всё внутреннее остаётся в приватном репо `donosov999-ai/gidromash`.
+```
+.
+├── index.html       # дашборд (всё внутри: HTML + CSS + JS)
+├── README.md        # этот файл
+└── LICENSE          # MIT
+```
+
+## Источники (peer-review)
+
+- Gottman, J. — 4 horsemen, repair attempts, aftermath, magic 6 hours
+- Light, Grewen, Amico (2005) — *Biological Psychology* — объятия и окситоцин
+- Bowlby, J. — теория привязанности
+- Fogg, B. J. — B = MAP, микропривычки
+- Frontiers in Psychology (2025) — phubbing meta-analysis
+- WEF Global Risks Report (2026) — AI-deepfakes top-3 risks
+- Cleveland Clinic (2024) — therapy speak
+- DSM-5 (2022) — критерии NPD, PTSD
+
+## Версионирование
+
+См. CHANGELOG в самой шпаргалке (нижняя секция HTML). При обновлении контента — версия в `<title>` и в `.brand-version` обновляется вручную.
+
+## Лицензия
+
+MIT — см. [LICENSE](./LICENSE).
+
+⚠ Контент основан на peer-review источниках, но не является медицинским советом. При кризисе — см. блок "Кризис" в дашборде.

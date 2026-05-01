@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Биохимия ДО психолога · ODV999</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
+</head>
+<body data-theme="light">
+
+<div class="container">
+  <div class="hero">
+    <h1>Биохимия ДО психолога<span class="v">v1.0</span></h1>
+    <p>Прежде чем платить психологу — проверь гормоны. У многих «отношенческих» проблем биохимическая причина: перименопауза, late-onset hypogonadism, дефицит D, гипотиреоз, повышенный пролактин.</p>
+  </div>
+
+  <div class="warn"><strong>⚠ Это скрининг, не диагностика.</strong> Результат — список анализов, которые имеет смысл сдать. Расшифровывает врач.</div>
+
+  <div class="card">
+    <div class="card-title">1. Базовые данные</div>
+    <div class="field">
+      <label>Пол:</label>
+      <select id="sex">
+        <option value="">— выбери —</option>
+        <option value="f">👩 Женщина</option>
+        <option value="m">👨 Мужчина</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Возраст:</label>
+      <input type="number" id="age" min="18" max="100" placeholder="например, 38">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">2. Симптомы (отметь всё что подходит за последние 3 месяца)</div>
+    <ul class="checklist" id="symptoms"></ul>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn" id="calcBtn" type="button">Получить список анализов</button>
+  </div>
+
+  <div id="result"></div>
+
+  <details>
+    <summary>Почему это работает</summary>
+    <p><strong>Перименопауза 35-44</strong> — мажет под «эмоциональную нестабильность» / «у нас плохие отношения». Реально: падает прогестерон → бессонница → раздражительность. Анализы (ФСГ, эстрадиол, АМГ) показывают за 6-12 мес до прихода менопаузы.</p>
+    <p><strong>Late-onset hypogonadism (Mayo Clinic 2024)</strong> у мужчин 40+: тестостерон падает 1%/год. Симптомы — апатия, либидо↓, утренние эрекции &lt;2/нед, ↑жир. Часто маркируется как «кризис отношений».</p>
+    <p><strong>Высокий пролактин</strong> (>15 нг/мл у женщин, >18 у мужчин) — подавляет либидо и у тех и у других. Причины: стресс, лекарства (нейролептики, СИОЗС), микроаденома гипофиза.</p>
+    <p><strong>Дефицит D &lt;30</strong> — апатия, либидо↓, депрессивность.</p>
+    <p><strong>Гипотиреоз (ТТГ >4)</strong> — усталость, апатия, набор веса, либидо↓.</p>
+  </details>
+
+  <div class="footer">
+    Источники: Mayo Clinic 2024 (late-onset hypogonadism) · Endotext NCBI 2024 · ISSAM Recommendations · DSM-5
+  </div>
+</div>
+
+<script src="../assets/dashboard-nav.js"></script>
+<script>
+var SYMPTOMS = [
+  {id:'libido',  label:'Снизилось либидо', sex:'both', tag:'sex'},
+  {id:'apathy',  label:'Апатия / нет мотивации', sex:'both', tag:'mood'},
+  {id:'tired',   label:'Хроническая усталость даже после сна', sex:'both', tag:'energy'},
+  {id:'mood',    label:'Раздражительность, эмоциональные качели', sex:'both', tag:'mood'},
+  {id:'sleep',   label:'Бессонница, плохой сон', sex:'both', tag:'sleep'},
+  {id:'weight',  label:'Набор веса без изменения питания', sex:'both', tag:'metabol'},
+  {id:'depress', label:'Подавленность 2+ нед подряд', sex:'both', tag:'mood'},
+  // Female
+  {id:'cycle',   label:'Цикл сбился / стал нерегулярным', sex:'f', tag:'gyn'},
+  {id:'pms',     label:'ПМС стал тяжелее', sex:'f', tag:'gyn'},
+  {id:'hot',     label:'Приливы жара', sex:'f', tag:'gyn'},
+  {id:'dry',     label:'Сухость влагалища, дискомфорт при сексе', sex:'f', tag:'gyn'},
+  // Male
+  {id:'morning', label:'Утренние эрекции <2 раз/нед 4+ нед', sex:'m', tag:'andro'},
+  {id:'ed',      label:'Проблемы с эрекцией (>50% попыток за 6 мес)', sex:'m', tag:'andro'},
+  {id:'fat',     label:'Жир в области живота, гинекомастия', sex:'m', tag:'andro'},
+  {id:'muscle',  label:'Снижение мышечной массы / силы', sex:'m', tag:'andro'}
+];
+
+function build(){
+  var sex = document.getElementById('sex').value;
+  var ul = document.getElementById('symptoms');
+  ul.innerHTML = '';
+  SYMPTOMS.forEach(function(s){
+    if (s.sex !== 'both' && s.sex !== sex) return;
+    var li = document.createElement('li');
+    li.dataset.id = s.id;
+    li.dataset.tag = s.tag;
+    li.innerHTML = '<span class="box">✓</span><span>' + s.label + '</span>';
+    li.addEventListener('click', function(){ li.classList.toggle('done'); });
+    ul.appendChild(li);
+  });
+}
+document.getElementById('sex').addEventListener('change', build);
+build();
+
+document.getElementById('calcBtn').addEventListener('click', function(){
+  var sex = document.getElementById('sex').value;
+  var age = parseInt(document.getElementById('age').value, 10);
+  if (!sex || !age) { alert('Заполни пол и возраст.'); return; }
+
+  var checked = Array.from(document.querySelectorAll('#symptoms li.done')).map(function(li){ return {id: li.dataset.id, tag: li.dataset.tag}; });
+  if (checked.length === 0) { alert('Отметь хотя бы один симптом.'); return; }
+
+  var tags = {};
+  checked.forEach(function(c){ tags[c.tag] = (tags[c.tag] || 0) + 1; });
+
+  var html = '<div class="result-box"><h3>Список анализов и врачей</h3>';
+
+  // База — всем
+  var labs = ['Витамин D 25(OH)D', 'Ферритин', 'ТТГ + Т4 свободный', 'Пролактин', 'hsCRP'];
+
+  if (sex === 'f') {
+    if (age >= 35 || tags.gyn) {
+      labs = labs.concat(['ФСГ', 'ЛГ', 'Эстрадиол (E2)', 'АМГ (овариальный резерв)']);
+    }
+    if (tags.sex || tags.mood) labs.push('Тестостерон общий + свободный');
+  } else {
+    labs = labs.concat(['Тестостерон общий (>12 нмоль/л норма)', 'Тестостерон свободный (>220 пмоль/л)', 'ГСПГ (SHBG)', 'Эстрадиол (20–35 пг/мл)', 'ЛГ', 'ФСГ']);
+    if (age >= 40) labs.push('ПСА');
+    if (tags.metabol) labs.push('HbA1c (углеводный обмен)');
+  }
+
+  html += '<h4 style="font-size:14px;margin-top:12px;color:var(--text-dim);">Сдать в одной лаборатории, утром натощак:</h4>';
+  html += '<ul style="padding-left:20px;font-size:14px;">';
+  labs.forEach(function(l){ html += '<li>' + l + '</li>'; });
+  html += '</ul>';
+
+  html += '<h4 style="font-size:14px;margin-top:18px;color:var(--text-dim);">К каким врачам идти ПОСЛЕ анализов:</h4>';
+  var docs = [];
+  if (sex === 'f' && (age >= 35 || tags.gyn)) docs.push('🔴 <strong>Гинеколог-эндокринолог</strong> — перименопауза при цикл+бессонница+раздражительность 35+');
+  if (sex === 'm' && (tags.andro || tags.sex)) docs.push('🔴 <strong>Эндокринолог</strong> — late-onset hypogonadism при ↓либидо + ↓утренние эрекции + ↑жир');
+  if (sex === 'm' && checked.some(function(c){ return c.id === 'ed' || c.id === 'morning'; })) docs.push('🔴 <strong>Уролог</strong> — утренние эрекции <2/нед 4+ нед или ЭД');
+  if (tags.mood && checked.length >= 4) docs.push('⚕ <strong>Психиатр</strong> (НЕ психолог) — если депрессивные симптомы 2+ недели');
+  if (docs.length === 0) docs.push('Терапевт + эндокринолог по результатам анализов');
+
+  html += '<ul style="padding-left:20px;font-size:14px;">';
+  docs.forEach(function(d){ html += '<li>' + d + '</li>'; });
+  html += '</ul>';
+
+  html += '<div class="warn"><strong>Иди к биохимии ДО психолога.</strong> Если гормоны не в норме — психотерапия работает на 30%. С гормонами в норме — работает полноценно.</div>';
+  html += '<div class="btn-row"><a class="btn btn-secondary" href="crisis-navigator.html">Если кризис — навигатор →</a></div>';
+  html += '</div>';
+
+  document.getElementById('result').innerHTML = html;
+  document.getElementById('result').scrollIntoView({behavior:'smooth'});
+});
+</script>
+</body>
+</html>

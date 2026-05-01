@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Метатеория цикличности истории</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --text: #e0ddd5;
+    --text-dim: #8a8896;
+    --accent: #c9a84c;
+    --accent2: #4a8cc9;
+    --red: #c94a4a;
+    --green: #4ac96a;
+    --orange: #c97a3a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 17px;
+    line-height: 1.75;
+    overflow-x: hidden;
+  }
+
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse 800px 600px at 30% 20%, rgba(201,168,76,0.08), transparent),
+      radial-gradient(ellipse 600px 800px at 70% 80%, rgba(74,140,201,0.06), transparent);
+  }
+
+  .hero-subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 1s ease 0.3s forwards;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 900;
+    line-height: 1.1;
+    max-width: 900px;
+    opacity: 0;
+    animation: fadeUp 1s ease 0.6s forwards;
+  }
+
+  .hero h1 em {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .hero-desc {
+    margin-top: 2rem;
+    font-size: 1.15rem;
+    color: var(--text-dim);
+    max-width: 650px;
+    opacity: 0;
+    animation: fadeUp 1s ease 0.9s forwards;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 3rem;
+    opacity: 0;
+    animation: fadeUp 1s ease 1.5s forwards, float 3s ease-in-out infinite;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+  }
+
+  .scroll-hint::after {
+    content: '↓';
+    display: block;
+    text-align: center;
+    margin-top: 0.5rem;
+    font-size: 1.2rem;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  section {
+    padding: 6rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 700;
+    margin-bottom: 2rem;
+    line-height: 1.2;
+  }
+
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 2.5rem 0 1rem;
+    color: var(--accent);
+  }
+
+  h4 {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 1.5rem 0 0.5rem;
+    color: var(--accent2);
+  }
+
+  p { margin-bottom: 1.2rem; }
+
+  .highlight {
+    background: linear-gradient(135deg, var(--surface2), var(--surface));
+    border-left: 3px solid var(--accent);
+    padding: 1.5rem 2rem;
+    margin: 2rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .highlight p:last-child { margin-bottom: 0; }
+
+  .formula-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+    text-align: center;
+  }
+
+  .formula {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    color: var(--accent);
+    margin: 1rem 0;
+    line-height: 2;
+  }
+
+  .formula-label {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  /* Timeline */
+  .timeline {
+    position: relative;
+    margin: 3rem 0;
+    padding-left: 2rem;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent2), var(--red));
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+    padding-left: 1.5rem;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -2.35rem;
+    top: 0.5rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+  }
+
+  .timeline-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+  }
+
+  .timeline-title {
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+  }
+
+  .timeline-desc {
+    font-size: 0.95rem;
+    color: var(--text-dim);
+  }
+
+  /* Cards */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .card-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 0.5rem;
+  }
+
+  .card h4 {
+    margin: 0 0 0.5rem;
+    color: var(--text);
+    font-size: 1.1rem;
+  }
+
+  .card p {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    margin-bottom: 0;
+  }
+
+  /* Phase indicator */
+  .phase-bar {
+    display: flex;
+    margin: 2rem 0;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 48px;
+  }
+
+  .phase-segment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    transition: flex 0.3s;
+  }
+
+  .phase-segment.spring { background: #2a6a3a; flex: 1; }
+  .phase-segment.summer { background: #6a8a2a; flex: 1; }
+  .phase-segment.autumn { background: #8a6a2a; flex: 1; }
+  .phase-segment.winter { background: #4a3a5a; flex: 1; }
+
+  .phase-marker {
+    position: relative;
+    display: flex;
+    margin: 0.5rem 0 2rem;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+  }
+
+  .phase-marker-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--green), var(--accent), var(--orange), var(--red));
+  }
+
+  .phase-marker-dot {
+    position: absolute;
+    top: -6px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--red);
+    border: 3px solid var(--bg);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(201,74,74,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(201,74,74,0); }
+  }
+
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+    font-size: 0.9rem;
+  }
+
+  .matrix-table th {
+    background: var(--surface2);
+    padding: 0.8rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--accent);
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+  }
+
+  .matrix-table td {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .matrix-table tr:hover td {
+    background: var(--surface);
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .tag.danger { background: rgba(201,74,74,0.15); color: var(--red); }
+  .tag.warning { background: rgba(201,122,58,0.15); color: var(--orange); }
+  .tag.ok { background: rgba(74,201,106,0.15); color: var(--green); }
+  .tag.info { background: rgba(74,140,201,0.15); color: var(--accent2); }
+
+  .verdict {
+    background: linear-gradient(135deg, rgba(201,74,74,0.08), rgba(201,168,76,0.08));
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 12px;
+    padding: 2.5rem;
+    margin: 3rem 0;
+    text-align: center;
+  }
+
+  .verdict h3 {
+    color: var(--text);
+    font-size: 1.6rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .big-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 4rem;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .big-label {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-top: 0.5rem;
+  }
+
+  .flex-stats {
+    display: flex;
+    gap: 3rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 2rem 0;
+  }
+
+  .stat-block { text-align: center; }
+
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 4rem auto;
+    max-width: 700px;
+  }
+
+  .toc h3 {
+    margin-top: 0;
+    color: var(--text);
+  }
+
+  .toc a {
+    color: var(--text-dim);
+    text-decoration: none;
+    display: block;
+    padding: 0.4rem 0;
+    transition: color 0.2s, padding-left 0.2s;
+    font-size: 0.95rem;
+  }
+
+  .toc a:hover {
+    color: var(--accent);
+    padding-left: 0.5rem;
+  }
+
+  .toc a span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    margin-right: 0.8rem;
+  }
+
+  footer {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+  }
+
+  footer .accent { color: var(--accent); }
+
+  @media (max-width: 600px) {
+    .container { padding: 0 1.2rem; }
+    section { padding: 3rem 0; }
+    .matrix-table { font-size: 0.78rem; }
+    .matrix-table th, .matrix-table td { padding: 0.5rem; }
+    .flex-stats { gap: 1.5rem; }
+    .big-number { font-size: 2.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-subtitle">Синтетическое исследование</div>
+  <h1>Метатеория <em>цикличности</em> истории</h1>
+  <p class="hero-desc">Производная от работ Шпенглера, Тойнби, Ибн Хальдуна, Кондратьева, Гумилёва, Сорокина и Турчина. Паттерны, формулы, прогнозы. Закат Америки и будущее капитализма.</p>
+  <div class="scroll-hint">прокрутите вниз</div>
+</div>
+
+<div class="container">
+
+<nav class="toc">
+  <h3>Содержание</h3>
+  <a href="#part1"><span>I</span> Единая модель: «Пульс цивилизации»</a>
+  <a href="#part2"><span>II</span> Матрица паттернов: 7 универсальных закономерностей</a>
+  <a href="#part3"><span>III</span> Формулы цикличности</a>
+  <a href="#part4"><span>IV</span> Анализ: Америка — где мы на кривой?</a>
+  <a href="#part5"><span>V</span> Капитализм: системный цикл и постсистема</a>
+  <a href="#part6"><span>VI</span> Сценарии: 2025–2080</a>
+  <a href="#part7"><span>VII</span> Выводы</a>
+</nav>
+
+<!-- ═══════════════════ PART I ═══════════════════ -->
+<section id="part1">
+  <div class="section-num">Часть I</div>
+  <h2>Единая модель: «Пульс цивилизации»</h2>
+
+  <p>Если наложить друг на друга модели Шпенглера, Тойнби, Ибн Хальдуна, Гумилёва, Кондратьева, Сорокина и Турчина, проступает общая архитектура. Все они, независимо от эпохи и методологии, описывают один и тот же фундаментальный процесс — но на разных масштабах и с разных углов.</p>
+
+  <h3>Универсальная фазовая модель</h3>
+
+  <p>Каждая цивилизация, империя или экономическая система проходит через четыре макрофазы:</p>
+
+  <div class="phase-bar">
+    <div class="phase-segment spring">ГЕНЕЗИС</div>
+    <div class="phase-segment summer">ЭКСПАНСИЯ</div>
+    <div class="phase-segment autumn">СТАГНАЦИЯ</div>
+    <div class="phase-segment winter">РАСПАД</div>
+  </div>
+
+  <table class="matrix-table">
+    <thead>
+      <tr>
+        <th>Фаза</th>
+        <th>Шпенглер</th>
+        <th>Тойнби</th>
+        <th>Гумилёв</th>
+        <th>Ибн Хальдун</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>I. Генезис</strong></td>
+        <td>Весна — рождение символа</td>
+        <td>Ответ на вызов</td>
+        <td>Пассионарный толчок, подъём</td>
+        <td>Кочевая энергия, асабия</td>
+      </tr>
+      <tr>
+        <td><strong>II. Экспансия</strong></td>
+        <td>Лето — расцвет форм</td>
+        <td>Рост под лидерством творческого меньшинства</td>
+        <td>Акматическая фаза — перегрев</td>
+        <td>Завоевание, консолидация</td>
+      </tr>
+      <tr>
+        <td><strong>III. Стагнация</strong></td>
+        <td>Осень — цивилизация вместо культуры</td>
+        <td>Надлом: элита теряет творческую силу</td>
+        <td>Надлом → инерция</td>
+        <td>Роскошь, утрата солидарности</td>
+      </tr>
+      <tr>
+        <td><strong>IV. Распад</strong></td>
+        <td>Зима — окостенение</td>
+        <td>Универсальное государство → варварский натиск</td>
+        <td>Обскурация — угасание</td>
+        <td>Новые завоеватели</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="highlight">
+    <p><strong>Ключевой вывод:</strong> все теоретики описывают одну и ту же кривую. Различия — в масштабе времени (от 50-летних волн Кондратьева до 1500-летних циклов Гумилёва) и в том, какой именно механизм они считают двигателем. Но форма кривой — всегда одна: S-образный подъём, плато, нелинейный спад.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ PART II ═══════════════════ -->
+<section id="part2">
+  <div class="section-num">Часть II</div>
+  <h2>Матрица паттернов: 7 универсальных закономерностей</h2>
+
+  <p>Сопоставив все модели, можно выделить семь закономерностей, которые повторяются в каждом цикле каждой теории. Это и есть «производная» — общий знаменатель цикличности.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-tag">Паттерн 1</div>
+      <h4>Закон деградации элит</h4>
+      <p>Основатели системы — носители энергии, идеи, аскезы. Через 3–4 поколения их потомки живут за счёт ренты. Творческое меньшинство (Тойнби) → доминирующее меньшинство. Асабия (Ибн Хальдун) → её утрата. Пассионарии (Гумилёв) → субпассионарии. Турчин измеряет это как «перепроизводство элит» — число претендентов на элитные позиции превышает число самих позиций.</p>
+    </div>
+    <div class="card">
+      <div class="card-tag">Паттерн 2</div>
+      <h4>Цикл неравенства</h4>
+      <p>Каждый подъём начинается с относительного равенства. Рост создаёт концентрацию капитала. Пик неравенства совпадает с пиком политической нестабильности. Затем — революция, война или реформа «обнуляют» распределение. Кондратьевские волны совпадают с волнами неравенства: каждый технологический уклад сначала создаёт новую элиту, потом монополизируется.</p>
+    </div>
+    <div class="card">
+      <div class="card-tag">Паттерн 3</div>
+      <h4>Закон трёх поколений</h4>
+      <p>Ибн Хальдун: 3 поколения от основателя до распада (≈100–120 лет). Турчин: «вековые циклы» 200–300 лет (два хальдуновских цикла). Кондратьев: 2 поколения на волну (≈50–60 лет). Паттерн: основатели создают → наследники поддерживают → потомки растрачивают. Биологический ритм социальной памяти.</p>
+    </div>
+    <div class="card">
+      <div class="card-tag">Паттерн 4</div>
+      <h4>Маятник ценностей</h4>
+      <p>Сорокин: идеациональная (духовная) → чувственная (материальная) → идеалистическая (синтез). Шпенглер: культура → цивилизация. Переход от экспансии к стагнации всегда сопровождается ценностным сдвигом: героизм → гедонизм, аскеза → роскошь, коллективизм → индивидуализм. Фаза «зимы» часто порождает новый мистицизм и поиск смысла.</p>
+    </div>
+    <div class="card">
+      <div class="card-tag">Паттерн 5</div>
+      <h4>Финанциализация как предвестник</h4>
+      <p>Каждая великая держава перед упадком переходит от производства к финансовой ренте. Генуя → Нидерланды → Британия → США. Арриги описал это как «системные циклы накопления». Кондратьев: фаза «Б» (нисходящая) характеризуется уходом капитала из реального сектора в спекуляции. Когда прибыль легче получить от манипуляций с деньгами, чем от производства — это сигнал позднего цикла.</p>
+    </div>
+    <div class="card">
+      <div class="card-tag">Паттерн 6</div>
+      <h4>Технологический триггер</h4>
+      <p>Кондратьевские волны привязаны к технологиям. Но технологии — не причина, а катализатор. Они появляются на стыке фаз, когда старая система исчерпывает себя. Паровая машина, железная дорога, электричество, автомобиль, компьютер, ИИ — каждая из этих технологий возникала в момент кризиса предыдущего уклада. Новая технология — инструмент нового гегемона.</p>
+    </div>
+    <div class="card">
+      <div class="card-tag">Паттерн 7</div>
+      <h4>Фрактальная вложенность</h4>
+      <p>Циклы вложены друг в друга, как матрёшка. Внутри 1500-летнего цикла Гумилёва — несколько 200-летних циклов Турчина. Внутри каждого из них — 50-летние волны Кондратьева. Внутри Кондратьева — 7–11-летние циклы Жюгляра. Кризис в одном масштабе может быть усилен или смягчён фазой в более крупном масштабе. Самое опасное — когда нисходящие фазы на нескольких уровнях совпадают.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ PART III ═══════════════════ -->
+<section id="part3">
+  <div class="section-num">Часть III</div>
+  <h2>Формулы цикличности</h2>
+
+  <p>Попробуем формализовать закономерности. Это не строгие математические законы, а концептуальные формулы — они отражают найденные паттерны в сжатом виде.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">ФОРМУЛА 1 — Индекс устойчивости системы</div>
+    <div class="formula">
+      S = (E × C) / (Δi × P<sub>e</sub>)
+    </div>
+    <p style="font-size:0.9rem; color:var(--text-dim); margin-top:1rem;">
+      S — устойчивость системы<br>
+      E — энергия элиты (пассионарность / творческий потенциал / асабия)<br>
+      C — социальная когезия (сплочённость общества)<br>
+      Δi — индекс неравенства (коэффициент Джини или аналог)<br>
+      P<sub>e</sub> — перепроизводство элит (число претендентов / число позиций)
+    </p>
+  </div>
+
+  <p>Когда S падает ниже критического порога — система входит в фазу распада. Числитель (энергия × сплочённость) снижается по мере деградации элит. Знаменатель (неравенство × элитный избыток) растёт по мере концентрации ресурсов и перепроизводства дипломированных претендентов на власть.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">ФОРМУЛА 2 — Закон фазового перехода</div>
+    <div class="formula">
+      T<sub>кризис</sub> ≈ T<sub>основания</sub> + n × G
+    </div>
+    <p style="font-size:0.9rem; color:var(--text-dim); margin-top:1rem;">
+      T<sub>кризис</sub> — момент системного кризиса<br>
+      T<sub>основания</sub> — момент основания / начала цикла<br>
+      n — число поколений (обычно 3–4 для первого кризиса, 8–10 для полного цикла)<br>
+      G — длина поколения (≈25–30 лет)
+    </p>
+  </div>
+
+  <p>Это хальдуновский закон в формализованном виде: 3 поколения до первого надлома (75–120 лет), 8–10 поколений до полного цикла (200–300 лет). Для цивилизационных суперциклов Шпенглера/Гумилёва: n ≈ 40–60, что даёт 1000–1500 лет.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">ФОРМУЛА 3 — Резонанс циклов (момент максимального риска)</div>
+    <div class="formula">
+      R = Σ (A<sub>i</sub> × sin(2π × t / T<sub>i</sub>))
+    </div>
+    <p style="font-size:0.9rem; color:var(--text-dim); margin-top:1rem;">
+      R — суммарная амплитуда нестабильности<br>
+      A<sub>i</sub> — амплитуда каждого цикла<br>
+      T<sub>i</sub> — период каждого цикла<br>
+      Когда нисходящие фазы нескольких циклов совпадают, R достигает максимума → катастрофа.
+    </p>
+  </div>
+
+  <p>Это объясняет, почему одни кризисы катастрофичны, а другие — управляемы. Если нисходящая фаза Кондратьева (экономика) совпадает с нисходящей фазой Турчина (политика) и с надломом по Гумилёву (цивилизация) — получаем «идеальный шторм». Примеры: падение Рима (совпадение циклов на всех уровнях), 1914–1945 (наложение Кондратьевского дна, элитного кризиса, цивилизационного надлома по Шпенглеру).</p>
+
+  <div class="formula-box">
+    <div class="formula-label">ФОРМУЛА 4 — Индекс финанциализации (предвестник заката)</div>
+    <div class="formula">
+      F = (V<sub>fin</sub> / GDP) × (r<sub>fin</sub> / r<sub>prod</sub>)
+    </div>
+    <p style="font-size:0.9rem; color:var(--text-dim); margin-top:1rem;">
+      F — индекс финанциализации<br>
+      V<sub>fin</sub> — объём финансовых активов<br>
+      GDP — валовой продукт<br>
+      r<sub>fin</sub> — средняя доходность финансовых операций<br>
+      r<sub>prod</sub> — средняя доходность производства<br>
+      Когда F > критического порога — гегемон входит в «осеннюю» фазу
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════ PART IV ═══════════════════ -->
+<section id="part4">
+  <div class="section-num">Часть IV</div>
+  <h2>Америка — где мы на кривой?</h2>
+
+  <p>Применим построенную метамодель к Соединённым Штатам. Проведём диагностику по каждому уровню цикличности.</p>
+
+  <h3>Хронология: от генезиса к текущему моменту</h3>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-date">1607–1776 | Генезис</div>
+      <div class="timeline-title">Пассионарный толчок</div>
+      <div class="timeline-desc">Пуританские общины — носители мощной «асабии». Религиозная аскеза, протестантская этика, «Город на холме». По Гумилёву — фаза подъёма. По Тойнби — успешный ответ на вызов (дикая природа, расстояние от метрополии).</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">1776–1865 | Ранняя экспансия</div>
+      <div class="timeline-title">Континентальная экспансия</div>
+      <div class="timeline-desc">Manifest Destiny. Территориальный рост. Первый внутренний кризис — Гражданская война. По Турчину — типичный кризис первого цикла (≈90 лет от основания = 3 поколения).</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">1865–1945 | Зрелая экспансия</div>
+      <div class="timeline-title">Индустриальный взлёт</div>
+      <div class="timeline-desc">Превращение в промышленного гиганта. «Позолоченный век» → прогрессивные реформы → Новый курс. Классическая кондратьевская динамика: паровой век → железнодорожный век → электрический век.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">1945–1991 | Пик</div>
+      <div class="timeline-title">Глобальная гегемония</div>
+      <div class="timeline-desc">Абсолютный пик по всем параметрам: военная мощь, экономика, культурное влияние, технологическое лидерство. Бреттон-Вудс — доллар как мировая валюта. По Шпенглеру — «лето» переходит в «осень». По Гумилёву — акматическая фаза, расцвет, но уже с признаками перегрева (Вьетнам, контркультура 1960-х).</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">1991–2008 | Однополярный момент</div>
+      <div class="timeline-title">Начало осени</div>
+      <div class="timeline-desc">Иллюзия «конца истории». Глобализация как инструмент. Но: начало деиндустриализации, рост неравенства, финанциализация экономики. Финансовый сектор обгоняет промышленный. По Арриги — классический переход к «осеннему» накоплению, как у Нидерландов в XVIII веке.</div>
+    </div>
+    <div class="timeline-item" style="border-left: 2px solid var(--red); margin-left: -2px;">
+      <div class="timeline-date">2008–2025+ | Надлом</div>
+      <div class="timeline-title">Фаза нарастающей нестабильности</div>
+      <div class="timeline-desc">Финансовый кризис 2008. Оккупай Уолл-стрит. Трамп. Ковид. Поляризация. Штурм Капитолия. По Турчину — все маркеры «эпохи раздора»: перепроизводство элит, рост неравенства, падение доверия к институтам, политическая поляризация. По Тойнби — «раскол в обществе».</div>
+    </div>
+  </div>
+
+  <h3>Диагностика по каждому индикатору</h3>
+
+  <table class="matrix-table">
+    <thead>
+      <tr>
+        <th>Индикатор</th>
+        <th>Состояние</th>
+        <th>Статус</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Неравенство (Δi)</strong></td>
+        <td>Коэффициент Джини на уровне ~0.49 — максимум за 100 лет. Доля богатства 1% верхних ≈ 32%. Сопоставимо с «позолоченным веком» 1890-х.</td>
+        <td><span class="tag danger">КРИТИЧЕСКИЙ</span></td>
+      </tr>
+      <tr>
+        <td><strong>Перепроизводство элит (P<sub>e</sub>)</strong></td>
+        <td>Рекордное число выпускников MBA, JD, PhD при стагнации числа элитных позиций. Миллиардеры в политике — признак того, что элитные позиции «покупаются», а не завоёвываются компетенцией.</td>
+        <td><span class="tag danger">КРИТИЧЕСКИЙ</span></td>
+      </tr>
+      <tr>
+        <td><strong>Социальная когезия (C)</strong></td>
+        <td>Доверие к Конгрессу ≈ 15–20%. Доверие к СМИ ≈ 30%. Поляризация на уровне, сопоставимом с 1850-ми (перед Гражданской войной). Два информационных пузыря. Утрата общего нарратива.</td>
+        <td><span class="tag danger">КРИТИЧЕСКИЙ</span></td>
+      </tr>
+      <tr>
+        <td><strong>Финанциализация (F)</strong></td>
+        <td>Финансовые активы ≈ 600% ВВП. Финансовый сектор генерирует ~25% корпоративной прибыли при ~4% занятости. Доходность Уолл-стрит кратно превышает доходность реального сектора.</td>
+        <td><span class="tag danger">КРИТИЧЕСКИЙ</span></td>
+      </tr>
+      <tr>
+        <td><strong>Энергия элиты (E)</strong></td>
+        <td>Технологическая элита (Кремниевая долина) сохраняет творческий потенциал — ИИ, космос. Но политическая элита — геронтократия, династийность, идеологический паралич.</td>
+        <td><span class="tag warning">СРЕДНИЙ</span></td>
+      </tr>
+      <tr>
+        <td><strong>Военная мощь</strong></td>
+        <td>Абсолютное превосходство сохраняется, но затраты растут при снижающейся эффективности (Ирак, Афганистан). «Имперское перенапряжение» по Кеннеди.</td>
+        <td><span class="tag warning">СРЕДНИЙ</span></td>
+      </tr>
+      <tr>
+        <td><strong>Технологическое лидерство</strong></td>
+        <td>Лидерство в ИИ, биотехнологиях, космосе. Но Китай быстро сокращает разрыв. Контроль над полупроводниками — зависимость от Тайваня.</td>
+        <td><span class="tag ok">СОХРАНЯЕТСЯ</span></td>
+      </tr>
+      <tr>
+        <td><strong>Валютная гегемония</strong></td>
+        <td>Доллар остаётся мировой резервной валютой, но доля снижается. Дедолларизация — медленный, но устойчивый тренд. Государственный долг > 120% ВВП.</td>
+        <td><span class="tag warning">СРЕДНИЙ</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="verdict">
+    <h3>Положение Америки на кривой цикла</h3>
+    <div class="phase-marker" style="margin: 2rem auto; max-width: 500px;">
+      <div class="phase-marker-fill" style="width: 72%;"></div>
+      <div class="phase-marker-dot" style="left: 72%;"></div>
+    </div>
+    <div style="display:flex; justify-content:space-between; max-width:500px; margin: 0 auto 2rem; font-size:0.75rem; color:var(--text-dim);">
+      <span>Генезис</span>
+      <span>Экспансия</span>
+      <span>Стагнация</span>
+      <span>Распад</span>
+    </div>
+    <p style="max-width:600px; margin:0 auto;">США находятся в поздней стадии стагнации / раннем надломе. По всем семи паттернам — классические признаки перехода от «осени» к «зиме». Точка невозврата, вероятно, ещё не пройдена, но окно для коррекции сужается.</p>
+  </div>
+
+  <h3>Когда «закат»?</h3>
+
+  <p>Закат — не одномоментное событие, а процесс длительностью 30–80 лет. Применим формулу фазового перехода:</p>
+
+  <div class="highlight">
+    <p><strong>Турчинов цикл:</strong> T<sub>основания</sub> = 1776. Первый кризис (Гражданская война) = 1861 (85 лет). Второй кризисный период = 1960-е (190 лет). Третий кризис = ~2020-е (250 лет). Это совпадает с прогнозом Турчина (он опубликовал его в 2010): пик нестабильности в районе 2020-х годов.</p>
+    <p><strong>Кондратьевский цикл:</strong> 5-я волна (информационные технологии) достигла зрелости. 6-я волна (ИИ + биотех) только начинается. Переходные периоды между волнами — всегда турбулентны. Ожидаемый период нестабильности: 2020–2040.</p>
+    <p><strong>Арриги/Шпенглер:</strong> Переход гегемонии от Британии к США занял ~50 лет (1890–1945). Переход от США к следующему центру — процесс, который уже идёт, и может занять ещё 30–50 лет (до ~2050–2070).</p>
+  </div>
+
+  <div class="flex-stats">
+    <div class="stat-block">
+      <div class="big-number">2020–2030</div>
+      <div class="big-label">Пик внутренней нестабильности (Турчин)</div>
+    </div>
+    <div class="stat-block">
+      <div class="big-number">2040–2060</div>
+      <div class="big-label">Утрата безусловной гегемонии</div>
+    </div>
+    <div class="stat-block">
+      <div class="big-number">2060–2080</div>
+      <div class="big-label">Формирование нового мирового порядка</div>
+    </div>
+  </div>
+
+  <p>Важно: «закат» не означает исчезновение. Испания после заката осталась. Британия после заката осталась. Вопрос — в утрате статуса мирового гегемона и внутренней трансформации. США останутся крупной державой, но уже не единственным центром мировой системы.</p>
+</section>
+
+<!-- ═══════════════════ PART V ═══════════════════ -->
+<section id="part5">
+  <div class="section-num">Часть V</div>
+  <h2>Капитализм: системный цикл и что после</h2>
+
+  <h3>Капитализм как исторический цикл</h3>
+
+  <p>Капитализм — не «естественное состояние» экономики, а конкретная историческая система с началом, серединой и — если верить логике циклов — концом. Каждая предшествующая экономическая система казалась своим современникам вечной:</p>
+
+  <table class="matrix-table">
+    <thead>
+      <tr>
+        <th>Система</th>
+        <th>Примерная длительность</th>
+        <th>Причина заката</th>
+        <th>Что пришло на смену</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Рабовладельческий строй</td>
+        <td>~2000 лет</td>
+        <td>Исчерпание экстенсивного роста, нашествия</td>
+        <td>Феодализм</td>
+      </tr>
+      <tr>
+        <td>Феодализм</td>
+        <td>~800–1000 лет</td>
+        <td>Чума, урбанизация, торговая революция</td>
+        <td>Меркантилизм → Капитализм</td>
+      </tr>
+      <tr>
+        <td>Капитализм</td>
+        <td>~500 лет (с XVI в.)</td>
+        <td><em>В процессе?</em></td>
+        <td><em>?</em></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Фазы капитализма по Арриги</h3>
+
+  <p>Джованни Арриги выделил четыре «системных цикла накопления», каждый из которых связан с определённым государством-гегемоном:</p>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-date">XV–XVI вв.</div>
+      <div class="timeline-title">Генуэзский цикл</div>
+      <div class="timeline-desc">Итальянские города-государства. Торговый капитализм. Финанциализация → передача эстафеты.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">XVII–XVIII вв.</div>
+      <div class="timeline-title">Голландский цикл</div>
+      <div class="timeline-desc">Нидерланды. Торговая империя, VOC, биржа. Финанциализация → потеря лидерства.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">XVIII–XX вв.</div>
+      <div class="timeline-title">Британский цикл</div>
+      <div class="timeline-desc">Промышленный капитализм, мировая империя. Финанциализация → передача гегемонии США.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">XX–XXI вв.</div>
+      <div class="timeline-title">Американский цикл</div>
+      <div class="timeline-desc">Корпоративный капитализм → финансовый капитализм. Финанциализация идёт уже ~40 лет. По логике модели — терминальная фаза текущего цикла.</div>
+    </div>
+  </div>
+
+  <div class="highlight">
+    <p><strong>Ключевое наблюдение:</strong> каждый гегемон завершал свой цикл одинаково — переходом от производства к финансовым манипуляциям. Голландцы в XVIII веке стали «банкирами Европы», когда утратили торговую гегемонию. Британцы в начале XX века жили за счёт финансов Лондонского Сити, а не фабрик. США начали этот переход в 1980-е (рейганомика, деиндустриализация). Это не случайность — это структурный паттерн.</p>
+  </div>
+
+  <h3>Что после капитализма?</h3>
+
+  <p>Строго говоря, мы не можем точно знать, что будет «после», — точно так же, как крестьянин XIV века не мог описать будущий капитализм. Но на основе паттернов можно выделить несколько тенденций и сценариев:</p>
+
+  <h4>Сценарий 1: «Техно-феодализм» (наиболее вероятный в ближайшем горизонте)</h4>
+  <p>Термин Яниса Варуфакиса. Суть: платформенные гиганты (Amazon, Google, Apple, Microsoft) создали экосистемы, в которых рыночная конкуренция вытеснена рентной зависимостью. Продавец на Amazon — не рыночный субъект, а «вассал» платформы, отдающий «оброк» (комиссию). Данные — новая «земля», а те, кто контролирует данные, — новые «феодалы». Это не капитализм в классическом смысле: нет свободного рынка, есть зависимость от инфраструктурного контроля.</p>
+
+  <h4>Сценарий 2: «Пост-дефицитная экономика» (долгосрочный)</h4>
+  <p>Если ИИ и роботизация действительно вытеснят бóльшую часть человеческого труда, базовая логика капитализма (извлечение прибыли из труда) перестанет работать. Возможен переход к системам, основанным на базовом доходе, общественных фондах, распределении ресурсов через алгоритмы. Не «коммунизм» в советском понимании, а нечто принципиально новое.</p>
+
+  <h4>Сценарий 3: «Зелёный корпоративизм»</h4>
+  <p>Экологический кризис вынуждает перейти от модели бесконечного роста к управляемой экономике. Государства и корпорации сливаются в гибридные структуры, управляющие ресурсами. Планирование возвращается, но не советского типа, а алгоритмическое — с помощью big data и ИИ.</p>
+
+  <h4>Сценарий 4: «Цивилизационный откат»</h4>
+  <p>При катастрофическом сценарии (климатическая катастрофа, большая война, системный крах) — временный регресс и последующее формирование нового порядка из обломков старого. Исторический прецедент: Тёмные века после Рима. Маловероятен в чистом виде, но элементы возможны.</p>
+
+  <div class="highlight">
+    <p><strong>Производная от всех моделей:</strong> Наиболее вероятен не резкий «крах», а длительная мутация — подобно тому, как феодализм не «рухнул» в один день, а постепенно трансформировался через торговые города, ранний банкинг, мануфактуры. Капитализм уже мутирует: платформенная экономика, криптовалюты, государственный капитализм (Китай), социал-демократическое перераспределение (Скандинавия) — это конкурирующие «мутации», из которых одна (или гибрид) станет следующей системой.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ PART VI ═══════════════════ -->
+<section id="part6">
+  <div class="section-num">Часть VI</div>
+  <h2>Сценарии: 2025–2080</h2>
+
+  <p>Наложим все циклы друг на друга и посмотрим, что получается при резонансе.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-tag">2025–2035</div>
+      <h4>Эпоха Раздора</h4>
+      <p>Пик нестабильности по Турчину. Обострение поляризации в США. Геополитическая напряжённость (Тайвань, Ближний Восток). 6-я кондратьевская волна (ИИ) начинает перестраивать рынок труда. Массовая безработица в некоторых секторах. Рост популизма. Возможны «реформы отчаяния» или, напротив, углубление паралича.</p>
+    </div>
+    <div class="card">
+      <div class="card-tag">2035–2050</div>
+      <h4>Великая трансформация</h4>
+      <p>ИИ-революция достигает зрелости. Те страны, которые смогли адаптироваться — новые центры силы. Возможна «зелёная промышленная революция». Начало переформатирования мирового порядка: многополярность или биполярность (США—Китай) с элементами технологического блокирования. Капитализм мутирует в платформенно-алгоритмическую систему.</p>
+    </div>
+    <div class="card">
+      <div class="card-tag">2050–2080</div>
+      <h4>Новый порядок</h4>
+      <p>Формирование постамериканского мирового порядка. Новая экономическая система обретает устойчивые формы. По Сорокину — переход к «идеалистической» фазе (синтез материального и духовного). По Кондратьеву — восходящая фаза 6-й или 7-й волны. Новый «генезис» — начало следующего цикла.</p>
+    </div>
+  </div>
+
+  <div class="highlight">
+    <p><strong>Критическое окно — 2025–2035.</strong> Именно сейчас совпадают нисходящие фазы на нескольких уровнях: вековой цикл Турчина (пик раздора), переходная фаза Кондратьева (между 5-й и 6-й волной), осенняя фаза Шпенглера (западная цивилизация), «зима» арриговского цикла (финанциализация гегемона). Это не приговор — но это максимальная нагрузка на систему. То, как будут пройдены эти 10 лет, определит следующие 50.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ PART VII ═══════════════════ -->
+<section id="part7">
+  <div class="section-num">Часть VII</div>
+  <h2>Выводы</h2>
+
+  <h3>Что надёжно?</h3>
+  <p>Паттерны деградации элит, роста неравенства, финанциализации и утраты социальной когезии — подтверждаются статистически и повторяются устойчиво. Они работают как индикаторы фазы, а не как предсказания конкретных событий. США действительно проявляют все маркеры поздней фазы — это не мнение, а наблюдаемое совпадение с историческими прецедентами.</p>
+
+  <h3>Что спекулятивно?</h3>
+  <p>Точные даты, конкретные сценарии и — особенно — описание «постсистемы». Ни одна теория цикличности не способна предсказать, какая именно форма сменит текущую. Она может только указать, что текущая форма исчерпывается.</p>
+
+  <h3>Что уникально в текущем моменте?</h3>
+  <p>Впервые в истории система подходит к фазовому переходу, обладая: технологией, способной заменить человеческий труд (ИИ); оружием, способным уничтожить цивилизацию (ядерное); средствами мгновенной глобальной коммуникации; и осознанием самих циклов. Последний пункт принципиален — зная о паттернах, можно попытаться смягчить кризис. Но история пока не знает примеров, когда знание о цикле позволяло его предотвратить. Только смягчить.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">ИТОГОВЫЙ ТЕЗИС</div>
+    <div class="formula" style="font-size: 1rem; line-height: 1.8;">
+      «Мы не можем отменить зиму.<br>
+      Но можем к ней подготовиться<br>
+      и определить, какой будет следующая весна.»
+    </div>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <p>Аналитическое исследование на основе работ: О. Шпенглера, А. Тойнби, Ибн Хальдуна, Н. Кондратьева, П. Сорокина, Л. Гумилёва, П. Турчина, Дж. Арриги, И. Валлерстайна, Я. Варуфакиса</p>
+  <p class="accent" style="margin-top:0.5rem;">Метатеория цикличности истории — синтетическое исследование, 2025</p>
+</footer>
+
+</body>
+</html>

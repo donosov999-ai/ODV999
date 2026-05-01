@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phubbing трекер · ODV999</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
+</head>
+<body data-theme="light">
+
+<div class="container">
+  <div class="hero">
+    <h1>Phubbing трекер<span class="v">v1.0</span></h1>
+    <p>Phubbing = phone + snub. Игнорирование партнёра ради экрана. Frontiers in Psychology meta-analysis 2025 (81 исследование): effect size 0.38 — средне-значительный по Cohen.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Сегодня · <span id="today"></span></div>
+    <div class="field">
+      <label>Минут с телефоном при партнёре сегодня:</label>
+      <input type="number" id="todayMins" min="0" max="1440" placeholder="оценка по часам">
+    </div>
+    <div class="field">
+      <label>Соблюдены ли «зоны без телефона»? (отметь те что были без)</label>
+      <ul class="checklist" id="zones">
+        <li data-id="meal"><span class="box">✓</span><span>Совместная еда</span></li>
+        <li data-id="bedroom"><span class="box">✓</span><span>Спальня</span></li>
+        <li data-id="car"><span class="box">✓</span><span>Машина в разговоре</span></li>
+        <li data-id="reunite"><span class="box">✓</span><span>Первые 15 мин после возвращения</span></li>
+      </ul>
+    </div>
+    <button class="btn" id="saveBtn" type="button">Сохранить день</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Эта неделя</div>
+    <div class="stat" id="weekAvg">— <span class="lbl">мин/день в среднем</span></div>
+    <div id="weekDetail"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">История 30 дней</div>
+    <div id="calendar" style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px;font-size:11px;text-align:center;"></div>
+    <div class="card-attrib" style="margin-top:10px;">🟢 &lt;30 мин · 🟡 30-90 мин · 🔴 90+ мин</div>
+  </div>
+
+  <details>
+    <summary>Зачем это</summary>
+    <p><strong>Frontiers 2025 meta-analysis:</strong> партнёрский phubbing → ↓ удовлетворённость отношениями (effect size 0.38), ↑ риск депрессии у того, кого игнорируют, ↑ ревность.</p>
+    <p><strong>McDaniel et al. 2025:</strong> объективное (не самоотчёт) измерение времени с телефоном при партнёре — чем больше, тем выше депрессия и ниже жизненная удовлетворённость. Эффект сильнее у женщин.</p>
+    <p><strong>Цель:</strong> &lt;30 мин/день при партнёре. Зоны без телефона: еда, спальня, машина в разговоре, первые 15 мин после возвращения. Уведомление: «вижу, отвечу через 5 мин» — НЕ скролл.</p>
+  </details>
+
+  <div class="footer">
+    Источники: Frontiers in Psychology 2025 meta-analysis · McDaniel et al. 2025 · Roberts & David 2016
+  </div>
+</div>
+
+<script src="../assets/dashboard-nav.js"></script>
+<script>
+function todayKey(){ var d = new Date(); return d.toISOString().slice(0,10); }
+function load(){ return JSON.parse(localStorage.getItem('phubbing_log') || '{}'); }
+function save(s){ localStorage.setItem('phubbing_log', JSON.stringify(s)); }
+
+document.querySelectorAll('#zones li').forEach(function(li){
+  li.addEventListener('click', function(){ li.classList.toggle('done'); });
+});
+
+document.getElementById('saveBtn').addEventListener('click', function(){
+  var mins = parseInt(document.getElementById('todayMins').value, 10);
+  if (isNaN(mins)) { alert('Введи минуты.'); return; }
+  var zones = {};
+  document.querySelectorAll('#zones li').forEach(function(li){
+    zones[li.dataset.id] = li.classList.contains('done');
+  });
+  var log = load();
+  log[todayKey()] = {mins: mins, zones: zones};
+  save(log);
+  alert('Сохранено.');
+  render();
+});
+
+function render(){
+  document.getElementById('today').textContent = todayKey();
+  var log = load();
+  // load today
+  var t = log[todayKey()];
+  if (t) {
+    document.getElementById('todayMins').value = t.mins;
+    document.querySelectorAll('#zones li').forEach(function(li){
+      if (t.zones && t.zones[li.dataset.id]) li.classList.add('done'); else li.classList.remove('done');
+    });
+  }
+
+  // Week avg
+  var weekDays = [];
+  for (var i = 0; i < 7; i++) {
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    var k = d.toISOString().slice(0,10);
+    if (log[k]) weekDays.push(log[k].mins);
+  }
+  if (weekDays.length > 0) {
+    var avg = Math.round(weekDays.reduce(function(s,x){ return s+x; }, 0) / weekDays.length);
+    document.getElementById('weekAvg').innerHTML = avg + ' <span class="lbl">мин/день в среднем (' + weekDays.length + ' д с данными)</span>';
+    var status = avg < 30 ? '<span style="color:#3fb950">отличный</span>' : avg < 90 ? '<span style="color:#d29922">средний</span>' : '<span style="color:#f85149">высокий — снижай</span>';
+    document.getElementById('weekDetail').innerHTML = 'Уровень phubbing: ' + status;
+  }
+
+  // Calendar
+  var cal = document.getElementById('calendar');
+  cal.innerHTML = '';
+  for (var i = 29; i >= 0; i--) {
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    var k = d.toISOString().slice(0,10);
+    var entry = log[k];
+    var color, m;
+    if (!entry) { color = '#30363d'; m = '-'; }
+    else { m = entry.mins; color = m < 30 ? '#3fb950' : m < 90 ? '#d29922' : '#f85149'; }
+    cal.innerHTML += '<div title="' + k + ': ' + m + ' мин" style="background:' + color + ';padding:6px 0;border-radius:3px;color:#fff;">' + d.getDate() + '</div>';
+  }
+}
+render();
+</script>
+</body>
+</html>

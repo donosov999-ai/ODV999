@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>State of the Union · ODV999</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
+</head>
+<body data-theme="light">
+
+<div class="container">
+  <div class="hero">
+    <h1>State of the Union<span class="v">v1.0</span></h1>
+    <p>Готтман: 1 час в неделю — еженедельный ревью пары. Каждый отвечает: 3 хорошо / 2 хуже / 1 хочу. Минимум 12 недель — увидите тренд динамики.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Сегодня · <span id="today"></span></div>
+    <div class="two-col">
+      <div class="col">
+        <h2>👨 Партнёр 1</h2>
+        <div class="field"><label>3 что хорошо за неделю:</label><textarea id="p1_good" rows="3" placeholder="конкретные моменты"></textarea></div>
+        <div class="field"><label>2 что хуже:</label><textarea id="p1_bad" rows="2" placeholder="без обвинений, факты"></textarea></div>
+        <div class="field"><label>1 что хочу на след. неделю:</label><textarea id="p1_want" rows="2" placeholder="конкретный запрос"></textarea></div>
+      </div>
+      <div class="col">
+        <h2>👩 Партнёр 2</h2>
+        <div class="field"><label>3 что хорошо за неделю:</label><textarea id="p2_good" rows="3"></textarea></div>
+        <div class="field"><label>2 что хуже:</label><textarea id="p2_bad" rows="2"></textarea></div>
+        <div class="field"><label>1 что хочу на след. неделю:</label><textarea id="p2_want" rows="2"></textarea></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="saveBtn" type="button">Сохранить эту неделю</button>
+      <button class="btn btn-secondary" id="clearBtn" type="button">Очистить поля</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">История</div>
+    <div id="historyList"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="if(confirm('Удалить всю историю SoU?')){localStorage.removeItem('sou_log');location.reload();}">Очистить всю историю</button>
+    </div>
+  </div>
+
+  <details>
+    <summary>Правила сессии (Готтман)</summary>
+    <p><strong>1. Тайм-аут есть.</strong> Если ЧСС у любого &gt;100 — стоп, 20 мин паузы.</p>
+    <p><strong>2. Сначала «хорошо», потом «хуже».</strong> Готтмановский ratio 5:1 — позитива должно быть в разы больше.</p>
+    <p><strong>3. Конкретика, не обобщения.</strong> «Ты в среду помог с ребёнком» вместо «ты иногда помогаешь».</p>
+    <p><strong>4. «Хуже» — БЕЗ обвинений.</strong> «Я почувствовал X когда Y» вместо «ты сделал Z».</p>
+    <p><strong>5. «Хочу» — одно конкретное действие.</strong> Не «больше внимания», а «10 мин разговора без телефонов после ужина».</p>
+  </details>
+
+  <div class="footer">
+    Источник: Gottman, J. — Magic 6 Hours · State of the Union meeting
+  </div>
+</div>
+
+<script src="../assets/dashboard-nav.js"></script>
+<script>
+function load(){ return JSON.parse(localStorage.getItem('sou_log') || '[]'); }
+function save(arr){ localStorage.setItem('sou_log', JSON.stringify(arr)); }
+function today(){ var d = new Date(); return d.toISOString().slice(0,10); }
+document.getElementById('today').textContent = today();
+
+document.getElementById('saveBtn').addEventListener('click', function(){
+  var entry = {
+    date: today(),
+    p1: { good: $('p1_good'), bad: $('p1_bad'), want: $('p1_want') },
+    p2: { good: $('p2_good'), bad: $('p2_bad'), want: $('p2_want') }
+  };
+  var has = entry.p1.good || entry.p1.bad || entry.p1.want || entry.p2.good || entry.p2.bad || entry.p2.want;
+  if (!has) { alert('Заполни хотя бы одно поле.'); return; }
+  var log = load();
+  log.unshift(entry);
+  save(log);
+  document.querySelectorAll('textarea').forEach(function(t){ t.value = ''; });
+  alert('Сохранено.');
+  render();
+});
+document.getElementById('clearBtn').addEventListener('click', function(){
+  document.querySelectorAll('textarea').forEach(function(t){ t.value = ''; });
+});
+function $(id){ return document.getElementById(id).value.trim(); }
+function esc(s){ return s.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+function render(){
+  var log = load();
+  var box = document.getElementById('historyList');
+  if (log.length === 0) {
+    box.innerHTML = '<div class="card-attrib" style="text-align:center;padding:20px;">Пока пусто. Делайте State of the Union 1 раз в неделю.</div>';
+    return;
+  }
+  box.innerHTML = log.map(function(e, i){
+    return '<details style="margin-bottom:8px;">' +
+      '<summary>' + e.date + ' · State of the Union</summary>' +
+      '<div class="two-col" style="margin-top:10px;">' +
+        '<div class="col">' +
+          '<h2>👨 Партнёр 1</h2>' +
+          (e.p1.good ? '<p><strong>Хорошо:</strong> ' + esc(e.p1.good) + '</p>' : '') +
+          (e.p1.bad ?  '<p><strong>Хуже:</strong> '   + esc(e.p1.bad) +  '</p>' : '') +
+          (e.p1.want ? '<p><strong>Хочу:</strong> '   + esc(e.p1.want) + '</p>' : '') +
+        '</div>' +
+        '<div class="col">' +
+          '<h2>👩 Партнёр 2</h2>' +
+          (e.p2.good ? '<p><strong>Хорошо:</strong> ' + esc(e.p2.good) + '</p>' : '') +
+          (e.p2.bad ?  '<p><strong>Хуже:</strong> '   + esc(e.p2.bad) +  '</p>' : '') +
+          (e.p2.want ? '<p><strong>Хочу:</strong> '   + esc(e.p2.want) + '</p>' : '') +
+        '</div>' +
+      '</div>' +
+      '<button class="btn btn-secondary" onclick="del(' + i + ')" style="font-size:12px;padding:4px 10px;margin-top:8px;">Удалить</button>' +
+    '</details>';
+  }).join('');
+}
+function del(i){ var log = load(); log.splice(i, 1); save(log); render(); }
+window.del = del;
+render();
+</script>
+</body>
+</html>

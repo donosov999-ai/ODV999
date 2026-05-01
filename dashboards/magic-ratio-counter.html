@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5:1 счётчик · ODV999</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
+</head>
+<body data-theme="light">
+
+<div class="container">
+  <div class="hero">
+    <h1>5:1 эмоциональный счёт<span class="v">v1.0</span></h1>
+    <p>Готтман: на каждое <strong>негативное</strong> взаимодействие должно быть <strong>5 позитивных</strong>. Это разница между функциональной и распадающейся парой (наблюдение на ~3 000 пар, 30 лет).</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Сегодня · <span id="today"></span></div>
+    <div class="two-col">
+      <div class="col">
+        <h2 style="color:#3fb950;">+ Позитив</h2>
+        <p style="font-size:13px;color:var(--text-dim);margin-bottom:12px;">благодарность · комплимент · поцелуй · контакт · смех вместе · «спасибо» · поддержка · юмор</p>
+        <button class="btn" id="addPos" type="button" style="background:#3fb950;width:100%;padding:18px;font-size:18px;">+1 позитив</button>
+        <div class="stat" style="text-align:center;margin-top:12px;color:#3fb950;" id="posCount">0</div>
+      </div>
+      <div class="col">
+        <h2 style="color:#f85149;">− Негатив</h2>
+        <p style="font-size:13px;color:var(--text-dim);margin-bottom:12px;">критика · сарказм · оборона · стона · резкий тон · игнор · обвинение · 4 всадника</p>
+        <button class="btn" id="addNeg" type="button" style="width:100%;padding:18px;font-size:18px;">+1 негатив</button>
+        <div class="stat" style="text-align:center;margin-top:12px;color:#f85149;" id="negCount">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Ratio</div>
+    <div class="stat" id="ratio">— : 1</div>
+    <div id="status"></div>
+    <div class="progress"><div class="progress-bar" id="ratioBar" style="width:0%;background:#3fb950;"></div></div>
+    <div class="card-attrib">Цель: ≥5:1. Готтман: пары с ratio &lt;5:1 в обычной коммуникации (не в ссоре) — кандидаты на распад.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">История по дням</div>
+    <table id="historyTable">
+      <thead><tr><th>Дата</th><th class="num">+</th><th class="num">−</th><th class="num">Ratio</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="resetToday" type="button">Сбросить сегодня</button>
+      <button class="btn btn-secondary" onclick="if(confirm('Очистить всю историю?')){localStorage.removeItem('ratio_history');localStorage.removeItem('ratio_today');location.reload();}">Очистить всё</button>
+    </div>
+  </div>
+
+  <details>
+    <summary>Что считается негативом / позитивом</summary>
+    <p><strong>Позитив (+1):</strong> комплимент · «спасибо» · поцелуй/объятие · совместный смех · поддержка («я слышу») · похвала · игривый тон · взгляд + улыбка · конкретная благодарность · восхищение партнёром при детях/друзьях</p>
+    <p><strong>Негатив (−1):</strong> критика характера · сарказм · закатывание глаз · оборона («а ты сам(а)…») · игнор · резкий тон · обвинение в «всегда/никогда» · публичное унижение · стоунволлинг (молчание как наказание)</p>
+    <p>В <strong>ссоре</strong> ratio падает до ~0.8:1 даже у крепких пар — это норма во время конфликта. Главное — ratio в обычной жизни.</p>
+  </details>
+
+  <div class="footer">
+    Источник: Gottman & Levenson (1992) — Magic Ratio · 5:1 Positive-to-Negative Ratio
+  </div>
+</div>
+
+<script src="../assets/dashboard-nav.js"></script>
+<script>
+function todayKey(){ return new Date().toISOString().slice(0,10); }
+function loadToday(){ var x = JSON.parse(localStorage.getItem('ratio_today') || '{}'); if (x.day !== todayKey()) { archiveAndReset(); return {day: todayKey(), pos: 0, neg: 0}; } return x; }
+function saveToday(s){ localStorage.setItem('ratio_today', JSON.stringify(s)); }
+function loadHistory(){ return JSON.parse(localStorage.getItem('ratio_history') || '{}'); }
+function saveHistory(h){ localStorage.setItem('ratio_history', JSON.stringify(h)); }
+function archiveAndReset(){
+  var x = JSON.parse(localStorage.getItem('ratio_today') || '{}');
+  if (x.day && (x.pos > 0 || x.neg > 0)) {
+    var h = loadHistory();
+    h[x.day] = {pos: x.pos, neg: x.neg};
+    saveHistory(h);
+  }
+  localStorage.setItem('ratio_today', JSON.stringify({day: todayKey(), pos: 0, neg: 0}));
+}
+
+document.getElementById('today').textContent = todayKey();
+
+document.getElementById('addPos').addEventListener('click', function(){
+  var s = loadToday(); s.pos++; saveToday(s); render();
+});
+document.getElementById('addNeg').addEventListener('click', function(){
+  var s = loadToday(); s.neg++; saveToday(s); render();
+});
+document.getElementById('resetToday').addEventListener('click', function(){
+  if (!confirm('Сбросить счёт за сегодня?')) return;
+  saveToday({day: todayKey(), pos: 0, neg: 0});
+  render();
+});
+
+function render(){
+  var s = loadToday();
+  document.getElementById('posCount').textContent = s.pos;
+  document.getElementById('negCount').textContent = s.neg;
+
+  var ratio, status, barPct, barColor;
+  if (s.neg === 0 && s.pos === 0) {
+    ratio = '— : 1';
+    status = '<div class="card-attrib">Жми кнопки в течение дня</div>';
+    barPct = 0; barColor = '#3fb950';
+  } else if (s.neg === 0) {
+    ratio = s.pos + ' : 0';
+    status = '<div class="success"><strong>Идеально:</strong> только позитив. Если негатива реально не было — отлично. Если был, но не зафиксировал — занижаешь оценку.</div>';
+    barPct = 100; barColor = '#3fb950';
+  } else {
+    var r = s.pos / s.neg;
+    ratio = r.toFixed(1) + ' : 1';
+    barPct = Math.min(100, r / 5 * 100);
+    if (r >= 5) {
+      status = '<div class="success"><strong>≥5:1 — функциональная пара (Готтман).</strong> Поддерживай.</div>';
+      barColor = '#3fb950';
+    } else if (r >= 3) {
+      status = '<div class="note"><strong>3-5:1 — рабочая зона.</strong> Можно улучшить: 3 благодарности в день, объятие 20+ сек, поцелуй 6+ сек.</div>';
+      barColor = '#d29922';
+    } else {
+      status = '<div class="warn"><strong>&lt;3:1 — кандидат на распад (Готтман).</strong> Если сегодняшний день не аномалия — это паттерн. Проверь 4 всадника, переходи к Magic 6 Hours, рассмотри парную терапию.</div>';
+      barColor = '#f85149';
+    }
+  }
+  document.getElementById('ratio').textContent = ratio;
+  document.getElementById('status').innerHTML = status;
+  document.getElementById('ratioBar').style.width = barPct + '%';
+  document.getElementById('ratioBar').style.background = barColor;
+
+  // History
+  var h = loadHistory();
+  var keys = Object.keys(h).sort().reverse().slice(0, 14);
+  var tb = document.querySelector('#historyTable tbody');
+  if (keys.length === 0) {
+    tb.innerHTML = '<tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:20px;">История появится завтра</td></tr>';
+  } else {
+    tb.innerHTML = keys.map(function(k){
+      var e = h[k];
+      var r = e.neg === 0 ? '∞' : (e.pos / e.neg).toFixed(1);
+      var color = e.neg === 0 || e.pos / e.neg >= 5 ? '#3fb950' : e.pos / e.neg >= 3 ? '#d29922' : '#f85149';
+      return '<tr><td>' + k + '</td><td class="num">' + e.pos + '</td><td class="num">' + e.neg + '</td><td class="num" style="color:' + color + '">' + r + ':1</td></tr>';
+    }).join('');
+  }
+}
+render();
+</script>
+</body>
+</html>

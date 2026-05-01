@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magic 6 Hours · трекер · ODV999</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
+</head>
+<body data-theme="light">
+
+<div class="container">
+  <div class="hero">
+    <h1>Magic 6 Hours · недельный трекер<span class="v">v1.0</span></h1>
+    <p>Готтман: ~6 часов в неделю осознанного контакта = разница между крепкой и распадающейся парой. Наблюдение на ~3 000 пар за 30 лет.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Сегодня — <span id="todayLbl"></span></div>
+    <ul class="checklist" id="todayList"></ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Эта неделя — прогресс</div>
+    <div id="weekStats"></div>
+    <div class="progress"><div class="progress-bar" id="weekBar" style="width:0%"></div></div>
+    <div class="card-attrib" id="weekTotal">0 мин из 360 (6ч)</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">История по неделям</div>
+    <table id="historyTable">
+      <thead><tr><th>Неделя</th><th class="num">Минут</th><th class="num">% цели</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="if(confirm('Очистить всю историю?')){localStorage.removeItem('m6h_history');localStorage.removeItem('m6h_today');location.reload();}">Очистить историю</button>
+    </div>
+  </div>
+
+  <details>
+    <summary>Из чего складываются 6 часов (Готтман)</summary>
+    <p><strong>Утро (2 мин × 7 = 14 мин/нед):</strong> 6-секундный поцелуй при расставании + «Что у тебя сегодня?»</p>
+    <p><strong>Вечер (20 мин × 5 = 100 мин/нед):</strong> stress-reducing conversation. Слушать про день БЕЗ советов. Только эмпатия.</p>
+    <p><strong>Восхищение/уважение (5 мин × 7 = 35 мин/нед):</strong> 1 благодарность + 1 признание ежедневно.</p>
+    <p><strong>Физическая близость (60 сек × 7 = 7 мин/нед):</strong> Контакт перед сном.</p>
+    <p><strong>Date (2 ч × 1 = 120 мин/нед):</strong> Без детей, в календаре.</p>
+    <p><strong>State of the Union (1 ч × 1 = 60 мин/нед):</strong> Что хорошо/хуже/хочу.</p>
+    <p>Итого: 14 + 100 + 35 + 7 + 120 + 60 = <strong>336 мин (~5.6 ч)</strong> минимум.</p>
+  </details>
+
+  <div class="footer">
+    Источник: Gottman, J. — The Magic 5 Hours (расширено до 6 в современных рекомендациях)
+  </div>
+</div>
+
+<script src="../assets/dashboard-nav.js"></script>
+<script>
+var ITEMS = [
+  {id:'kiss',     label:'Поцелуй 6+ сек при расставании', mins:2, daily:true},
+  {id:'evening',  label:'Вечер 20 мин — stress-reducing conversation', mins:20, daily:true},
+  {id:'thanks',   label:'1 благодарность + 1 признание', mins:5, daily:true},
+  {id:'physical', label:'Контакт 60 сек перед сном', mins:1, daily:true},
+  {id:'date',     label:'Date 2 ч (если сегодня)', mins:120, daily:false},
+  {id:'sou',      label:'State of the Union 1 ч (если сегодня)', mins:60, daily:false}
+];
+
+function todayKey(){
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function weekKey(){
+  var d = new Date();
+  var dayOfWeek = (d.getDay() + 6) % 7; // Mon=0
+  d.setDate(d.getDate() - dayOfWeek);
+  return d.getFullYear() + '-W' + String(Math.ceil((((d - new Date(d.getFullYear(),0,1))/86400000)+1)/7)).padStart(2,'0');
+}
+
+function load(){ return JSON.parse(localStorage.getItem('m6h_today') || '{}'); }
+function save(s){ localStorage.setItem('m6h_today', JSON.stringify(s)); }
+function loadHistory(){ return JSON.parse(localStorage.getItem('m6h_history') || '{}'); }
+function saveHistory(h){ localStorage.setItem('m6h_history', JSON.stringify(h)); }
+
+function render(){
+  var st = load();
+  var dayKey = todayKey();
+  if (st.day !== dayKey) {
+    // Закрыть прошлый день: добавить минуты в неделю
+    if (st.day && st.mins) {
+      var hist = loadHistory();
+      var wk = st.week || weekKey();
+      hist[wk] = (hist[wk] || 0) + st.mins;
+      saveHistory(hist);
+    }
+    st = {day: dayKey, week: weekKey(), checked: {}, mins: 0};
+    save(st);
+  }
+  // Today list
+  var ul = document.getElementById('todayList');
+  ul.innerHTML = '';
+  ITEMS.forEach(function(it){
+    var li = document.createElement('li');
+    li.dataset.id = it.id;
+    if (st.checked[it.id]) li.classList.add('done');
+    li.innerHTML = '<span class="box">✓</span><span>' + it.label + '</span><span class="meta">' + it.mins + ' мин</span>';
+    li.addEventListener('click', function(){
+      st.checked[it.id] = !st.checked[it.id];
+      st.mins = ITEMS.reduce(function(s,x){ return s + (st.checked[x.id] ? x.mins : 0); }, 0);
+      save(st);
+      render();
+    });
+    ul.appendChild(li);
+  });
+
+  document.getElementById('todayLbl').textContent = dayKey;
+
+  // Week stats
+  var hist = loadHistory();
+  var wk = weekKey();
+  var weekMins = (hist[wk] || 0) + (st.mins || 0);
+  var pct = Math.min(100, Math.round(weekMins / 360 * 100));
+  document.getElementById('weekBar').style.width = pct + '%';
+  document.getElementById('weekBar').style.background = pct >= 80 ? '#3fb950' : pct >= 50 ? '#d29922' : '#f85149';
+  document.getElementById('weekTotal').textContent = weekMins + ' мин из 360 (6ч) = ' + pct + '%';
+  document.getElementById('weekStats').innerHTML = '<div class="stat">' + Math.round(weekMins/60) + 'ч <span class="lbl">из 6ч цели</span></div>';
+
+  // History
+  var tb = document.querySelector('#historyTable tbody');
+  tb.innerHTML = '';
+  var keys = Object.keys(hist).sort().reverse().slice(0, 12);
+  if (keys.length === 0) {
+    tb.innerHTML = '<tr><td colspan="3" style="color:var(--text-muted);text-align:center;padding:20px;">История появится после первой завершённой недели</td></tr>';
+  } else {
+    keys.forEach(function(k){
+      var m = hist[k];
+      var p = Math.round(m / 360 * 100);
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + k + '</td><td class="num">' + m + '</td><td class="num" style="color:' + (p>=80?'#3fb950':p>=50?'#d29922':'#f85149') + '">' + p + '%</td>';
+      tb.appendChild(tr);
+    });
+  }
+}
+render();
+</script>
+</body>
+</html>

@@ -3,979 +3,221 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NZT-48 Шпаргалка отношений · v2.0.1</title>
-<meta name="description" content="Только формулы и действия. Только подтверждённое исследованиями. Без воды.">
-<style>
-:root {
-  --bg: #0d1117;
-  --bg-elev: #161b22;
-  --bg-card: #1c2128;
-  --border: #30363d;
-  --border-soft: #21262d;
-  --text: #e6edf3;
-  --text-dim: #8b949e;
-  --text-muted: #6e7681;
-  --accent: #f85149;
-  --accent-soft: #ff7b72;
-  --green: #3fb950;
-  --yellow: #d29922;
-  --blue: #58a6ff;
-  --purple: #bc8cff;
-  --pink: #ff7b8b;
-  --code-bg: #0a0d12;
-  --hl: #21262d;
-  --shadow: 0 8px 24px rgba(0,0,0,.4);
-  --mono: ui-monospace, "SF Mono", "Monaco", "Cascadia Code", "Roboto Mono", Consolas, monospace;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-}
-[data-theme="light"] {
-  --bg: #ffffff;
-  --bg-elev: #f6f8fa;
-  --bg-card: #ffffff;
-  --border: #d0d7de;
-  --border-soft: #eaeef2;
-  --text: #1f2328;
-  --text-dim: #59636e;
-  --text-muted: #818b97;
-  --accent: #cf222e;
-  --accent-soft: #d1242f;
-  --green: #1a7f37;
-  --yellow: #9a6700;
-  --blue: #0969da;
-  --purple: #8250df;
-  --pink: #bf3989;
-  --code-bg: #f6f8fa;
-  --hl: #ddf4ff;
-  --shadow: 0 4px 12px rgba(0,0,0,.08);
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: 16px;
-  line-height: 1.6;
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-}
-
-.app { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
-
-/* SIDEBAR */
-.sidebar {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-  background: var(--bg-elev);
-  border-right: 1px solid var(--border);
-  padding: 24px 0 24px 0;
-  display: flex;
-  flex-direction: column;
-}
-.brand { padding: 0 20px 20px; border-bottom: 1px solid var(--border-soft); margin-bottom: 16px; }
-.brand-title { font-size: 14px; font-weight: 700; color: var(--accent); letter-spacing: 1.2px; }
-.brand-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-.brand-version { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-family: var(--mono); }
-
-.search-wrap { padding: 0 20px 16px; }
-.search {
-  width: 100%;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-family: var(--sans);
-  outline: none;
-  transition: border-color .15s;
-}
-.search:focus { border-color: var(--blue); }
-.search::placeholder { color: var(--text-muted); }
-
-.filters { padding: 0 20px 16px; display: flex; gap: 6px; flex-wrap: wrap; }
-.filter-chip {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all .15s;
-  user-select: none;
-}
-.filter-chip:hover { color: var(--text); border-color: var(--text-dim); }
-.filter-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
-
-.nav { padding: 0 12px; flex: 1; }
-.nav a {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  color: var(--text-dim);
-  text-decoration: none;
-  border-radius: 6px;
-  font-size: 13px;
-  margin-bottom: 2px;
-  border-left: 2px solid transparent;
-  transition: all .15s;
-}
-.nav a:hover { background: var(--bg-card); color: var(--text); }
-.nav a.active { background: var(--bg-card); color: var(--text); border-left-color: var(--accent); }
-.nav-num { font-family: var(--mono); color: var(--text-muted); font-size: 11px; min-width: 18px; }
-
-.theme-toggle {
-  margin: 0 20px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all .15s;
-}
-.theme-toggle:hover { color: var(--text); border-color: var(--text-dim); }
-
-/* MAIN */
-.main { padding: 40px 48px 80px; max-width: 980px; }
-.hero { margin-bottom: 48px; }
-.hero h1 { font-size: 28px; font-weight: 800; letter-spacing: -.5px; margin-bottom: 8px; }
-.hero h1 .v { font-size: 14px; color: var(--text-muted); font-weight: 500; font-family: var(--mono); margin-left: 8px; }
-.hero p { color: var(--text-dim); font-size: 14px; }
-.hero .legend {
-  margin-top: 16px;
-  display: flex;
-  gap: 16px;
-  font-size: 13px;
-  color: var(--text-dim);
-  font-family: var(--mono);
-}
-
-section { margin-bottom: 56px; scroll-margin-top: 24px; }
-section h2 {
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-}
-section h2 .num {
-  font-size: 14px;
-  color: var(--text-muted);
-  font-family: var(--mono);
-  font-weight: 500;
-  background: var(--bg-card);
-  padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-}
-section .lead { color: var(--text-dim); font-size: 14px; margin-bottom: 24px; }
-
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 16px;
-  transition: border-color .15s, transform .15s;
-}
-.card:hover { border-color: var(--text-muted); }
-.card.hidden { display: none; }
-.card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-.card-title { font-size: 15px; font-weight: 700; color: var(--text); }
-.card-attrib { font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 2px; }
-.card-tags { display: flex; gap: 6px; flex-shrink: 0; }
-.tag {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-family: var(--mono);
-}
-.tag-zh { background: rgba(255,123,139,.15); color: var(--pink); border: 1px solid rgba(255,123,139,.3); }
-.tag-m { background: rgba(88,166,255,.15); color: var(--blue); border: 1px solid rgba(88,166,255,.3); }
-.tag-both { background: rgba(63,185,80,.15); color: var(--green); border: 1px solid rgba(63,185,80,.3); }
-.tag-crit { background: rgba(248,81,73,.18); color: var(--accent-soft); border: 1px solid rgba(248,81,73,.4); }
-
-.code {
-  background: var(--code-bg);
-  border: 1px solid var(--border-soft);
-  border-radius: 6px;
-  padding: 14px 16px;
-  font-family: var(--mono);
-  font-size: 13px;
-  line-height: 1.65;
-  white-space: pre-wrap;
-  color: var(--text);
-  overflow-x: auto;
-}
-.code .accent { color: var(--accent-soft); font-weight: 600; }
-.code .kw { color: var(--purple); font-weight: 600; }
-.code .num { color: var(--yellow); }
-.code .arrow { color: var(--green); font-weight: 700; }
-
-.note {
-  margin-top: 12px;
-  padding: 10px 14px;
-  background: rgba(88,166,255,.06);
-  border-left: 3px solid var(--blue);
-  border-radius: 4px;
-  font-size: 13px;
-  color: var(--text-dim);
-}
-.note strong { color: var(--text); }
-
-.warn {
-  margin-top: 12px;
-  padding: 10px 14px;
-  background: rgba(248,81,73,.08);
-  border-left: 3px solid var(--accent);
-  border-radius: 4px;
-  font-size: 13px;
-  color: var(--text);
-}
-
-/* GLOSSARY */
-.glossary-cat { margin-bottom: 32px; }
-.glossary-cat h3 {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 12px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--border-soft);
-}
-.term {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 16px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border-soft);
-  font-size: 13px;
-}
-.term:last-child { border-bottom: none; }
-.term dt { color: var(--accent-soft); font-weight: 700; font-family: var(--mono); }
-.term dd { color: var(--text-dim); }
-
-/* SOURCES */
-.sources li {
-  list-style: none;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border-soft);
-  font-size: 13px;
-  color: var(--text-dim);
-}
-.sources strong { color: var(--text); }
-.sources a { color: var(--blue); text-decoration: none; }
-.sources a:hover { text-decoration: underline; }
-
-/* CRISIS */
-.crisis-card {
-  background: linear-gradient(135deg, rgba(248,81,73,.12), rgba(248,81,73,.04));
-  border: 1px solid rgba(248,81,73,.4);
-  border-radius: 8px;
-  padding: 20px;
-}
-.crisis-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 8px 0;
-  font-size: 14px;
-}
-.crisis-row .em { font-size: 18px; }
-.crisis-row .body { color: var(--text); }
-.crisis-row .body strong { color: var(--accent-soft); }
-
-/* FOOTER */
-.footer {
-  margin-top: 80px;
-  padding-top: 24px;
-  border-top: 1px solid var(--border-soft);
-  font-size: 12px;
-  color: var(--text-muted);
-  text-align: center;
-}
-.footer a { color: var(--text-dim); }
-
-/* CHIPS in tonight checklist */
-.checklist { list-style: none; }
-.checklist li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  margin-bottom: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all .15s;
-  user-select: none;
-}
-.checklist li:hover { border-color: var(--text-muted); }
-.checklist li .box {
-  width: 18px; height: 18px;
-  border: 2px solid var(--text-muted);
-  border-radius: 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  color: transparent;
-  transition: all .15s;
-}
-.checklist li.done .box {
-  background: var(--green);
-  border-color: var(--green);
-  color: white;
-}
-.checklist li.done {
-  opacity: .55;
-  text-decoration: line-through;
-}
-
-/* MOBILE */
-.menu-btn { display: none; }
-@media (max-width: 900px) {
-  .app { grid-template-columns: 1fr; }
-  .sidebar {
-    position: fixed; top: 0; left: 0;
-    height: 100vh; width: 280px;
-    transform: translateX(-100%);
-    transition: transform .25s;
-    z-index: 100;
-    box-shadow: var(--shadow);
-  }
-  .sidebar.open { transform: translateX(0); }
-  .main { padding: 24px 20px 80px; padding-top: 64px; }
-  .menu-btn {
-    display: flex;
-    position: fixed;
-    top: 12px; left: 12px;
-    z-index: 101;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    align-items: center;
-    gap: 8px;
-  }
-  .term { grid-template-columns: 1fr; gap: 4px; }
-  .term dt { font-size: 12px; }
-}
-
-/* search highlight */
-mark { background: rgba(210,153,34,.3); color: var(--text); padding: 0 2px; border-radius: 2px; }
-
-/* Hide elements when filtered */
-.card.filter-hidden, section.filter-hidden { display: none; }
-</style>
+<title>NZT-48 Шпаргалка отношений · ODV999</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
 </head>
-<body data-theme="dark">
+<body data-theme="light">
 
-<button class="menu-btn" id="menuBtn">☰ Меню</button>
+<div class="container">
+  <div class="hero">
+    <h1>NZT-48 Шпаргалка отношений<span class="v">v2.0.1</span></h1>
+    <p>Только формулы и действия. Только подтверждённое исследованиями. Без воды.</p>
+    <div style="margin-top:12px;color:var(--text-muted);font-family:var(--mono);font-size:12px;">👩 ей · 👨 ему · без значка — обоим · ⚠ кризис</div>
+  </div>
 
-<div class="app">
+  <h2 style="font-size:18px;margin:24px 0 12px;">1. Во время ссоры</h2>
 
-  <aside class="sidebar" id="sidebar">
-    <div class="brand">
-      <div class="brand-title">NZT-48 ШПАРГАЛКА</div>
-      <div class="brand-sub">Отношения · только формулы и действия</div>
-      <div class="brand-version">v2.0.1 · 30.04.2026</div>
-    </div>
-
-    <div class="search-wrap">
-      <input type="search" class="search" id="search" placeholder="🔍 Поиск по тексту..." autocomplete="off">
-    </div>
-
-    <div class="filters">
-      <span class="filter-chip active" data-filter="all">Все</span>
-      <span class="filter-chip" data-filter="zh">👩 Ей</span>
-      <span class="filter-chip" data-filter="m">👨 Ему</span>
-      <span class="filter-chip" data-filter="both">Обоим</span>
-    </div>
-
-    <nav class="nav" id="nav">
-      <a href="#s1" class="active"><span class="nav-num">1</span> Во время ссоры</a>
-      <a href="#s2"><span class="nav-num">2</span> После ссоры</a>
-      <a href="#s3"><span class="nav-num">3</span> Magic 6 Hours</a>
-      <a href="#s4"><span class="nav-num">4</span> Биохимия</a>
-      <a href="#s5"><span class="nav-num">5</span> Цифровая гигиена</a>
-      <a href="#s6"><span class="nav-num">6</span> Сегодня вечером</a>
-      <a href="#crisis"><span class="nav-num">⚠</span> Кризис</a>
-      <a href="#labels"><span class="nav-num">📛</span> Ложные ярлыки</a>
-      <a href="#glossary"><span class="nav-num">📖</span> Словарь</a>
-      <a href="#sources"><span class="nav-num">📚</span> Источники</a>
-    </nav>
-
-    <button class="theme-toggle" id="themeToggle">🌙 Светлая тема</button>
-  </aside>
-
-  <main class="main">
-    <div class="hero">
-      <h1>NZT-48 Шпаргалка отношений<span class="v">v2.0.1</span></h1>
-      <p>Только формулы и действия. Только подтверждённое исследованиями. Без воды.</p>
-      <div class="legend">
-        <span>👩 ей</span>
-        <span>👨 ему</span>
-        <span>без значка — обоим</span>
-      </div>
-    </div>
-
-    <!-- SECTION 1 -->
-    <section id="s1" data-tags="both">
-      <h2><span class="num">01</span>Во время ссоры</h2>
-      <p class="lead">Что делать прямо сейчас, в эпицентре конфликта.</p>
-
-      <div class="card" data-tags="both" data-search="time-out готтман flooding чсс пауза стена 4 всадника">
-        <div class="card-head">
-          <div>
-            <div class="card-title">TIME-OUT при флудинге</div>
-            <div class="card-attrib">Готтман · ЧСС &gt;100 = «затопление», префронтальная кора отключена</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-both">обоим</span></div>
-        </div>
-        <pre class="code">ЧСС &gt;100 <span class="arrow">→</span> <span class="accent">СТОП</span> <span class="arrow">→</span> 20 мин ≤ пауза ≤ 24 ч
+  <div class="card">
+    <div class="card-title">TIME-OUT при флудинге</div>
+    <div class="card-attrib">Готтман · ЧСС &gt;100 = «затопление», префронтальная кора отключена</div>
+    <pre class="code">ЧСС &gt;100 <span class="arrow">→</span> <span class="accent">СТОП</span> <span class="arrow">→</span> 20 мин ≤ пауза ≤ 24 ч
 <span class="kw">НЕ</span> руминировать (читать / спорт / музыка)
 Тот, кто ушёл — тот и возвращается
 Дольше 24 ч = <span class="accent">СТЕНА</span> (4-й всадник) <span class="arrow">→</span> к терапевту</pre>
-      </div>
+  </div>
 
-      <div class="card" data-tags="both" data-search="repair attempts готтман починка фразы">
-        <div class="card-head">
-          <div>
-            <div class="card-title">REPAIR ATTEMPTS — 6 фраз в момент ссоры</div>
-            <div class="card-attrib">Готтман · главный предиктор устойчивости пары</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-both">обоим</span></div>
-        </div>
-        <pre class="code"><span class="num">1.</span> «Подожди, мне нужно перерыв»
+  <div class="card">
+    <div class="card-title">REPAIR ATTEMPTS — 6 фраз</div>
+    <div class="card-attrib">Готтман · главный предиктор устойчивости пары</div>
+    <pre class="code"><span class="num">1.</span> «Подожди, мне нужно перерыв»
 <span class="num">2.</span> «Я скучаю по тебе»
 <span class="num">3.</span> «Мы оба правы / оба неправы»
 <span class="num">4.</span> «Прости, я неудачно сказал»
 <span class="num">5.</span> «Я люблю тебя»
 <span class="num">6.</span> (юмор без сарказма)</pre>
-      </div>
+  </div>
 
-      <div class="card" data-tags="both" data-search="4 всадника антидот критика презрение оборона стена">
-        <div class="card-head">
-          <div>
-            <div class="card-title">4 ВСАДНИКА → АНТИДОТ</div>
-            <div class="card-attrib">Готтман · сильнейшие предикторы дисфункции</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-both">обоим</span></div>
-        </div>
-        <pre class="code"><span class="accent">Критика личности</span>    <span class="arrow">→</span> Я-сообщение о факте
+  <div class="card">
+    <div class="card-title">4 ВСАДНИКА → АНТИДОТ</div>
+    <pre class="code"><span class="accent">Критика личности</span>    <span class="arrow">→</span> Я-сообщение о факте
 <span class="accent">Презрение</span>           <span class="arrow">→</span> 3 благодарности в день
 <span class="accent">Оборона</span>             <span class="arrow">→</span> «Ты прав в том, что…»
 <span class="accent">Стена</span>               <span class="arrow">→</span> 20-мин пауза → возврат</pre>
-      </div>
+    <div class="btn-row"><a class="btn btn-secondary" href="four-horsemen-test.html">Пройти тест 4 всадника →</a></div>
+  </div>
 
-      <div class="card" data-tags="both" data-search="я-сообщение i-message факт эмоция потребность">
-        <div class="card-head">
-          <div>
-            <div class="card-title">Я-СООБЩЕНИЕ (формула)</div>
-            <div class="card-attrib">NVC Розенберг + Готтман soft start-up</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-both">обоим</span></div>
-        </div>
-        <pre class="code">Когда [<span class="kw">ФАКТ</span>], я чувствую [<span class="kw">ЭМОЦИЯ</span>],
+  <div class="card">
+    <div class="card-title">Я-СООБЩЕНИЕ (формула)</div>
+    <pre class="code">Когда [<span class="kw">ФАКТ</span>], я чувствую [<span class="kw">ЭМОЦИЯ</span>],
 мне нужно [<span class="kw">ПОТРЕБНОСТЬ</span>], прошу [<span class="kw">КОНКРЕТНО</span>].
 
 ФАКТ ≠ оценка («3 раза», не «всегда»)
 ЭМОЦИЯ ≠ мысль («одиноко», не «проигнорированной»)</pre>
-      </div>
-    </section>
+    <div class="btn-row"><a class="btn btn-secondary" href="i-message-generator.html">Генератор Я-сообщения →</a></div>
+  </div>
 
-    <!-- SECTION 2 -->
-    <section id="s2" data-tags="both">
-      <h2><span class="num">02</span>После ссоры — Aftermath of a Fight</h2>
-      <p class="lead">5 шагов разбора по Готтману. Только когда оба эмоционально готовы — не по часам, по состоянию.</p>
+  <h2 style="font-size:18px;margin:32px 0 12px;">2. После ссоры — Aftermath of a Fight (5 шагов)</h2>
 
-      <div class="card" data-tags="both" data-search="aftermath fight feelings realities triggers responsibility constructive plans">
-        <div class="card-head">
-          <div>
-            <div class="card-title">5 шагов разбора</div>
-            <div class="card-attrib">Готтман · «aftermath of a fight protocol»</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-both">обоим</span></div>
-        </div>
-        <pre class="code"><span class="num">1.</span> <span class="kw">FEELINGS</span>      — каждый описывает чувства во время ссоры
-                  <span class="accent">Запрет:</span> оправдания, объяснения «почему»
-<span class="num">2.</span> <span class="kw">REALITIES</span>     — каждый описывает СВОЁ восприятие ссоры
-                  <span class="accent">Запрет:</span> спорить с восприятием другого
+  <div class="card">
+    <div class="card-attrib">Готтман · «aftermath of a fight protocol»</div>
+    <pre class="code"><span class="num">1.</span> <span class="kw">FEELINGS</span>      — каждый описывает чувства во время ссоры
+<span class="num">2.</span> <span class="kw">REALITIES</span>     — каждый описывает СВОЁ восприятие
 <span class="num">3.</span> <span class="kw">TRIGGERS</span>      — что сработало (детство / прошлый опыт / страх)
 <span class="num">4.</span> <span class="kw">RESPONSIBILITY</span> — каждый: «как я внёс в эскалацию»
 <span class="num">5.</span> <span class="kw">CONSTRUCTIVE</span>   — 1 конкретное действие на следующий раз</pre>
-        <div class="warn"><strong>Если на любом шаге возвращается ссора → стоп → ещё не готовы.</strong></div>
-        <div class="note">Чем раньше repair attempt после ссоры — тем меньше остаточный резентимент (Готтман, U Washington — repair attempts theory).</div>
-      </div>
-    </section>
+    <div class="warn"><strong>Если на любом шаге возвращается ссора → стоп → ещё не готовы.</strong></div>
+    <div class="note">Чем раньше repair attempt после ссоры — тем меньше остаточный резентимент (Готтман, U Washington — repair attempts theory).</div>
+    <div class="btn-row"><a class="btn btn-secondary" href="aftermath-assistant.html">Открыть ассистент →</a></div>
+  </div>
 
-    <!-- SECTION 3 -->
-    <section id="s3" data-tags="both">
-      <h2><span class="num">03</span>Ежедневно — Magic 6 Hours</h2>
-      <p class="lead">~6 часов в неделю осознанного контакта = разница между крепкой и распадающейся парой (Готтман, ~3 000 пар, 30 лет).</p>
+  <h2 style="font-size:18px;margin:32px 0 12px;">3. Ежедневно — Magic 6 Hours</h2>
 
-      <div class="card" data-tags="both" data-search="утро поцелуй 6 секунд расставание magic hours">
-        <div class="card-head">
-          <div>
-            <div class="card-title">УТРОМ — 2 минуты</div>
-            <div class="card-attrib">Готтман · 6-second kiss rule</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-both">обоим</span></div>
-        </div>
-        <pre class="code">Поцелуй <span class="num">6+ сек</span> при расставании
-«Куда сегодня? Что у тебя?»</pre>
-      </div>
+  <div class="card">
+    <div class="card-attrib">Готтман · ~6 часов в неделю осознанного контакта = разница между крепкой и распадающейся парой</div>
+    <pre class="code"><span class="kw">УТРОМ — 2 мин:</span>
+  Поцелуй <span class="num">6+ сек</span> при расставании
+  «Куда сегодня? Что у тебя?»
 
-      <div class="card" data-tags="both" data-search="вечер объятие 20 секунд stress reducing conversation Light 2005">
-        <div class="card-head">
-          <div>
-            <div class="card-title">ВЕЧЕР — 20 минут (stress-reducing conversation)</div>
-            <div class="card-attrib">Light, Grewen, Amico 2005 (Biological Psychology) — частые объятия → ↓АД, ↓кортизол</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-both">обоим</span></div>
-        </div>
-        <pre class="code">Объятие <span class="num">20+ сек</span> на пороге
-Слушать партнёра про день <span class="accent">БЕЗ советов</span> и <span class="accent">БЕЗ решений</span>
-Только эмпатия. «Я тебя слышу».</pre>
-      </div>
+<span class="kw">ВЕЧЕР — 20 мин (stress-reducing conversation):</span>
+  Объятие <span class="num">20+ сек</span> на пороге (Light 2005: ↓АД, ↓кортизол)
+  Слушать партнёра про день <span class="accent">БЕЗ советов</span> и <span class="accent">БЕЗ решений</span>
+  Только эмпатия. «Я тебя слышу».
 
-      <div class="card" data-tags="both" data-search="восхищение благодарность уважение признание">
-        <div class="card-head">
-          <div>
-            <div class="card-title">ВОСХИЩЕНИЕ / УВАЖЕНИЕ — 5 минут в день</div>
-            <div class="card-attrib">Готтман · антидот к презрению</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-both">обоим</span></div>
-        </div>
-        <pre class="code"><span class="num">1</span> благодарность («спасибо за…» — конкретно)
-<span class="num">1</span> признание («ты молодец, что…»)</pre>
-      </div>
+<span class="kw">ВОСХИЩЕНИЕ/УВАЖЕНИЕ — 5 мин в день:</span>
+  <span class="num">1</span> благодарность («спасибо за…» — конкретно)
+  <span class="num">1</span> признание («ты молодец, что…»)
 
-      <div class="card" data-tags="both" data-search="физическая близость контакт сон">
-        <div class="card-head">
-          <div>
-            <div class="card-title">ФИЗИЧЕСКАЯ БЛИЗОСТЬ перед сном</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-both">обоим</span></div>
-        </div>
-        <pre class="code">Контакт <span class="num">60 сек</span> перед сном (не обязательно секс)</pre>
-      </div>
+<span class="kw">ФИЗИЧЕСКАЯ БЛИЗОСТЬ:</span>
+  Контакт <span class="num">60 сек</span> перед сном
 
-      <div class="card" data-tags="both" data-search="date night свидание 2 часа в неделю">
-        <div class="card-head">
-          <div>
-            <div class="card-title">DATE — 2 часа в неделю</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-both">обоим</span></div>
-        </div>
-        <pre class="code"><span class="kw">Без</span> детей, <span class="kw">без</span> друзей. <span class="accent">В календаре.</span></pre>
-      </div>
+<span class="kw">DATE — 2 ч в неделю:</span>
+  Без детей, без друзей. В календаре.
 
-      <div class="card" data-tags="both" data-search="state of the union ревью еженедельно">
-        <div class="card-head">
-          <div>
-            <div class="card-title">STATE OF THE UNION — 1 час в неделю</div>
-            <div class="card-attrib">Готтман · еженедельный ревью пары</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-both">обоим</span></div>
-        </div>
-        <pre class="code">Что <span class="num">хорошо</span> / что <span class="num">хуже</span> / что <span class="num">хочу</span></pre>
-      </div>
-    </section>
+<span class="kw">STATE OF THE UNION — 1 ч в неделю:</span>
+  Что хорошо / что хуже / что хочу</pre>
+    <div class="btn-row">
+      <a class="btn btn-secondary" href="magic-6-hours-tracker.html">Magic 6 Hours трекер →</a>
+      <a class="btn btn-secondary" href="state-of-the-union.html">State of the Union →</a>
+    </div>
+  </div>
 
-    <!-- SECTION 4 -->
-    <section id="s4" data-tags="both">
-      <h2><span class="num">04</span>Биохимия — ДО терапии</h2>
-      <p class="lead">Прежде чем платить психологу — проверь гормоны. У многих «отношенческих» проблем биохимическая причина.</p>
+  <h2 style="font-size:18px;margin:32px 0 12px;">4. Биохимия — ДО терапии</h2>
 
-      <div class="card" data-tags="zh" data-search="женщина 35+ амг фсг лг эстрадиол пролактин ттг витамин d ферритин">
-        <div class="card-head">
-          <div>
-            <div class="card-title">👩 Женщина 35+ (раз в год)</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-zh">ей</span></div>
-        </div>
-        <pre class="code">ФСГ · ЛГ · эстрадиол
-<span class="kw">АМГ</span> (овариальный резерв)
-Тестостерон общий + свободный
-Пролактин · ТТГ · Т4св
-Витамин D · ферритин</pre>
-      </div>
+  <div class="card">
+    <pre class="code"><span class="accent">👩 ЖЕНЩИНА 35+ (раз в год):</span>
+  ФСГ · ЛГ · эстрадиол
+  АМГ (овариальный резерв)
+  Тестостерон общий + свободный
+  Пролактин · ТТГ · Т4св
+  Витамин D · ферритин
 
-      <div class="card" data-tags="m" data-search="мужчина 35+ тестостерон shbg эстрадиол hba1c пса андропауза">
-        <div class="card-head">
-          <div>
-            <div class="card-title">👨 Мужчина 35+ (раз в год)</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-m">ему</span></div>
-        </div>
-        <pre class="code">Тестостерон общий <span class="num">&gt;12 нмоль/л</span> · свободный <span class="num">&gt;220 пмоль/л</span>
-ГСПГ (SHBG)
-Эстрадиол <span class="num">20–35 пг/мл</span>
-ЛГ · ФСГ · пролактин
-ТТГ · витамин D · HbA1c
-ПСА (после 40)</pre>
-      </div>
+<span class="accent">👨 МУЖЧИНА 35+ (раз в год):</span>
+  Тестостерон общий <span class="num">&gt;12 нмоль/л</span> · свободный <span class="num">&gt;220 пмоль/л</span>
+  ГСПГ (SHBG)
+  Эстрадиол <span class="num">20–35 пг/мл</span>
+  ЛГ · ФСГ · пролактин
+  ТТГ · витамин D · HbA1c
+  ПСА (после 40)</pre>
+    <div class="warn"><strong>СИГНАЛ — К ВРАЧУ, НЕ К ПСИХОЛОГУ:</strong>
+      <br>👩 цикл рассинхрон + бессонница + раздражительность 35+ → перименопауза → гинеколог-эндокринолог
+      <br>👨 ↓ либидо + ↓ утренние эрекции + ↑ жир + апатия → late-onset hypogonadism → эндокринолог
+    </div>
+    <div class="note"><strong>Утренние эрекции &lt;2 раз/нед 4+ нед → уролог.</strong></div>
+    <div class="btn-row"><a class="btn btn-secondary" href="biochemistry-first.html">Симптом-чекер →</a></div>
+  </div>
 
-      <div class="card" data-tags="both" data-search="сигнал к врачу не к психологу перименопауза андропауза">
-        <div class="card-head">
-          <div>
-            <div class="card-title">⚠ Сигнал — К ВРАЧУ, не к психологу</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-crit">критично</span></div>
-        </div>
-        <pre class="code"><span class="accent">👩</span> цикл рассинхрон + бессонница + раздражительность 35+
-   <span class="arrow">→</span> перименопауза <span class="arrow">→</span> гинеколог-эндокринолог
+  <h2 style="font-size:18px;margin:32px 0 12px;">5. Цифровая гигиена</h2>
 
-<span class="accent">👨</span> ↓ либидо + ↓ утренние эрекции + ↑ жир + апатия
-   <span class="arrow">→</span> late-onset hypogonadism <span class="arrow">→</span> эндокринолог</pre>
-        <div class="warn">Утренние эрекции &lt;2 раз/нед 4+ нед → уролог.</div>
-      </div>
-    </section>
-
-    <!-- SECTION 5 -->
-    <section id="s5" data-tags="both">
-      <h2><span class="num">05</span>Цифровая гигиена</h2>
-      <p class="lead">Phubbing + AI-deepfakes — топ-3 риск 2026 (WEF Global Risks).</p>
-
-      <div class="card" data-tags="both" data-search="phubbing телефон спальня frontiers 2025 effect size 0.38">
-        <div class="card-head">
-          <div>
-            <div class="card-title">PHUBBING (phone snubbing)</div>
-            <div class="card-attrib">Frontiers in Psychology meta-analysis 2025 (81 исследование) · effect size 0.38</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-both">обоим</span></div>
-        </div>
-        <pre class="code"><span class="kw">ЗОНЫ БЕЗ ТЕЛЕФОНА:</span>
-  еда · спальня · машина в разговоре · 15 мин после возвращения
-
-<span class="kw">УВЕДОМЛЕНИЕ:</span>
-  «вижу, отвечу через 5 мин» <span class="arrow">→</span> <span class="accent">НЕ скролл</span>
-
+  <div class="card">
+    <div class="card-title">PHUBBING (мета-анализ Frontiers 2025)</div>
+    <pre class="code"><span class="kw">ЗОНЫ БЕЗ ТЕЛЕФОНА:</span> еда · спальня · машина в разговоре · 15 мин после возвращения
+<span class="kw">УВЕДОМЛЕНИЕ:</span> «вижу, отвечу через 5 мин» <span class="arrow">→</span> <span class="accent">НЕ скролл</span>
 Серый экран после 20:00</pre>
-      </div>
+    <div class="btn-row"><a class="btn btn-secondary" href="phubbing-tracker.html">Phubbing трекер →</a></div>
+  </div>
 
-      <div class="card" data-tags="both" data-search="ai deepfakes deepfake голосовой пароль шантаж wef 2026">
-        <div class="card-head">
-          <div>
-            <div class="card-title">AI-DEEPFAKES</div>
-            <div class="card-attrib">WEF Global Risks Report 2026 · топ-3 рисков · Keepnet 2026: 68% deepfakes неотличимы</div>
-          </div>
-          <div class="card-tags"><span class="tag tag-both">обоим</span></div>
-        </div>
-        <pre class="code"><span class="accent">СЕМЕЙНЫЙ ГОЛОСОВОЙ ПАРОЛЬ</span> — слово, которого нет в IG
+  <div class="card">
+    <div class="card-title">AI-DEEPFAKES (WEF 2026: топ-3 рисков)</div>
+    <pre class="code"><span class="accent">СЕМЕЙНЫЙ ГОЛОСОВОЙ ПАРОЛЬ</span> — слово, которого нет в IG
 Перевод <span class="num">&gt;50К ₽</span> по голосу <span class="arrow">→</span> перезвон САМ на его номер
 Голос больше <span class="kw">НЕ</span> доказывает кто говорил
-
 <span class="accent">👨</span> НЕ использовать AI-girlfriend / Replika / Character.AI
 Шантаж deepfake-фото <span class="arrow">→</span> <span class="accent">НЕ платить</span> <span class="arrow">→</span> Управление К МВД</pre>
-      </div>
-    </section>
+  </div>
 
-    <!-- SECTION 6 -->
-    <section id="s6" data-tags="both">
-      <h2><span class="num">06</span>Сегодня вечером — 5 действий</h2>
-      <p class="lead">Кликни, чтобы отметить выполненным. Сохраняется в браузере.</p>
+  <h2 style="font-size:18px;margin:32px 0 12px;">6. Сегодня вечером — 5 действий</h2>
 
-      <ul class="checklist" id="tonightList">
-        <li data-id="phone"><span class="box">✓</span><span>Телефон в другую комнату (2 ч)</span></li>
-        <li data-id="hug"><span class="box">✓</span><span>Объятие 20+ сек, без слов</span></li>
-        <li data-id="listen"><span class="box">✓</span><span>«Лучшее? Худшее?» — 10 мин слушания без советов</span></li>
-        <li data-id="thanks"><span class="box">✓</span><span>1 конкретная благодарность</span></li>
-        <li data-id="cal"><span class="box">✓</span><span>В календарь: date night + анализы (👩/👨 см. блок 4)</span></li>
-      </ul>
-    </section>
+  <div class="card">
+    <ul class="checklist" id="tonightList">
+      <li data-id="phone"><span class="box">✓</span><span>Телефон в другую комнату (2 ч)</span></li>
+      <li data-id="hug"><span class="box">✓</span><span>Объятие 20+ сек, без слов</span></li>
+      <li data-id="listen"><span class="box">✓</span><span>«Лучшее? Худшее?» — 10 мин слушания без советов</span></li>
+      <li data-id="thanks"><span class="box">✓</span><span>1 конкретная благодарность</span></li>
+      <li data-id="cal"><span class="box">✓</span><span>В календарь: date night + анализы (см. Биохимия первым)</span></li>
+    </ul>
+    <div class="btn-row"><a class="btn btn-secondary" href="daily-habits.html">Daily-трекер →</a></div>
+  </div>
 
-    <!-- CRISIS -->
-    <section id="crisis" data-tags="both">
-      <h2><span class="num">⚠</span>Кризис — к врачу сразу</h2>
+  <h2 style="font-size:18px;margin:32px 0 12px;">⚠ Кризис — к врачу сразу</h2>
 
-      <div class="crisis-card">
-        <div class="crisis-row">
-          <span class="em">🚨</span>
-          <div class="body">Мысли о суициде <strong>→ 8-800-2000-122</strong> (РФ)</div>
-        </div>
-        <div class="crisis-row">
-          <span class="em">🚨</span>
-          <div class="body">Физическое насилие <strong>→ 112</strong> + кризисный центр</div>
-        </div>
-        <div class="crisis-row">
-          <span class="em">⚕</span>
-          <div class="body">Депрессия 2+ нед <strong>→ психиатр</strong> (не психолог)</div>
-        </div>
-        <div class="crisis-row">
-          <span class="em">⚕</span>
-          <div class="body">Алкоголь у партнёра ≥3 дней/нед ≥4 порции <strong>→ нарколог + парный терапевт</strong></div>
-        </div>
-      </div>
-    </section>
+  <div class="card" style="background:linear-gradient(135deg, rgba(248,81,73,.12), rgba(248,81,73,.04));border-color:rgba(248,81,73,.4);">
+    <pre class="code">🚨 Мысли о суициде <span class="arrow">→</span> <span class="accent">8-800-2000-122</span> (РФ)
+🚨 Физическое насилие <span class="arrow">→</span> <span class="accent">112</span> + кризисный центр
+Депрессия 2+ нед <span class="arrow">→</span> психиатр (не психолог)
+Алкоголь у партнёра ≥3 дней/нед ≥4 порции <span class="arrow">→</span> нарколог + парный терапевт</pre>
+    <div class="btn-row"><a class="btn btn-secondary" href="crisis-navigator.html">Полный кризис-навигатор →</a></div>
+  </div>
 
-    <!-- LABELS -->
-    <section id="labels" data-tags="both">
-      <h2><span class="num">📛</span>Ложные ярлыки</h2>
-      <p class="lead">Cleveland Clinic 2024: therapy speak часто усугубляет конфликты.</p>
+  <h2 style="font-size:18px;margin:32px 0 12px;">Ложные ярлыки (Cleveland Clinic 2024)</h2>
 
-      <div class="card" data-tags="both" data-search="газлайтит травма граница нарцисс токсично NPD DSM">
-        <pre class="code"><span class="accent">«Газлайтит»</span>  <span class="arrow">→</span> разногласие ≠ газлайтинг
-              (это многолетняя манипуляция реальностью)
-<span class="accent">«Травма»</span>     <span class="arrow">→</span> DSM-5: угроза жизни/целостности
-              Обида — не травма.
-<span class="accent">«Граница»</span>    <span class="arrow">→</span> ТВОЁ действие при нарушении
-              не контроль партнёра
-<span class="accent">«Нарцисс»</span>    <span class="arrow">→</span> NPD = 1-2% популяции
-              виден невооружённым глазом
-<span class="accent">«Токсично»</span>   <span class="arrow">→</span> не диагноз
-              Если не можешь сформулировать конкретно — нет проблемы</pre>
-        <div class="warn"><strong>3+ клинических термина в одной ссоре = СТОП. Переписать обычным языком.</strong></div>
-      </div>
-    </section>
+  <div class="card">
+    <pre class="code"><span class="accent">«Газлайтит»</span>  <span class="arrow">→</span> разногласие ≠ газлайтинг (это многолетняя манипуляция)
+<span class="accent">«Травма»</span>     <span class="arrow">→</span> DSM-5: угроза жизни/целостности. Обида — не травма.
+<span class="accent">«Граница»</span>    <span class="arrow">→</span> ТВОЁ действие при нарушении, не контроль партнёра
+<span class="accent">«Нарцисс»</span>    <span class="arrow">→</span> NPD = 1-2% популяции, виден невооружённым глазом
+<span class="accent">«Токсично»</span>   <span class="arrow">→</span> не диагноз. Если не можешь сформулировать конкретно — нет проблемы</pre>
+    <div class="warn"><strong>3+ клинических термина в одной ссоре = СТОП. Переписать обычным языком.</strong></div>
+    <div class="btn-row"><a class="btn btn-secondary" href="therapy-speak-detector.html">Detector ярлыков →</a></div>
+  </div>
 
-    <!-- GLOSSARY -->
-    <section id="glossary" data-tags="both">
-      <h2><span class="num">📖</span>Словарь терминов</h2>
+  <h2 style="font-size:18px;margin:32px 0 12px;">Источники</h2>
 
-      <div class="glossary-cat">
-        <h3>Готтмановская система</h3>
-        <dl>
-          <div class="term"><dt>Flooding (затопление)</dt><dd>Состояние, когда ЧСС &gt;100, лимбика перехватывает мозг, рациональный разговор невозможен.</dd></div>
-          <div class="term"><dt>Time-out</dt><dd>Пауза 20 мин — 24 ч при flooding. 20 мин = минимум для лимбической системы вернуться в норму.</dd></div>
-          <div class="term"><dt>Repair attempt</dt><dd>Попытка починки в момент ссоры (фраза, юмор, прикосновение). Главный предиктор устойчивости пары.</dd></div>
-          <div class="term"><dt>Soft start-up</dt><dd>Мягкое начало разговора. «Я чувствую…» вместо «Ты опять…».</dd></div>
-          <div class="term"><dt>4 всадника</dt><dd>Критика (личности), презрение (сарказм/закатывание глаз), оборона (защита вместо слушания), стена (молчание/отстранение). Сильнейшие предикторы дисфункции.</dd></div>
-          <div class="term"><dt>Aftermath of a Fight</dt><dd>5-шаговый разбор после ссоры: Feelings → Realities → Triggers → Responsibility → Constructive Plans.</dd></div>
-          <div class="term"><dt>Magic 6 Hours</dt><dd>~6 часов в неделю осознанного контакта (утро, вечер, благодарность, date, state of the union).</dd></div>
-          <div class="term"><dt>Stress-reducing conversation</dt><dd>20 мин разговора о дне партнёра БЕЗ советов. Только эмпатия.</dd></div>
-          <div class="term"><dt>State of the Union</dt><dd>1 час в неделю: что хорошо / что хуже / что хочу.</dd></div>
-          <div class="term"><dt>NSO (Negative Sentiment Override)</dt><dd>Состояние пары, в котором даже нейтральные слова партнёра воспринимаются негативно. Признак затяжного конфликта.</dd></div>
-        </dl>
-      </div>
+  <div class="card">
+    <ul style="list-style:none;font-size:13px;line-height:1.9;">
+      <li><strong>Gottman, J.</strong> — Time-out, 4 horsemen, repair attempts, aftermath of a fight, magic 6 hours</li>
+      <li><strong>Light, Grewen, Amico (2005)</strong> — 20-сек объятие, ↓АД, ↓кортизол · <em>Biological Psychology</em></li>
+      <li><strong>Bowlby, J.</strong> — теория привязанности (anchor / тревожный / избегающий)</li>
+      <li><strong>Fogg, B. J.</strong> — B = MAP, микропривычки</li>
+      <li><strong>Frontiers in Psychology (2025)</strong> — phubbing meta-analysis</li>
+      <li><strong>WEF Global Risks Report (2026)</strong> — AI-deepfakes top-3 risks</li>
+      <li><strong>Cleveland Clinic (2024)</strong> — therapy speak</li>
+      <li><strong>DSM-5 (2022)</strong> — критерии NPD, травмы</li>
+    </ul>
+  </div>
 
-      <div class="glossary-cat">
-        <h3>Привязанность (Bowlby + Tatkin)</h3>
-        <dl>
-          <div class="term"><dt>Безопасная (anchor)</dt><dd>Комфортна и с близостью, и с одиночеством. ~50% людей.</dd></div>
-          <div class="term"><dt>Тревожная (wave)</dt><dd>Паника при отдалении, постоянная проверка. ~20%.</dd></div>
-          <div class="term"><dt>Избегающая (island)</dt><dd>Дискомфорт от близости, бежит при «слишком близко». ~25%.</dd></div>
-          <div class="term"><dt>Earned secure</dt><dd>Переход из тревожной/избегающей в безопасную через работу. Реальный концепт, не миф.</dd></div>
-        </dl>
-      </div>
-
-      <div class="glossary-cat">
-        <h3>Гормоны и метаболизм</h3>
-        <dl>
-          <div class="term"><dt>АМГ</dt><dd>Антимюллеров гормон. Главный показатель овариального резерва у женщины.</dd></div>
-          <div class="term"><dt>ФСГ, ЛГ</dt><dd>Гормоны гипофиза, регулирующие половую систему.</dd></div>
-          <div class="term"><dt>Эстрадиол (E2)</dt><dd>Основной эстроген.</dd></div>
-          <div class="term"><dt>SHBG / ГСПГ</dt><dd>Глобулин, связывающий половые гормоны. Нужен для расчёта свободного тестостерона.</dd></div>
-          <div class="term"><dt>HbA1c</dt><dd>Гликированный гемоглобин, показатель углеводного обмена за 3 мес.</dd></div>
-          <div class="term"><dt>ПСА</dt><dd>Простатоспецифический антиген, скрининг рака простаты после 40.</dd></div>
-          <div class="term"><dt>Перименопауза</dt><dd>Переход за 5–10 лет до менопаузы. Старт обычно 40–44, может с 35.</dd></div>
-          <div class="term"><dt>Late-onset hypogonadism</dt><dd>Андропауза. Клинически значимое снижение тестостерона у мужчин 40+.</dd></div>
-          <div class="term"><dt>Пролактин</dt><dd>Гормон гипофиза. Повышение → подавление либидо.</dd></div>
-        </dl>
-      </div>
-
-      <div class="glossary-cat">
-        <h3>Психодиагностика и DSM</h3>
-        <dl>
-          <div class="term"><dt>DSM-5</dt><dd>Диагностическое руководство Американской психиатрической ассоциации.</dd></div>
-          <div class="term"><dt>NPD</dt><dd>Нарциссическое расстройство личности. Диагноз DSM-5. 1–2% популяции. Стабильные критерии: грандиозность, отсутствие эмпатии, эксплуатация, потребность в восхищении.</dd></div>
-          <div class="term"><dt>PTSD</dt><dd>Посттравматическое расстройство. После события с угрозой жизни/целостности.</dd></div>
-          <div class="term"><dt>Газлайтинг (реальный)</dt><dd>Систематическая многолетняя манипуляция, заставляющая жертву сомневаться в собственной памяти и реальности.</dd></div>
-          <div class="term"><dt>Алекситимия</dt><dd>Неспособность распознавать и называть свои чувства. Не диагноз, навыковый дефицит.</dd></div>
-          <div class="term"><dt>EFT</dt><dd>Emotionally Focused Therapy. Парная терапия Сью Джонсон. Effect size 1.3 (Spengler 2022) — золотой стандарт.</dd></div>
-        </dl>
-      </div>
-
-      <div class="glossary-cat">
-        <h3>Цифровая среда</h3>
-        <dl>
-          <div class="term"><dt>Phubbing</dt><dd>Phone + snub. Игнорирование живого человека ради экрана.</dd></div>
-          <div class="term"><dt>Deepfake</dt><dd>AI-сгенерированное видео/аудио, выдающее одного человека за другого.</dd></div>
-          <div class="term"><dt>Parasocial relationship</dt><dd>Односторонняя эмоциональная связь с медиаперсоной, которая о тебе не знает.</dd></div>
-          <div class="term"><dt>AI-companion</dt><dd>Чат-бот, имитирующий партнёра (Replika, Character.AI и др.).</dd></div>
-        </dl>
-      </div>
-
-      <div class="glossary-cat">
-        <h3>Поведенческое</h3>
-        <dl>
-          <div class="term"><dt>B = MAP (Fogg)</dt><dd>Behavior = Motivation × Ability × Prompt. Если поведение не происходит — слабо одно из трёх.</dd></div>
-          <div class="term"><dt>Tiny Habit</dt><dd>Микропривычка, рассчитанная на работу без мотивации.</dd></div>
-          <div class="term"><dt>Hebbian rule</dt><dd>«Нейроны, активирующиеся вместе, связываются». Основа нейропластичности.</dd></div>
-          <div class="term"><dt>Embodied cognition</dt><dd>Мышление работает через тело. Поведение меняет мозг быстрее, чем разговор.</dd></div>
-        </dl>
-      </div>
-
-      <div class="glossary-cat">
-        <h3>Что НЕ диагноз (поп-термины)</h3>
-        <dl>
-          <div class="term"><dt>«Токсично»</dt><dd>Собирательный поп-термин. Не диагноз.</dd></div>
-          <div class="term"><dt>«Токсичная маскулинность»</dt><dd>Социологический термин. В IG используется для обесценивания мужского вообще.</dd></div>
-          <div class="term"><dt>«Эмоционально недоступный»</dt><dd>Описание, не диагноз. Часто = алекситимия.</dd></div>
-          <div class="term"><dt>«Травма от свекрови»</dt><dd>Поп-использование. По DSM-5 травма требует угрозы жизни/целостности.</dd></div>
-        </dl>
-      </div>
-    </section>
-
-    <!-- SOURCES -->
-    <section id="sources" data-tags="both">
-      <h2><span class="num">📚</span>Источники</h2>
-      <p class="lead">Только подтверждённое peer-review.</p>
-
-      <ul class="sources">
-        <li><strong>Gottman, J.</strong> — Time-out, 4 horsemen, repair attempts, aftermath of a fight, magic 6 hours · <a href="https://www.gottman.com/blog/manage-conflict-the-aftermath-of-a-fight/" target="_blank" rel="noopener">gottman.com</a></li>
-        <li><strong>Light, K. C., Grewen, K. M., Amico, J. A. (2005)</strong> — 20-сек объятие, ↓АД, ↓кортизол · <em>Biological Psychology</em></li>
-        <li><strong>Bowlby, J.</strong> — теория привязанности (анкор / тревожный / избегающий)</li>
-        <li><strong>Fogg, B. J.</strong> — B = MAP, микропривычки</li>
-        <li><strong>Frontiers in Psychology (2025)</strong> — phubbing meta-analysis</li>
-        <li><strong>WEF Global Risks Report (2026)</strong> — AI-deepfakes top-3 risks</li>
-        <li><strong>Keepnet Labs (2026)</strong> — 68% deepfakes неотличимы</li>
-        <li><strong>Cleveland Clinic (2024)</strong> — therapy speak</li>
-        <li><strong>PlushCare (2024)</strong> — 80% TikTok mental-health misleading</li>
-        <li><strong>DSM-5 (2022)</strong> — критерии NPD, травмы</li>
-      </ul>
-    </section>
-
-    <div class="footer">
-      Автор: Denis Onosov (ODV999) · ⚠ Конфиденциально · v2.0.1 от 30.04.2026<br>
-      Только формулы и действия. Только подтверждённое исследованиями. Без воды.
-    </div>
-  </main>
+  <div class="footer">
+    Автор: Denis Onosov (ODV999) · v2.0.1 от 30.04.2026
+  </div>
 </div>
 
+<script src="../assets/dashboard-nav.js"></script>
 <script>
-// Theme toggle
-const themeBtn = document.getElementById('themeToggle');
-const initial = localStorage.getItem('theme') || 'dark';
-document.body.dataset.theme = initial;
-themeBtn.textContent = initial === 'dark' ? '☀ Светлая тема' : '🌙 Тёмная тема';
-themeBtn.addEventListener('click', () => {
-  const next = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
-  document.body.dataset.theme = next;
-  localStorage.setItem('theme', next);
-  themeBtn.textContent = next === 'dark' ? '☀ Светлая тема' : '🌙 Тёмная тема';
-});
-
-// Search
-const search = document.getElementById('search');
-const cards = document.querySelectorAll('.card');
-const sections = document.querySelectorAll('section');
-search.addEventListener('input', (e) => {
-  const q = e.target.value.toLowerCase().trim();
-  if (!q) {
-    cards.forEach(c => c.classList.remove('hidden'));
-    sections.forEach(s => s.classList.remove('hidden'));
-    document.querySelectorAll('mark').forEach(m => {
-      const txt = document.createTextNode(m.textContent);
-      m.parentNode.replaceChild(txt, m);
-    });
-    return;
-  }
-  sections.forEach(section => {
-    let any = false;
-    section.querySelectorAll('.card').forEach(card => {
-      const haystack = (
-        (card.dataset.search || '') + ' ' +
-        card.textContent.toLowerCase()
-      );
-      if (haystack.includes(q)) {
-        card.classList.remove('hidden');
-        any = true;
-      } else {
-        card.classList.add('hidden');
-      }
-    });
-    // Also check section content (for sections without cards like glossary)
-    const sectionText = section.textContent.toLowerCase();
-    if (sectionText.includes(q)) any = true;
-    section.classList.toggle('hidden', !any);
-  });
-});
-
-// Tag filter
-const chips = document.querySelectorAll('.filter-chip');
-chips.forEach(chip => {
-  chip.addEventListener('click', () => {
-    chips.forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    const filter = chip.dataset.filter;
-    cards.forEach(card => {
-      const tags = (card.dataset.tags || '').split(/\s+/);
-      if (filter === 'all' || tags.includes(filter)) {
-        card.classList.remove('filter-hidden');
-      } else {
-        card.classList.add('filter-hidden');
-      }
-    });
-  });
-});
-
-// Active nav on scroll
-const navLinks = document.querySelectorAll('.nav a');
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      const id = entry.target.id;
-      navLinks.forEach(a => {
-        a.classList.toggle('active', a.getAttribute('href') === '#' + id);
-      });
-    }
-  });
-}, { rootMargin: '-30% 0px -60% 0px' });
-sections.forEach(s => observer.observe(s));
-
-// Mobile menu
-const menuBtn = document.getElementById('menuBtn');
-const sidebar = document.getElementById('sidebar');
-menuBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
-navLinks.forEach(a => a.addEventListener('click', () => sidebar.classList.remove('open')));
-document.addEventListener('click', (e) => {
-  if (window.innerWidth <= 900 && !sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
-    sidebar.classList.remove('open');
-  }
-});
-
-// Tonight checklist (persistence)
-const list = document.getElementById('tonightList');
-const stored = JSON.parse(localStorage.getItem('tonight') || '{}');
-list.querySelectorAll('li').forEach(li => {
-  const id = li.dataset.id;
+var list = document.getElementById('tonightList');
+var stored = JSON.parse(localStorage.getItem('tonight') || '{}');
+list.querySelectorAll('li').forEach(function(li){
+  var id = li.dataset.id;
   if (stored[id]) li.classList.add('done');
-  li.addEventListener('click', () => {
+  li.addEventListener('click', function(){
     li.classList.toggle('done');
     stored[id] = li.classList.contains('done');
     localStorage.setItem('tonight', JSON.stringify(stored));
   });
 });
-
-// Reset checklist daily
-const today = new Date().toISOString().split('T')[0];
+var today = new Date().toISOString().split('T')[0];
 if (localStorage.getItem('tonight-date') !== today) {
   localStorage.setItem('tonight-date', today);
   localStorage.setItem('tonight', '{}');
-  list.querySelectorAll('li').forEach(li => li.classList.remove('done'));
+  list.querySelectorAll('li').forEach(function(li){ li.classList.remove('done'); });
 }
 </script>
 </body>

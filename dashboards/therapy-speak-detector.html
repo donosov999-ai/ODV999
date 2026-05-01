@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Therapy Speak Detector · ODV999</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
+</head>
+<body data-theme="light">
+
+<div class="container">
+  <div class="hero">
+    <h1>Therapy Speak Detector<span class="v">v1.0</span></h1>
+    <p>Проверяет текст на 5 поп-психологических ярлыков (газлайтит / токсично / нарцисс / граница / травма). Cleveland Clinic 2024: therapy speak <strong>усугубляет</strong> конфликты.</p>
+  </div>
+
+  <div class="warn"><strong>Правило:</strong> 3+ клинических термина в одной ссоре = СТОП. Переписать обычным языком.</div>
+
+  <div class="card">
+    <div class="card-title">Вставь текст ссоры / поста / переписки</div>
+    <div class="field">
+      <textarea id="input" rows="8" placeholder="Например: «Ты опять газлайтишь меня. Это токсичные отношения, ты нарцисс, у меня травма от тебя. Я ставлю границы и блокирую…»"></textarea>
+    </div>
+    <button class="btn" id="analyzeBtn" type="button">Проверить</button>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="card">
+    <div class="card-title">Поп-термины vs DSM-5 / реальность</div>
+    <div id="dictionary"></div>
+  </div>
+
+  <div class="footer">
+    Источники: Cleveland Clinic 2024 (therapy speak) · DSM-5 2022 · PlushCare 2024 (80% TikTok mental health misleading)
+  </div>
+</div>
+
+<script src="../assets/dashboard-nav.js"></script>
+<script>
+var TERMS = [
+  {
+    word: 'газлайт',
+    pop: '«Ты меня газлайтишь» = «ты со мной не согласен» / «ты иначе помнишь»',
+    dsm: 'Реальный газлайтинг — систематическая многолетняя манипуляция, заставляющая жертву сомневаться в собственной памяти и реальности. Признаки: повторяющиеся отрицания того, что произошло; принуждение сомневаться в фактах; изоляция от других источников реальности.',
+    replace: 'Если разногласие — «мы помним по-разному». Если намеренная ложь — «ты соврал». Если систематика — к терапевту, не к подруге.'
+  },
+  {
+    word: 'токсичн',
+    pop: '«Это токсичные отношения» = «мне сейчас тяжело»',
+    dsm: '«Токсично» — НЕ диагноз. Собирательный поп-термин для дискомфортных отношений. В DSM-5 нет такого критерия.',
+    replace: 'Конкретно: что именно? «Он не отвечает на сообщения сутки» / «она кричит при разговоре про деньги» / «он принижает мои достижения». Если не можешь сформулировать конкретно — нет проблемы для разбора.'
+  },
+  {
+    word: 'нарцисс',
+    pop: '«Он нарцисс» = «он эгоистичный/самовлюблённый»',
+    dsm: 'NPD (нарциссическое расстройство личности) — диагноз DSM-5. Распространённость 1-2% популяции. Стабильные критерии: грандиозность, отсутствие эмпатии, эксплуатация других, потребность в восхищении. Виден невооружённым глазом — это не «иногда».',
+    replace: 'Если поведение — «эгоистичен в [конкретно]». Если подозрение на NPD — диагностирует психиатр, не TikTok.'
+  },
+  {
+    word: 'границ',
+    pop: '«Я ставлю границы» = «я хочу контролировать что ты делаешь»',
+    dsm: 'Граница — ТВОЁ действие при нарушении, не команда партнёру. «Если ты будешь кричать — я выйду из комнаты на 20 мин» = граница. «Не кричи на меня» = просьба/требование, не граница.',
+    replace: 'Формула: «Если [поведение партнёра], то я [своё действие]». Не «не делай X», а «при X я делаю Y».'
+  },
+  {
+    word: 'травм',
+    pop: '«У меня травма от тебя/отношений/свекрови»',
+    dsm: 'PTSD по DSM-5 требует ЭКСПОЗИЦИИ к угрозе жизни/целостности. Боевые действия, насилие, тяжёлая авария, угроза смерти. Обида — не травма. Тяжёлый период в отношениях — не травма.',
+    replace: '«Мне было больно» / «Я разочарован» / «Мне страшно после» — точные термины. Если действительно было физ./сексуальное насилие — да, это травма, к специалисту.'
+  },
+  {
+    word: 'абьюз',
+    pop: '«Он абьюзер» = «он со мной поступает плохо»',
+    dsm: 'Абьюз — повторяющиеся паттерны контроля, унижения, изоляции, физ./сексуального/финансового насилия. Не «иногда нагрубил». Если реальный абьюз — это вопрос безопасности, не «работы над отношениями».',
+    replace: 'Один эпизод грубости ≠ абьюз. Систематика контроля, унижения, изоляции — да. Если узнал себя как жертву — Управление К МВД / 8-800-7000-600 (горячая линия для женщин).'
+  }
+];
+
+function buildDict(){
+  var box = document.getElementById('dictionary');
+  TERMS.forEach(function(t){
+    var d = document.createElement('details');
+    d.innerHTML = '<summary>«' + t.word + '...»</summary>' +
+      '<p><strong>Поп-использование:</strong> ' + t.pop + '</p>' +
+      '<p><strong>DSM-5 / реальность:</strong> ' + t.dsm + '</p>' +
+      '<p><strong>Замена:</strong> ' + t.replace + '</p>';
+    box.appendChild(d);
+  });
+}
+buildDict();
+
+document.getElementById('analyzeBtn').addEventListener('click', function(){
+  var txt = document.getElementById('input').value.toLowerCase();
+  if (!txt.trim()) { alert('Вставь текст.'); return; }
+  var found = [];
+  TERMS.forEach(function(t){
+    var re = new RegExp(t.word, 'gi');
+    var matches = (txt.match(re) || []).length;
+    if (matches > 0) found.push({term: t, count: matches});
+  });
+
+  var html = '<div class="result-box"><h3>Найдено</h3>';
+  if (found.length === 0) {
+    html += '<div class="success">Терминов из списка не найдено. Текст вне «therapy speak» зоны.</div>';
+  } else {
+    var totalCount = found.reduce(function(s,f){ return s + f.count; }, 0);
+    html += '<div class="stat">' + totalCount + ' <span class="lbl">упоминаний клинических терминов</span></div>';
+    if (totalCount >= 3) {
+      html += '<div class="warn"><strong>3+ клинических термина в одной ссоре = СТОП.</strong> Cleveland Clinic 2024: therapy speak усугубляет конфликты — одна сторона говорит «у меня граница», другая — «это контроль», и обе уверены, что правы. Переписать обычным языком.</div>';
+    }
+    html += '<table style="margin-top:14px;">';
+    html += '<thead><tr><th>Термин</th><th class="num">Раз</th><th>Что делать</th></tr></thead><tbody>';
+    found.forEach(function(f){
+      html += '<tr><td><strong>«' + f.term.word + '...»</strong></td><td class="num">' + f.count + '</td><td>' + f.term.replace + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+  html += '<div class="btn-row"><a class="btn btn-secondary" href="i-message-generator.html">Я-сообщение генератор →</a></div>';
+  html += '</div>';
+  document.getElementById('result').innerHTML = html;
+  document.getElementById('result').scrollIntoView({behavior:'smooth'});
+});
+</script>
+</body>
+</html>

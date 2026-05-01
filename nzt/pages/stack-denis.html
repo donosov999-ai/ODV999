@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NZT-48 — Стек Дениса · по дням</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0d12; --bg-elev:#0f1419; --bg-card:#141b23; --bg-hover:#1a232d;
+  --border:#1e2830; --border-lux:#2a3844;
+  --text:#e8ecf0; --text-dim:#7d8996; --text-muted:#4a5664;
+  --morning:#f5b041; --noon:#52b788; --evening:#b08cd8; --night:#4a8fd9; --cycle:#e94e77;
+  --active:#52b788; --planned:#f5b041; --gated:#ff7043; --paused:#7d8996; --off:#4a5664;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'JetBrains Mono',monospace; background:var(--bg); color:var(--text);
+  min-height:100vh; line-height:1.5; font-size:13px;
+  background-image:
+    radial-gradient(circle at 15% 15%, rgba(245,176,65,.03) 0%, transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(74,143,217,.03) 0%, transparent 40%);
+}
+.container{max-width:1400px;margin:0 auto;padding:32px 24px}
+
+.hero{
+  padding:40px 32px; margin-bottom:20px;
+  background:linear-gradient(135deg,var(--bg-elev) 0%,var(--bg-card) 100%);
+  border:1px solid var(--border); border-radius:16px;
+  position:relative; overflow:hidden;
+}
+.hero::before{
+  content:''; position:absolute; top:-50%;left:-10%; width:120%;height:200%;
+  background:radial-gradient(ellipse,rgba(245,176,65,.05) 0%,transparent 60%);
+  pointer-events:none;
+}
+.hero-label{font-size:10px;letter-spacing:.25em;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px}
+.hero-title{font-family:'Fraunces',serif;font-size:44px;font-weight:600;line-height:1.1;letter-spacing:-.02em;margin-bottom:4px}
+.hero-title em{font-style:italic;color:var(--morning);font-weight:400}
+
+.hero-today{
+  display:flex;align-items:center;gap:12px; margin:16px 0 24px; padding:14px 18px;
+  background:var(--bg); border:1px solid var(--border-lux); border-radius:10px;
+}
+.today-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted)}
+.today-date{font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:var(--text)}
+.today-day{font-family:'Fraunces',serif;font-style:italic;font-size:20px;font-weight:400;color:var(--morning)}
+.today-hint{margin-left:auto;font-size:11px;color:var(--text-dim);max-width:55%;text-align:right;line-height:1.5}
+
+.hero-stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+  background:var(--border); border-radius:10px; overflow:hidden; border:1px solid var(--border);
+}
+.hero-stat{padding:18px 20px; background:var(--bg-card)}
+.stat-num{font-family:'Fraunces',serif;font-size:32px;font-weight:600;line-height:1;color:var(--text)}
+.stat-label{font-size:10px;letter-spacing:.15em;color:var(--text-muted);text-transform:uppercase;margin-top:6px}
+
+.day-tabs{display:flex;gap:6px;margin:20px 0;flex-wrap:wrap;align-items:center}
+.day-tab{
+  padding:10px 14px; border-radius:10px; border:1px solid var(--border);
+  background:var(--bg-elev); color:var(--text-dim);
+  font-family:inherit; font-size:11px; letter-spacing:.05em; cursor:pointer;
+  transition:all .15s; display:flex;flex-direction:column;align-items:center;gap:2px; min-width:56px;
+}
+.day-tab:hover{border-color:var(--border-lux);color:var(--text)}
+.day-tab.active{background:var(--morning);color:var(--bg);border-color:var(--morning);font-weight:600}
+.day-tab.today:not(.active){border-color:var(--morning);color:var(--morning)}
+.day-tab-name{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em}
+.day-tab-cnt{font-size:10px;opacity:.75}
+
+.off-banner{
+  padding:16px 20px; margin-bottom:20px;
+  background:linear-gradient(135deg,rgba(176,140,216,.08) 0%,rgba(74,143,217,.08) 100%);
+  border:1px solid rgba(176,140,216,.25); border-radius:10px;
+  font-size:12px; color:var(--text-dim); line-height:1.55; display:none;
+}
+.off-banner.show{display:block}
+.off-banner strong{color:var(--evening);font-weight:600;font-family:'Fraunces',serif;font-style:italic;font-size:14px;display:block;margin-bottom:6px}
+.off-banner code{background:var(--bg);padding:1px 6px;border-radius:3px;font-size:11px;color:var(--morning);border:1px solid var(--border)}
+
+.filters{background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:24px}
+.filter-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.filter-row:last-child{margin-bottom:0}
+.filter-label{font-size:10px;letter-spacing:.2em;color:var(--text-muted);text-transform:uppercase;min-width:70px;font-weight:500}
+.filter-btn{
+  padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;
+  color:var(--text-dim);font-family:inherit;font-size:11px;cursor:pointer;transition:all .15s;
+}
+.filter-btn:hover{color:var(--text);border-color:var(--border-lux);background:var(--bg-hover)}
+.filter-btn.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.search-box{flex:1;min-width:200px;max-width:350px;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;font-size:12px}
+.search-box:focus{outline:none;border-color:var(--morning)}
+.reset-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--cycle);background:transparent;color:var(--cycle);font-family:inherit;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.reset-btn:hover{background:var(--cycle);color:#fff}
+
+.time-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:24px}
+.time-col{background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.time-col.empty{opacity:.4}
+.time-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;position:relative}
+.time-header::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--text-muted)}
+.time-col[data-time="morning"] .time-header::before{background:var(--morning)}
+.time-col[data-time="noon"] .time-header::before{background:var(--noon)}
+.time-col[data-time="afternoon"] .time-header::before{background:var(--noon)}
+.time-col[data-time="evening"] .time-header::before{background:var(--evening)}
+.time-col[data-time="night"] .time-header::before{background:var(--night)}
+.time-col[data-time="cycle"] .time-header::before{background:var(--cycle)}
+.time-name{font-family:'Fraunces',serif;font-size:20px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.time-col[data-time="morning"] .time-name{color:var(--morning)}
+.time-col[data-time="noon"] .time-name,.time-col[data-time="afternoon"] .time-name{color:var(--noon)}
+.time-col[data-time="evening"] .time-name{color:var(--evening)}
+.time-col[data-time="night"] .time-name{color:var(--night)}
+.time-col[data-time="cycle"] .time-name{color:var(--cycle)}
+.time-hint{font-size:10px;color:var(--text-muted);letter-spacing:.05em}
+.time-count{padding:3px 10px;border-radius:20px;background:var(--bg-card);font-size:11px;font-weight:500;color:var(--text-dim);border:1px solid var(--border)}
+.time-body{padding:8px;flex:1;min-height:60px}
+
+.card{padding:10px 14px;margin-bottom:4px;border-radius:8px;background:var(--bg-card);border:1px solid transparent;cursor:pointer;transition:all .15s;position:relative}
+.card:hover{border-color:var(--border-lux);background:var(--bg-hover)}
+.card.off-today{opacity:.35;background:var(--bg)}
+.card.off-today::after{
+  content:'OFF'; position:absolute; top:8px; right:10px;
+  font-size:9px; letter-spacing:.12em; color:var(--off);
+  background:var(--bg-card); padding:2px 7px; border-radius:3px; border:1px solid var(--border);
+}
+.card-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.card-name{font-size:12.5px;font-weight:500;color:var(--text);letter-spacing:-.01em;line-height:1.3;flex:1}
+.card.off-today .card-name{padding-right:42px}
+.card-dose{font-size:11px;color:var(--text-dim);white-space:nowrap;font-weight:400}
+.card-meta{display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap}
+.chip{padding:1px 7px;border-radius:4px;font-size:9px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;border:1px solid}
+.chip.cat{color:var(--text-dim);border-color:var(--border)}
+.chip.freq{color:var(--morning);border-color:rgba(245,176,65,.3);background:rgba(245,176,65,.06)}
+.chip.st-active{color:var(--active);border-color:rgba(82,183,136,.3);background:rgba(82,183,136,.08)}
+.chip.st-planned{color:var(--planned);border-color:rgba(245,176,65,.3);background:rgba(245,176,65,.08)}
+.chip.st-gated{color:var(--gated);border-color:rgba(255,112,67,.3);background:rgba(255,112,67,.08)}
+.chip.st-paused{color:var(--paused);border-color:rgba(125,137,150,.3);background:rgba(125,137,150,.1)}
+.card-notes{font-size:11px;color:var(--text-dim);margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);display:none;line-height:1.45;font-style:italic}
+.card.open .card-notes{display:block}
+.card.open{background:var(--bg-hover);border-color:var(--border-lux)}
+.empty-msg{text-align:center;padding:24px 12px;color:var(--text-muted);font-size:11px;font-style:italic}
+
+.legend{
+  margin-top:16px;padding:14px 18px;background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;
+  font-size:11px;color:var(--text-dim);display:flex;gap:18px;flex-wrap:wrap;align-items:center;
+}
+.legend-item{display:flex;gap:6px;align-items:center}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.legend-dot.d{background:var(--active)}
+.legend-dot.wf{background:var(--morning)}
+.legend-dot.w{background:var(--noon)}
+.legend-dot.c{background:var(--cycle)}
+.legend-dot.o{background:var(--off);border:1px solid var(--border-lux)}
+
+.footer{margin-top:40px;padding:24px;border-top:1px solid var(--border);text-align:center;color:var(--text-muted);font-size:11px}
+.footer em{color:var(--text-dim);font-style:normal;font-family:'Fraunces',serif}
+
+@media(max-width:720px){
+  .container{padding:16px 12px}
+  .hero{padding:24px 18px}
+  .hero-title{font-size:28px}
+  .hero-stats{grid-template-columns:repeat(2,1fr)}
+  .time-grid{grid-template-columns:1fr}
+  .hero-today{flex-direction:column;align-items:flex-start;gap:8px}
+  .today-hint{margin-left:0;max-width:100%;text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="hero">
+  <div class="hero-label">Neuro Zerolimit Technology · 48 systems</div>
+  <div class="hero-title">Стек <em>Дениса</em></div>
+
+  <div class="hero-today">
+    <div>
+      <div class="today-label">Сегодня</div>
+      <div><span class="today-date" id="today-date">—</span> · <span class="today-day" id="today-day">—</span></div>
+    </div>
+    <div class="today-hint" id="today-hint"></div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="stat-num" id="stat-today">—</div><div class="stat-label">сегодня пить</div></div>
+    <div class="hero-stat"><div class="stat-num" style="color:var(--active)" id="stat-active">—</div><div class="stat-label">активно</div></div>
+    <div class="hero-stat"><div class="stat-num" style="color:var(--planned)" id="stat-planned">—</div><div class="stat-label">план</div></div>
+    <div class="hero-stat"><div class="stat-num" style="color:var(--gated)" id="stat-gated">—</div><div class="stat-label">гейт</div></div>
+  </div>
+</div>
+
+<div class="day-tabs" id="day-tabs"></div>
+
+<div class="off-banner" id="off-banner">
+  <strong>🌿 Воскресенье — OFF-день</strong>
+  Полный off от стимуляторов: <code>Фенотропил</code>, <code>Кофеин</code>, <code>Тирозин</code>, <code>Родиола</code>, <code>Huperzine-A</code>, <code>Кордицепс</code>, <code>Анирацетам</code>, <code>Мукуна</code>, <code>Дигекса</code>, <code>Цитруллин</code>.
+  Остаётся: NMN + R-ALA + NAC + пробиотики 10-50млрд + базовые витамины/минералы + ночной блок.
+</div>
+
+<div class="filters">
+  <div class="filter-row">
+    <div class="filter-label">Статус</div>
+    <button class="filter-btn active" data-filter="status" data-val="all">Все</button>
+    <button class="filter-btn" data-filter="status" data-val="active">✅ Active</button>
+    <button class="filter-btn" data-filter="status" data-val="planned">📅 Planned</button>
+    <button class="filter-btn" data-filter="status" data-val="gated">⏳ Gated</button>
+    <button class="filter-btn" data-filter="status" data-val="paused">⏸ Paused</button>
+  </div>
+  <div class="filter-row">
+    <div class="filter-label">Категория</div>
+    <button class="filter-btn active" data-filter="cat" data-val="all">Все</button>
+    <button class="filter-btn" data-filter="cat" data-val="supplement">Supplement</button>
+    <button class="filter-btn" data-filter="cat" data-val="peptide">Peptide</button>
+    <button class="filter-btn" data-filter="cat" data-val="herb">Herb</button>
+    <button class="filter-btn" data-filter="cat" data-val="nootropic">Nootropic</button>
+    <button class="filter-btn" data-filter="cat" data-val="vitamin">Vitamin</button>
+    <button class="filter-btn" data-filter="cat" data-val="mineral">Mineral</button>
+    <button class="filter-btn" data-filter="cat" data-val="amino">Amino</button>
+    <button class="filter-btn" data-filter="cat" data-val="hormone">Hormone</button>
+  </div>
+  <div class="filter-row">
+    <div class="filter-label">Поиск</div>
+    <input type="text" class="search-box" id="search" placeholder="название / заметка..." />
+    <button class="reset-btn" id="reset">Сбросить</button>
+  </div>
+</div>
+
+<div class="time-grid" id="grid"></div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot d"></div>Каждый день</div>
+  <div class="legend-item"><div class="legend-dot wf"></div>Пн/Ср/Пт</div>
+  <div class="legend-item"><div class="legend-dot w"></div>Сб/Вс</div>
+  <div class="legend-item"><div class="legend-dot c"></div>Курс (ON/OFF)</div>
+  <div class="legend-item"><div class="legend-dot o"></div>OFF сегодня</div>
+</div>
+
+<div class="footer">
+  <em>NZT-48 · v4.0.1</em> · учитывает правило «Вс OFF от стимуляторов» + Пн/Ср/Пт тренировочные · live sync Supabase intake_plan
+</div>
+</div>
+
+<script>
+// dayOfWeek: 0=Вс 1=Пн 2=Вт 3=Ср 4=Чт 5=Пт 6=Сб
+const DAYS_ALL = [0,1,2,3,4,5,6];
+const DAYS_WORK = [1,2,3,4,5,6];     // без Вс (OFF стимуляторов)
+const DAYS_MWF = [1,3,5];
+const DAYS_WEEKEND = [0,6];
+const DAYS_SUN = [0];
+
+const data = [
+  // ═══ MORNING ═══
+  {n:"NMN (сублингв.)",c:"supplement",d:"500мг",f:"daily",t:"morning",s:"active",nt:"Под язык 1-2мин. NAD+↑",days:DAYS_ALL},
+  {n:"L-Тирозин",c:"amino",d:"500мг",f:"daily",t:"morning",s:"active",nt:"⚠️ OFF в Вс! Прекурсор дофамина",days:DAYS_WORK},
+  {n:"L-Теанин",c:"amino",d:"200мг",f:"daily",t:"morning+night",s:"active",nt:"Альфа-волны (4:1 к кофеину)",days:DAYS_ALL},
+  {n:"Креатин моногидрат",c:"amino",d:"5000мг",f:"daily",t:"morning",s:"active",nt:"В SUNRISE BASE",days:DAYS_ALL},
+  {n:"Таурин",c:"amino",d:"250мг",f:"daily",t:"morning",s:"active",nt:"ГАМК-модуляция",days:DAYS_ALL},
+  {n:"L-Глутамин",c:"amino",d:"200мг",f:"weekly",t:"morning",s:"active",nt:"Сб/Вс. Восстановление ЖКТ",days:DAYS_WEEKEND},
+  {n:"Бакопа 50%",c:"herb",d:"150мг",f:"daily",t:"morning",s:"active",nt:"Память +12% за 12 нед",days:DAYS_ALL},
+  {n:"Гинкго 24/6",c:"herb",d:"120мг",f:"daily",t:"morning",s:"active",nt:"Микроциркуляция мозга",days:DAYS_ALL},
+  {n:"Готу Кола 10:1",c:"herb",d:"100мг",f:"daily",t:"morning",s:"active",nt:"Нейропротекция",days:DAYS_ALL},
+  {n:"Кордицепс militaris",c:"herb",d:"1500мг",f:"daily",t:"morning",s:"active",nt:"⚠️ OFF в Вс! VO₂max + АТФ",days:DAYS_WORK},
+  {n:"Львиная грива 10:1",c:"herb",d:"200мг",f:"daily",t:"morning",s:"active",nt:"NGF↑ → рост аксонов",days:DAYS_ALL},
+  {n:"Маитаке 50% полисах.",c:"herb",d:"600мг",f:"daily",t:"morning",s:"active",nt:"↑Инсулиночувствительность. ⚠️ 5-й антикоагулянт",days:DAYS_ALL},
+  {n:"Мумиё 20:1",c:"herb",d:"250мг",f:"daily",t:"morning",s:"active",nt:"T +20%, мито↑",days:DAYS_ALL},
+  {n:"Родиола 3%",c:"herb",d:"200мг",f:"daily",t:"morning",s:"active",nt:"⚠️ OFF в Вс! MAO-B↓",days:DAYS_WORK},
+  {n:"Тонгкат Али 100:1",c:"herb",d:"400мг",f:"daily",t:"morning",s:"active",nt:"T +37%, ↓SHBG",days:DAYS_ALL},
+  {n:"MSM (порошок)",c:"mineral",d:"1500мг",f:"daily",t:"morning",s:"active",nt:"Сера для соединительной ткани",days:DAYS_ALL},
+  {n:"Бор цитрат",c:"mineral",d:"10мг",f:"daily",t:"morning",s:"active",nt:"↓SHBG → ↑своб.T",days:DAYS_ALL},
+  {n:"Магний L-треонат",c:"mineral",d:"500мг",f:"daily",t:"morning+evening+night",s:"active",nt:"Mg через ГЭБ. 500+500+1000мг",days:DAYS_ALL},
+  {n:"Цинк пиколинат",c:"mineral",d:"30мг",f:"daily",t:"morning",s:"active",nt:"Кофактор T",days:DAYS_ALL},
+  {n:"Alpha-GPC 50%",c:"nootropic",d:"300мг",f:"daily",t:"morning",s:"active",nt:"Быстрый АЦХ (40% холин)",days:DAYS_ALL},
+  {n:"Анирацетам",c:"nootropic",d:"750мг",f:"daily",t:"morning+noon",s:"active",nt:"⚠️ OFF в Вс! AMPA↑. С жирами",days:DAYS_WORK},
+  {n:"Ноопепт",c:"nootropic",d:"20мг",f:"cycle",t:"morning",s:"active",nt:"BDNF/NGF. OFF-нед Фенотропила: ежедневно кроме Вс",days:DAYS_WORK},
+  {n:"Фенотропил",c:"nootropic",d:"100мг",f:"mon_wed_fri",t:"morning+noon",s:"active",nt:"Пн/Ср/Пт. 2 нед ON/1 OFF. До 14:00",days:DAYS_MWF},
+  {n:"Цитиколин CDP",c:"nootropic",d:"250мг",f:"daily",t:"morning",s:"active",nt:"Холин → АЦХ",days:DAYS_ALL},
+  {n:"MCT C8 каприлова",c:"supplement",d:"8мл",f:"daily",t:"morning",s:"active",nt:"С кофе. Кетоны для мозга",days:DAYS_ALL},
+  {n:"NAC",c:"supplement",d:"600мг",f:"weekly",t:"morning",s:"active",nt:"Сб/Вс. Глутатион-прекурсор",days:DAYS_WEEKEND},
+  {n:"R-ALA",c:"supplement",d:"450мг",f:"daily",t:"morning",s:"active",nt:"300+150мг. Антиоксидант",days:DAYS_ALL},
+  {n:"Астаксантин",c:"supplement",d:"6мг",f:"daily",t:"morning",s:"active",nt:"Сетчатка + антиоксидант",days:DAYS_ALL},
+  {n:"Глюкозамин сульфат",c:"supplement",d:"750мг",f:"daily",t:"morning",s:"active",nt:"Суставы (100кг)",days:DAYS_ALL},
+  {n:"Кверцетин",c:"supplement",d:"500мг",f:"cycle",t:"morning",s:"active",nt:"Сенолитик 3дн/мес с Физетином",days:null},
+  {n:"Кофеин",c:"supplement",d:"50мг",f:"daily",t:"morning",s:"active",nt:"⚠️ OFF в Вс! ≤50мг/приём",days:DAYS_WORK},
+  {n:"Омега-3 EPA+DHA",c:"supplement",d:"2000мг",f:"daily",t:"morning",s:"active",nt:"2 softgel. DHA → мозг",days:DAYS_ALL},
+  {n:"Пробиотик B.coagulans",c:"supplement",d:"2 млрд",f:"daily",t:"morning",s:"active",nt:"Микробиом ежедневно",days:DAYS_ALL},
+  {n:"Пробиотики 10-50млрд CFU",c:"supplement",d:"25 млрд",f:"weekly",t:"morning",s:"active",nt:"Воскресенье — усиленный удар",days:DAYS_SUN},
+  {n:"Физетин (сенолитик)",c:"supplement",d:"500мг",f:"cycle",t:"morning",s:"active",nt:"3 дня/мес с Кверцетином",days:null},
+  {n:"Хондроитин сульфат",c:"supplement",d:"600мг",f:"daily",t:"morning",s:"active",nt:"Хрящ",days:DAYS_ALL},
+  {n:"B6 P-5-P",c:"vitamin",d:"50мг",f:"daily",t:"morning",s:"active",nt:"Кофактор CBS → ↓гомоцистеин",days:DAYS_ALL},
+  {n:"B12 метилкобаламин",c:"vitamin",d:"1000мкг",f:"daily",t:"morning",s:"active",nt:"Метилирование",days:DAYS_ALL},
+  {n:"Витамин D3",c:"vitamin",d:"5000МЕ",f:"daily",t:"morning",s:"active",nt:"Екб 56° с.ш.",days:DAYS_ALL},
+  {n:"Витамин K2 (MK-7)",c:"vitamin",d:"200мкг",f:"daily",t:"morning",s:"active",nt:"Артерии + кости",days:DAYS_ALL},
+  {n:"Метилфолат",c:"vitamin",d:"800мкг",f:"daily",t:"morning",s:"active",nt:"По гомоцистеину 10.73",days:DAYS_ALL},
+  // Пептиды утро
+  {n:"Семакс",c:"peptide",d:"400мкг",f:"cycle",t:"morning+cycle",s:"paused",nt:"14д ON/14-28д OFF. NGF",days:null},
+  {n:"Дигекса",c:"peptide",d:"10мг",f:"mon_wed_fri",t:"morning",s:"active",nt:"Пн/Ср/Пт 06:35. АПР 2-й заход. P21 BDNF ↑7x",days:DAYS_MWF},
+  {n:"Кисспептин-54",c:"peptide",d:"1500мкг",f:"cycle",t:"morning+cycle",s:"active",nt:"14д ON/14д OFF, 4×/год. Фамотидин 20мг ДО",days:null},
+  {n:"Эпиталон",c:"peptide",d:"10мг",f:"cycle",t:"cycle",s:"paused",nt:"Весенний курс сделан. Следующий ОКТ",days:null},
+  {n:"Лаеннек",c:"peptide",d:"2мл",f:"cycle",t:"morning+cycle",s:"planned",nt:"🌺 2×/год: МАЙ + ОКТ. 2мл п/к через день ×10",days:null},
+  {n:"Церебролизин",c:"peptide",d:"5мл",f:"cycle",t:"morning+cycle",s:"planned",nt:"🍂 2×/год: СЕН + ФЕВ. 5мл в/м ×10дн",days:null},
+  {n:"Кортексин",c:"peptide",d:"10мг",f:"cycle",t:"morning+cycle",s:"planned",nt:"🍂 1-2×/год с Церебролизином",days:null},
+  {n:"GHK-Cu",c:"peptide",d:"2000мкг",f:"cycle",t:"cycle",s:"planned",nt:"Кожа/волосы/печень",days:null},
+  {n:"TB-500",c:"peptide",d:"2500мкг",f:"cycle",t:"cycle",s:"planned",nt:"После BPC-157",days:null},
+  {n:"Ипаморелин",c:"peptide",d:"200мкг",f:"cycle",t:"cycle",s:"gated",nt:"⏳ ГЕЙТ: АД <135/85",days:null},
+  {n:"CJC-1295 DAC",c:"peptide",d:"100мкг",f:"cycle",t:"cycle",s:"gated",nt:"⏳ ГЕЙТ: с Ипаморелином",days:null},
+  {n:"Золушка в/в",c:"peptide",d:"1 курс",f:"cycle",t:"morning+cycle",s:"planned",nt:"🌺 2×/год ×5 капельниц. МАР ✅",days:null},
+  {n:"NAD+ в/в",c:"peptide",d:"1 курс",f:"cycle",t:"morning+cycle",s:"planned",nt:"2×/год ×4. В неделю NAD+: убрать NMN + NR",days:null},
+  {n:"Майерса в/в",c:"peptide",d:"1 курс",f:"cycle",t:"morning+cycle",s:"planned",nt:"2×/год ×4 капельницы",days:null},
+  {n:"Фосфатидилхолин в/в",c:"peptide",d:"1 курс",f:"cycle",t:"morning+cycle",s:"planned",nt:"1-2×/год ×5. При ЛПНП 4.03",days:null},
+  {n:"Хелатирование ЭДТА в/в",c:"peptide",d:"1 курс",f:"cycle",t:"cycle",s:"gated",nt:"⏳ Гейт: тяж. металлы",days:null},
+  {n:"Озонотерапия в/в",c:"peptide",d:"1 курс",f:"cycle",t:"cycle",s:"gated",nt:"⏳ Гейт: 3 мес БИПАП",days:null},
+
+  // ═══ NOON (обед 13:00) ═══
+  {n:"Мукуна 20% L-DOPA",c:"herb",d:"200мг",f:"daily",t:"noon",s:"active",nt:"⚠️ OFF в Вс! ТОЛЬКО обед. НЕ после 17:00",days:DAYS_WORK},
+  {n:"Huperzine-A",c:"nootropic",d:"100мкг",f:"mon_wed_fri",t:"noon",s:"active",nt:"Пн/Ср/Пт. T½ 10-14ч",days:DAYS_MWF},
+  {n:"BPC-157",c:"peptide",d:"500мкг",f:"daily",t:"noon",s:"active",nt:"13:00 10ед. 30д ON/30д OFF. В живот",days:DAYS_ALL},
+  {n:"CoQ10 убихинол",c:"supplement",d:"200мг",f:"daily",t:"noon",s:"active",nt:"С жирами. Мито + ↓АД 11мм",days:DAYS_ALL},
+  {n:"NR (никотинамид рибозид)",c:"supplement",d:"300мг",f:"daily",t:"noon",s:"active",nt:"NAD+ синергия с NMN",days:DAYS_ALL},
+  {n:"PQQ",c:"supplement",d:"20мг",f:"daily",t:"noon",s:"active",nt:"Биогенез новых митохондрий",days:DAYS_ALL},
+  {n:"Куркумин 95%",c:"supplement",d:"250мг",f:"daily",t:"noon",s:"active",nt:"С жирами + пиперин ×20",days:DAYS_ALL},
+  {n:"Пикногенол",c:"supplement",d:"150мг",f:"daily",t:"noon",s:"active",nt:"NO↑, эрекция, капилляры",days:DAYS_ALL},
+  {n:"Пиперин",c:"supplement",d:"20мг",f:"daily",t:"noon",s:"active",nt:"С куркумином. ≤40мг/день",days:DAYS_ALL},
+  {n:"Ресвератрол транс-",c:"supplement",d:"300мг",f:"daily",t:"noon",s:"active",nt:"С жирами. SIRT1 + eNOS↑",days:DAYS_ALL},
+  {n:"Уридин монофосфат",c:"supplement",d:"150мг",f:"daily",t:"noon",s:"active",nt:"Фосфолипиды, дендриты",days:DAYS_ALL},
+  {n:"Фосфатидилсерин",c:"supplement",d:"100мг",f:"daily",t:"noon",s:"active",nt:"Мембраны, ↓кортизол",days:DAYS_ALL},
+  {n:"Бенфотиамин",c:"vitamin",d:"330мг",f:"daily",t:"noon",s:"active",nt:"GraFLab комбо. ↓гликация",days:DAYS_ALL},
+
+  // ═══ AFTERNOON (тренировка 16:00) ═══
+  {n:"Цитруллин малат",c:"amino",d:"6000мг",f:"mon_wed_fri",t:"afternoon",s:"active",nt:"Перед силовой Пн/Ср/Пт. NO↑",days:DAYS_MWF},
+
+  // ═══ EVENING (17:30-19:50) ═══
+  {n:"Икариин (горянка 60%)",c:"herb",d:"500мг",f:"daily",t:"evening",s:"active",nt:"↓PDE5",days:DAYS_ALL},
+  {n:"Крапива корень 10:1",c:"herb",d:"60мг",f:"daily",t:"evening",s:"active",nt:"↓SHBG → ↑своб.T",days:DAYS_ALL},
+  {n:"Силимарин 80%",c:"herb",d:"300мг",f:"daily",t:"evening",s:"active",nt:"Гепатопротекция",days:DAYS_ALL},
+  {n:"DIM",c:"supplement",d:"100мг",f:"daily",t:"evening",s:"active",nt:"↓E2, блок ароматизации",days:DAYS_ALL},
+  {n:"IP6 инозитол гексафосфат",c:"supplement",d:"500мг",f:"daily",t:"evening",s:"active",nt:"17:30 натощак. Хелатор Fe",days:DAYS_ALL},
+  {n:"Vision капсула",c:"supplement",d:"1 капс",f:"daily",t:"evening",s:"active",nt:"19:50 ужин. Лютеин+Зеа+Астак+Черника",days:DAYS_ALL},
+  {n:"Берберин",c:"supplement",d:"500мг",f:"daily",t:"evening",s:"active",nt:"AMPK↑, ↓ЛПНП",days:DAYS_ALL},
+  {n:"Ликопин",c:"supplement",d:"20мг",f:"daily",t:"evening",s:"active",nt:"Простата (43+)",days:DAYS_ALL},
+  {n:"Лютеин+Зеаксантин",c:"supplement",d:"20мг",f:"daily",t:"evening",s:"active",nt:"В Vision капсуле",days:DAYS_ALL},
+  {n:"Витамин E токоферолы",c:"vitamin",d:"200МЕ",f:"daily",t:"evening",s:"active",nt:"Кровоток + сперматогенез",days:DAYS_ALL},
+
+  // ═══ NIGHT (21:00-21:40) ═══
+  {n:"L-Триптофан",c:"amino",d:"200мг",f:"daily",t:"night",s:"active",nt:"Серотонин → мелатонин",days:DAYS_ALL},
+  {n:"Глицин (сублингв.)",c:"amino",d:"500мг",f:"daily",t:"night",s:"active",nt:"21:40 ночной блок",days:DAYS_ALL},
+  {n:"Ашваганда KSM-66",c:"herb",d:"600мг",f:"daily",t:"night",s:"active",nt:"T +17%, кортизол −27%",days:DAYS_ALL},
+  {n:"Мелатонин сублингв.",c:"hormone",d:"0.3мг",f:"on_demand",t:"night",s:"active",nt:"По потребности. Микродоза!",days:DAYS_ALL},
+  {n:"Литий оротат",c:"mineral",d:"5мг",f:"daily",t:"night",s:"active",nt:"С ночным молоком. Настроение",days:DAYS_ALL},
+  {n:"Магний глицинат",c:"mineral",d:"400мг",f:"daily",t:"night",s:"active",nt:"Системный Mg, сон",days:DAYS_ALL},
+  {n:"Медь глицинат",c:"mineral",d:"1мг",f:"daily",t:"night",s:"active",nt:"Баланс с цинком",days:DAYS_ALL},
+  {n:"Селен селенометионин",c:"mineral",d:"200мкг",f:"daily",t:"night",s:"active",nt:"Щитовидка + GPx",days:DAYS_ALL},
+  {n:"Хром пиколинат",c:"mineral",d:"200мкг",f:"daily",t:"night",s:"active",nt:"Инсулиночувствительность",days:DAYS_ALL},
+  {n:"Селанк",c:"peptide",d:"400мкг",f:"cycle",t:"night+cycle",s:"active",nt:"21:30. 14-21д ON/14-28д OFF",days:null},
+  {n:"Пинеалон",c:"peptide",d:"10мг",f:"cycle",t:"night+cycle",s:"planned",nt:"🎄 1×/год ДЕК ×30 дней",days:null},
+  {n:"Апигенин",c:"supplement",d:"100мг",f:"daily",t:"night",s:"active",nt:"CD38↓ → NAD+↑",days:DAYS_ALL},
+  {n:"Наттокиназа",c:"supplement",d:"100мг",f:"daily",t:"night",s:"active",nt:"21:15 натощак. 2000 FU",days:DAYS_ALL},
+  {n:"Витамин C аскорбат Ca",c:"vitamin",d:"250мг",f:"daily",t:"night",s:"active",nt:"Антиоксидант",days:DAYS_ALL},
+
+  // ═══ ON-DEMAND ═══
+  {n:"PT-141",c:"peptide",d:"1500мкг",f:"on_demand",t:"cycle",s:"active",nt:"Макс 8р/мес. Фамотидин ДО. НЕ с Виагрой",days:DAYS_ALL},
+];
+
+const TIMES = [
+  {k:'morning', title:'Утро',        hint:'06:30 → 12:00',  icon:'🌅'},
+  {k:'noon',    title:'Обед',        hint:'13:00',          icon:'☀️'},
+  {k:'afternoon',title:'Тренировка', hint:'16:00 → 18:00',  icon:'⚡'},
+  {k:'evening', title:'Вечер',       hint:'17:30 → 20:00',  icon:'🌆'},
+  {k:'night',   title:'Ночь',        hint:'21:00 → 22:00',  icon:'🌙'},
+  {k:'cycle',   title:'Курсы',       hint:'циклы / on-demand', icon:'♾'},
+];
+
+const DAY_NAMES = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+const DAY_FULL  = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+const MONTHS    = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+
+const HINTS = {
+  0: '🌿 OFF-день. Только база: NMN, R-ALA, NAC, Глутамин, пробиотики 25млрд, ночной блок.',
+  1: '💪 Пн силовая + NZT-комплект: Фенотропил + Huperzine + Дигекса + Цитруллин',
+  2: '🎯 Вт — Ноопепт в OFF-нед Фенотропила. Без Huperzine/Дигексы',
+  3: '💪 Ср силовая + NZT-комплект: Фенотропил + Huperzine + Дигекса + Цитруллин',
+  4: '🎯 Чт — Ноопепт. Без Huperzine/Дигексы',
+  5: '💪 Пт силовая + NZT-комплект: Фенотропил + Huperzine + Дигекса + Цитруллин',
+  6: '🏋️ Сб — предтреник TITAN. NAC + L-Глутамин. Без стимов-нейромодуляторов из Пн/Ср/Пт',
+};
+
+const now = new Date();
+const todayIdx = now.getDay();
+document.getElementById('today-date').textContent = `${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+document.getElementById('today-day').textContent  = DAY_FULL[todayIdx];
+document.getElementById('today-hint').textContent = HINTS[todayIdx];
+
+let activeFilters = {status:'all', cat:'all', q:'', day: todayIdx};
+
+function itemOnDay(item, day){
+  if(item.days === null) return true; // курс — зависит от цикла, не от дня
+  return item.days.includes(day);
+}
+function matchesFilter(item){
+  if(activeFilters.status !== 'all' && item.s !== activeFilters.status) return false;
+  if(activeFilters.cat !== 'all' && item.c !== activeFilters.cat) return false;
+  if(activeFilters.q){
+    const q = activeFilters.q.toLowerCase();
+    if(!item.n.toLowerCase().includes(q) && !(item.nt||'').toLowerCase().includes(q)) return false;
+  }
+  return true;
+}
+
+function renderDayTabs(){
+  const tabs = document.getElementById('day-tabs');
+  tabs.innerHTML = '';
+  const all = document.createElement('button');
+  all.className = 'day-tab' + (activeFilters.day === 'all' ? ' active' : '');
+  all.innerHTML = `<div class="day-tab-name">Все</div><div class="day-tab-cnt">график</div>`;
+  all.onclick = () => { activeFilters.day='all'; render(); };
+  tabs.appendChild(all);
+  for(let i=1;i<=6;i++) addDayTab(tabs,i);
+  addDayTab(tabs,0);
+}
+function addDayTab(tabs, i){
+  const cnt = data.filter(it => matchesFilter(it) && it.s === 'active' && itemOnDay(it,i) && !it.t.includes('cycle')).length;
+  const btn = document.createElement('button');
+  const isActive = activeFilters.day === i;
+  const isToday  = i === todayIdx;
+  btn.className = 'day-tab' + (isActive ? ' active' : '') + (isToday ? ' today' : '');
+  btn.innerHTML = `<div class="day-tab-name">${DAY_NAMES[i]}${isToday ? ' ·' : ''}</div><div class="day-tab-cnt">${cnt}</div>`;
+  btn.onclick = () => { activeFilters.day=i; render(); };
+  tabs.appendChild(btn);
+}
+
+function renderStats(){
+  const day = activeFilters.day;
+  let todayCount;
+  if(day === 'all'){
+    todayCount = data.filter(it => it.s === 'active').length;
+  } else {
+    todayCount = data.filter(it => it.s === 'active' && itemOnDay(it, day)).length;
+  }
+  document.getElementById('stat-today').textContent   = todayCount;
+  document.getElementById('stat-active').textContent  = data.filter(it => it.s === 'active').length;
+  document.getElementById('stat-planned').textContent = data.filter(it => it.s === 'planned').length;
+  document.getElementById('stat-gated').textContent   = data.filter(it => it.s === 'gated').length;
+  document.getElementById('off-banner').classList.toggle('show', day === 0);
+}
+
+function render(){
+  renderDayTabs();
+  renderStats();
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  const day = activeFilters.day;
+
+  TIMES.forEach(time => {
+    const items = data.filter(i => i.t.includes(time.k) && matchesFilter(i));
+    const activeCnt = day === 'all'
+      ? items.length
+      : items.filter(i => itemOnDay(i, day)).length;
+    const col = document.createElement('div');
+    col.className = 'time-col' + (items.length === 0 ? ' empty' : '');
+    col.setAttribute('data-time', time.k);
+    col.innerHTML = `
+      <div class="time-header">
+        <div>
+          <div class="time-name">${time.icon} ${time.title}</div>
+          <div class="time-hint">${time.hint}</div>
+        </div>
+        <div class="time-count">${activeCnt}${day !== 'all' && activeCnt < items.length ? ` / ${items.length}` : ''}</div>
+      </div>
+      <div class="time-body">
+        ${items.length === 0 ? '<div class="empty-msg">пусто</div>' : items.map(i => renderCard(i, day)).join('')}
+      </div>
+    `;
+    grid.appendChild(col);
+  });
+  attachCardHandlers();
+}
+
+function renderCard(i, day){
+  const isOffToday = day !== 'all' && !itemOnDay(i, day);
+  const statusChip = `<span class="chip st-${i.s}">${i.s}</span>`;
+  const catChip = `<span class="chip cat">${i.c}</span>`;
+  const freqLabel = {
+    'daily': '',
+    'mon_wed_fri': 'Пн/Ср/Пт',
+    'weekly': 'Сб/Вс',
+    'cycle': 'курс',
+    'on_demand': 'on-demand',
+  }[i.f] || i.f;
+  const freqChip = freqLabel ? `<span class="chip freq">${freqLabel}</span>` : '';
+  return `
+    <div class="card ${isOffToday ? 'off-today' : ''}">
+      <div class="card-head">
+        <div class="card-name">${i.n}</div>
+        <div class="card-dose">${i.d}</div>
+      </div>
+      <div class="card-meta">${catChip}${freqChip}${statusChip}</div>
+      ${i.nt ? `<div class="card-notes">${i.nt}</div>` : ''}
+    </div>
+  `;
+}
+
+function attachCardHandlers(){
+  document.querySelectorAll('.card').forEach(c => {
+    c.onclick = () => c.classList.toggle('open');
+  });
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.onclick = () => {
+    const group = btn.dataset.filter;
+    const val = btn.dataset.val;
+    document.querySelectorAll(`.filter-btn[data-filter="${group}"]`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilters[group] = val;
+    render();
+  };
+});
+document.getElementById('search').addEventListener('input', (e) => {
+  activeFilters.q = e.target.value;
+  render();
+});
+document.getElementById('reset').onclick = () => {
+  activeFilters = {status:'all', cat:'all', q:'', day: todayIdx};
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.filter-btn[data-val="all"]').forEach(b => b.classList.add('active'));
+  document.getElementById('search').value = '';
+  render();
+};
+
+render();
+</script>
+<script src="../assets/inject-overlay.js"></script>
+</body>
+</html>
