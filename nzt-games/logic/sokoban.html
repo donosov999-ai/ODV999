@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Сокобан — NZT-48</title>
+<style>
+  body { margin:0; min-height:100vh; background:#1a1505; color:#eaeaea;
+    font-family:'Segoe UI',sans-serif; display:flex; flex-direction:column;
+    justify-content:center; align-items:center; gap:14px; }
+  .hud { display:flex; gap:30px; font-size:16px; letter-spacing:2px; }
+  .hud b { color:#fbbf24; }
+  canvas { background:#2a1f0a; border:2px solid #78350f; }
+  .wrap { position:relative; }
+  .overlay { position:absolute; inset:0; display:none; justify-content:center;
+    align-items:center; flex-direction:column; background:rgba(0,0,0,0.85);
+    font-size:28px; color:#fbbf24; gap:8px; }
+  .overlay small { font-size:14px; color:#fff; letter-spacing:1px; }
+  .controls { font-size:12px; color:#776; letter-spacing:1px; }
+</style>
+</head>
+<body>
+  <div class="hud">
+    <div>УРОВЕНЬ <b id="level">1</b>/<b id="total">0</b></div>
+    <div>ХОДЫ <b id="moves">0</b></div>
+    <div>ЦЕЛИ <b id="done">0</b>/<b id="need">0</b></div>
+  </div>
+  <div class="wrap">
+    <canvas id="game" width="640" height="480"></canvas>
+    <div id="overlay" class="overlay"></div>
+  </div>
+  <div class="controls">СТРЕЛКИ — двигать · U — отмена · N — след. уровень · R — заново уровень</div>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+// #=wall, .=floor, @=player, $=box, *=box on goal, +=player on goal, space=outside
+const LEVELS = [
+`  #####
+  #   #
+  #$  #
+###  $##
+#  $ $ #
+# # ## #   ######
+# # ## #####  ..#
+#$  $          ..#
+##### ### #@##  ..#
+    #     #########
+    #######`,
+`############
+#..  #     ###
+#..  # $  $  #
+#..  #$####  #
+#..    @ ##  #
+#..  # #  $ ##
+###### ##$ $ #
+  # $  $ $ $ #
+  #    #     #
+  ############`,
+`        ########
+        #     @#
+        # $#$ ##
+        # $  $#
+        ##$ $ #
+######### $ # ###
+#....  ## $  $  #
+##...     $  $  #
+#....  ##########
+########`,
+`####
+#  ###
+#    #
+#@$$ #
+## # ##
+ #.#  #
+ # $  #
+ #. . #
+ #  ###
+ ####`
+];
+
+let grid, player, boxes, goals, level, moves, history, gameOver, done, need;
+
+function parseLevel(s) {
+  const rows = s.split('\n').filter(r => r.length);
+  const maxW = Math.max(...rows.map(r => r.length));
+  const g = [];
+  player = null; boxes = []; goals = [];
+  for (let y=0; y<rows.length; y++) {
+    const row = [];
+    const r = rows[y].padEnd(maxW, ' ');
+    for (let x=0; x<r.length; x++) {
+      const c = r[x];
+      if (c === '#') row.push('#');
+      else if (c === '.') { row.push('.'); goals.push({x,y}); }
+      else if (c === '@') { row.push(' '); player = {x,y}; }
+      else if (c === '+') { row.push('.'); player = {x,y}; goals.push({x,y}); }
+      else if (c === '$') { row.push(' '); boxes.push({x,y}); }
+      else if (c === '*') { row.push('.'); boxes.push({x,y}); goals.push({x,y}); }
+      else row.push(' ');
+    }
+    g.push(row);
+  }
+  return g;
+}
+
+function loadLevel(i) {
+  grid = parseLevel(LEVELS[i]);
+  moves = 0; history = []; gameOver = false;
+  need = goals.length;
+  updateDone();
+  overlay.style.display = 'none';
+}
+
+function updateDone() {
+  done = 0;
+  for (const b of boxes) {
+    if (goals.some(g => g.x === b.x && g.y === b.y)) done++;
+  }
+  if (done >= need) {
+    overlay.innerHTML = 'УРОВЕНЬ ПРОЙДЕН<small>Ходов: ' + moves + ' · N — следующий</small>';
+    overlay.style.display = 'flex';
+    gameOver = true;
+  }
+}
+
+function at(x, y) {
+  return grid[y] && grid[y][x];
+}
+
+function boxAt(x, y) {
+  return boxes.find(b => b.x === x && b.y === y);
+}
+
+function move(dx, dy) {
+  if (gameOver) return;
+  const nx = player.x + dx, ny = player.y + dy;
+  const c = at(nx, ny);
+  if (c === '#' || c === undefined) return;
+  const b = boxAt(nx, ny);
+  if (b) {
+    const bnx = nx + dx, bny = ny + dy;
+    const bc = at(bnx, bny);
+    if (bc === '#' || bc === undefined || boxAt(bnx, bny)) return;
+    history.push({px: player.x, py: player.y, box: {x: b.x, y: b.y}});
+    b.x = bnx; b.y = bny;
+  } else {
+    history.push({px: player.x, py: player.y});
+  }
+  player.x = nx; player.y = ny;
+  moves++;
+  updateDone();
+  render();
+}
+
+function undo() {
+  if (history.length === 0) return;
+  const h = history.pop();
+  if (h.box) {
+    const b = boxes.find(x => x.x === player.x && x.y === player.y);
+    if (b) { b.x = h.box.x; b.y = h.box.y; }
+  }
+  player.x = h.px; player.y = h.py;
+  moves++;
+  gameOver = false;
+  overlay.style.display = 'none';
+  updateDone();
+  render();
+}
+
+function render() {
+  ctx.fillStyle = '#2a1f0a';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  const H = grid.length, W = Math.max(...grid.map(r => r.length));
+  const T = Math.min(Math.floor(canvas.width / W), Math.floor(canvas.height / H));
+  const ox = (canvas.width - W*T) / 2;
+  const oy = (canvas.height - H*T) / 2;
+  for (let y=0; y<H; y++) for (let x=0; x<grid[y].length; x++) {
+    const c = grid[y][x];
+    const px = ox + x*T, py = oy + y*T;
+    if (c === '#') {
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(px, py, T, T);
+      ctx.fillStyle = '#92400e';
+      ctx.fillRect(px+2, py+2, T-4, T-4);
+    } else if (c === '.') {
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(px, py, T, T);
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(px+T/2-3, py+T/2-3, 6, 6);
+    } else if (c === ' ') {
+      ctx.fillStyle = '#1a0f05';
+      ctx.fillRect(px, py, T, T);
+    }
+  }
+  for (const b of boxes) {
+    const px = ox + b.x*T, py = oy + b.y*T;
+    const onGoal = goals.some(g => g.x === b.x && g.y === b.y);
+    ctx.fillStyle = onGoal ? '#22c55e' : '#d97706';
+    ctx.fillRect(px+4, py+4, T-8, T-8);
+    ctx.fillStyle = onGoal ? '#15803d' : '#78350f';
+    ctx.strokeStyle = ctx.fillStyle;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(px+4, py+4, T-8, T-8);
+    ctx.beginPath();
+    ctx.moveTo(px+4, py+4); ctx.lineTo(px+T-4, py+T-4);
+    ctx.moveTo(px+T-4, py+4); ctx.lineTo(px+4, py+T-4);
+    ctx.stroke();
+  }
+  // player
+  const px = ox + player.x*T, py = oy + player.y*T;
+  ctx.fillStyle = '#fbbf24';
+  ctx.beginPath();
+  ctx.arc(px+T/2, py+T/2, T/2-4, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.arc(px+T/2-4, py+T/2-2, 2, 0, Math.PI*2);
+  ctx.arc(px+T/2+4, py+T/2-2, 2, 0, Math.PI*2);
+  ctx.fill();
+
+  document.getElementById('moves').textContent = moves;
+  document.getElementById('level').textContent = level + 1;
+  document.getElementById('total').textContent = LEVELS.length;
+  document.getElementById('done').textContent = done;
+  document.getElementById('need').textContent = need;
+}
+
+function nextLevel() {
+  level = (level + 1) % LEVELS.length;
+  loadLevel(level);
+  render();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'r' || e.key === 'R') { loadLevel(level); render(); return; }
+  if (e.key === 'n' || e.key === 'N') { nextLevel(); return; }
+  if (e.key === 'u' || e.key === 'U') { undo(); return; }
+  const m = {ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]};
+  if (m[e.key]) { move(m[e.key][0], m[e.key][1]); e.preventDefault(); }
+});
+
+level = 0;
+loadLevel(level);
+render();
+</script>
+</body>
+</html>

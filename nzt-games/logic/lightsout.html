@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Lights Out — NZT-48</title>
+<style>
+  body { margin:0; min-height:100vh; background:#0a0a20; color:#eaeaea;
+    font-family:'Segoe UI',sans-serif; display:flex; flex-direction:column;
+    justify-content:center; align-items:center; gap:14px; }
+  .hud { display:flex; gap:30px; font-size:16px; letter-spacing:2px; }
+  .hud b { color:#fbbf24; }
+  .board { display:grid; gap:8px; padding:12px; background:#1a1a3a; border-radius:8px;
+    box-shadow:0 0 40px rgba(251,191,36,0.2); }
+  .cell { width:64px; height:64px; border-radius:8px; cursor:pointer;
+    transition:background 0.15s, box-shadow 0.15s; border:2px solid transparent; }
+  .cell.on { background:#fbbf24; box-shadow:0 0 20px #fbbf24, inset 0 0 12px rgba(255,255,255,0.5); }
+  .cell.off { background:#1e1e4a; }
+  .cell:hover { border-color:#fff; }
+  .wrap { position:relative; }
+  .overlay { position:absolute; inset:0; display:none; justify-content:center;
+    align-items:center; flex-direction:column; background:rgba(0,0,0,0.8);
+    font-size:28px; color:#fbbf24; gap:8px; border-radius:8px; }
+  .overlay small { font-size:14px; color:#fff; letter-spacing:1px; }
+  .controls { font-size:12px; color:#667; letter-spacing:1px; }
+  .sizes { display:flex; gap:8px; }
+  .sizes button { background:#1e1e4a; color:#fff; border:1px solid #333;
+    padding:6px 14px; cursor:pointer; border-radius:4px; }
+  .sizes button.active { background:#fbbf24; color:#000; }
+</style>
+</head>
+<body>
+  <div class="hud">
+    <div>ХОДЫ <b id="moves">0</b></div>
+    <div>УРОВЕНЬ <b id="level">1</b></div>
+    <div>РАЗМЕР <b id="size">5</b>×<b id="size2">5</b></div>
+  </div>
+  <div class="sizes">
+    <button data-n="3">3×3</button>
+    <button data-n="4">4×4</button>
+    <button data-n="5" class="active">5×5</button>
+    <button data-n="6">6×6</button>
+    <button data-n="7">7×7</button>
+  </div>
+  <div class="wrap">
+    <div class="board" id="board"></div>
+    <div id="overlay" class="overlay"></div>
+  </div>
+  <div class="controls">КЛИК — переключить клетку и соседей · цель — погасить все · R — новая раскладка</div>
+<script>
+const boardEl = document.getElementById('board');
+const overlay = document.getElementById('overlay');
+let N = 5, grid, moves = 0, level = 1;
+
+function emptyGrid() { return Array.from({length:N}, () => Array(N).fill(false)); }
+
+function toggle(x, y) {
+  if (x<0||x>=N||y<0||y>=N) return;
+  grid[y][x] = !grid[y][x];
+}
+
+function scramble() {
+  grid = emptyGrid();
+  const count = N * N;
+  for (let i=0; i<count; i++) {
+    const x = Math.floor(Math.random()*N);
+    const y = Math.floor(Math.random()*N);
+    click(x, y, true);
+  }
+  if (grid.every(r => r.every(c => !c))) scramble();
+}
+
+function click(x, y, silent = false) {
+  toggle(x, y);
+  toggle(x-1, y); toggle(x+1, y); toggle(x, y-1); toggle(x, y+1);
+  if (!silent) moves++;
+}
+
+function reset(full = true) {
+  if (full) { moves = 0; level = 1; }
+  boardEl.style.gridTemplateColumns = `repeat(${N}, 64px)`;
+  scramble();
+  moves = 0;
+  render();
+  overlay.style.display = 'none';
+}
+
+function render() {
+  boardEl.innerHTML = '';
+  for (let y=0; y<N; y++) for (let x=0; x<N; x++) {
+    const c = document.createElement('div');
+    c.className = 'cell ' + (grid[y][x] ? 'on' : 'off');
+    c.onclick = () => {
+      if (overlay.style.display === 'flex') return;
+      click(x, y);
+      render();
+      if (grid.every(r => r.every(v => !v))) {
+        overlay.innerHTML = 'ВСЕ ПОГАШЕНЫ<small>Ходов: ' + moves + ' · R — новая</small>';
+        overlay.style.display = 'flex';
+        level++;
+      }
+    };
+    boardEl.appendChild(c);
+  }
+  document.getElementById('moves').textContent = moves;
+  document.getElementById('level').textContent = level;
+  document.getElementById('size').textContent = N;
+  document.getElementById('size2').textContent = N;
+}
+
+document.querySelectorAll('.sizes button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.sizes button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    N = +b.dataset.n;
+    reset(true);
+  };
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'r' || e.key === 'R') reset(false);
+});
+
+reset(true);
+</script>
+</body>
+</html>

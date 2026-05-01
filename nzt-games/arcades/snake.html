@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Змейка — NZT-48</title>
+<style>
+  body { margin:0; min-height:100vh; background:#0a0a15; color:#eaeaea;
+    font-family:'Segoe UI',sans-serif; display:flex; flex-direction:column;
+    justify-content:center; align-items:center; gap:14px; }
+  .hud { display:flex; gap:30px; font-size:16px; letter-spacing:2px; }
+  .hud b { color:#4ade80; }
+  canvas { background:#050510; border:2px solid #1e3a2e;
+    box-shadow:0 0 30px rgba(74,222,128,0.25); }
+  .wrap { position:relative; }
+  .overlay { position:absolute; inset:0; display:none; justify-content:center;
+    align-items:center; flex-direction:column; background:rgba(0,0,0,0.75);
+    font-size:28px; color:#4ade80; gap:8px; }
+  .overlay small { font-size:14px; color:#fff; letter-spacing:1px; }
+  .controls { font-size:12px; color:#667; letter-spacing:1px; }
+</style>
+</head>
+<body>
+  <div class="hud">
+    <div>СЧЁТ <b id="score">0</b></div>
+    <div>РЕКОРД <b id="best">0</b></div>
+    <div>ДЛИНА <b id="len">3</b></div>
+    <div>БУСТ <b id="boost">0</b></div>
+  </div>
+  <div class="wrap">
+    <canvas id="game" width="600" height="600"></canvas>
+    <div id="overlay" class="overlay"></div>
+  </div>
+  <div class="controls">СТРЕЛКИ / WASD · SHIFT — буст · P — пауза · R — заново · туннели по краям</div>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const TILE = 24, COLS = 25, ROWS = 25;
+let snake, dir, pendingDir, food, boosts, score, len, gameOver, paused, step, speed, boostCharge, boosting, boostTimer;
+let best = +localStorage.getItem('nzt_snake_best') || 0;
+
+function reset() {
+  snake = [{x:12,y:12},{x:11,y:12},{x:10,y:12}];
+  dir = {x:1,y:0}; pendingDir = null;
+  score = 0; len = 3; step = 0; speed = 8;
+  boostCharge = 0; boosting = false; boostTimer = 0;
+  gameOver = false; paused = false;
+  food = spawnFood();
+  boosts = [];
+  overlay.style.display = 'none';
+}
+
+function spawnFood() {
+  while (true) {
+    const f = {x:Math.floor(Math.random()*COLS), y:Math.floor(Math.random()*ROWS)};
+    if (!snake.some(s => s.x===f.x && s.y===f.y)) return f;
+  }
+}
+
+function spawnBoost() {
+  if (boosts.length >= 2) return;
+  const types = ['speed','shrink','bonus'];
+  const t = types[Math.floor(Math.random()*types.length)];
+  while (true) {
+    const b = {x:Math.floor(Math.random()*COLS), y:Math.floor(Math.random()*ROWS), type:t, life:300};
+    if (!snake.some(s => s.x===b.x && s.y===b.y) && (food.x!==b.x || food.y!==b.y)) {
+      boosts.push(b); return;
+    }
+  }
+}
+
+function tick() {
+  if (gameOver || paused) return;
+  step++;
+  const interval = boosting ? 2 : Math.max(3, 10 - Math.floor(speed/4));
+  if (step % interval !== 0) return;
+
+  if (pendingDir && (pendingDir.x !== -dir.x || pendingDir.y !== -dir.y)) {
+    dir = pendingDir; pendingDir = null;
+  }
+  let head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+  // туннели
+  if (head.x < 0) head.x = COLS - 1;
+  if (head.x >= COLS) head.x = 0;
+  if (head.y < 0) head.y = ROWS - 1;
+  if (head.y >= ROWS) head.y = 0;
+
+  if (snake.some((s,i) => i < snake.length - 1 && s.x === head.x && s.y === head.y)) {
+    gameOver = true;
+    if (score > best) { best = score; localStorage.setItem('nzt_snake_best', best); }
+    return;
+  }
+  snake.unshift(head);
+
+  if (head.x === food.x && head.y === food.y) {
+    score += 10 * (boosting ? 2 : 1);
+    len++; speed = Math.min(30, speed + 0.3);
+    boostCharge = Math.min(100, boostCharge + 15);
+    food = spawnFood();
+    if (Math.random() < 0.35) spawnBoost();
+  } else {
+    snake.pop();
+  }
+
+  for (let i = boosts.length - 1; i >= 0; i--) {
+    const b = boosts[i];
+    b.life--;
+    if (b.life <= 0) { boosts.splice(i,1); continue; }
+    if (b.x === head.x && b.y === head.y) {
+      if (b.type === 'speed') { boostCharge = 100; }
+      else if (b.type === 'shrink') {
+        for (let k = 0; k < 3 && snake.length > 3; k++) snake.pop();
+        len = snake.length;
+      } else if (b.type === 'bonus') {
+        score += 100;
+      }
+      boosts.splice(i,1);
+    }
+  }
+
+  if (boosting) {
+    boostTimer--;
+    boostCharge = Math.max(0, boostCharge - 2);
+    if (boostTimer <= 0 || boostCharge <= 0) boosting = false;
+  }
+}
+
+function draw() {
+  ctx.fillStyle = '#050510';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle = 'rgba(74,222,128,0.05)';
+  for (let i = 0; i <= COLS; i++) {
+    ctx.beginPath(); ctx.moveTo(i*TILE,0); ctx.lineTo(i*TILE,ROWS*TILE); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,i*TILE); ctx.lineTo(COLS*TILE,i*TILE); ctx.stroke();
+  }
+
+  // еда
+  ctx.fillStyle = '#f43f5e';
+  ctx.shadowColor = '#f43f5e'; ctx.shadowBlur = 15;
+  ctx.beginPath();
+  ctx.arc(food.x*TILE+TILE/2, food.y*TILE+TILE/2, TILE/2-3, 0, Math.PI*2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // бусты
+  for (const b of boosts) {
+    const alpha = b.life < 60 && Math.floor(b.life/6)%2 ? 0.3 : 1;
+    ctx.globalAlpha = alpha;
+    const col = b.type==='speed' ? '#fbbf24' : b.type==='shrink' ? '#22d3ee' : '#a855f7';
+    ctx.fillStyle = col;
+    ctx.shadowColor = col; ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(b.x*TILE+TILE/2, b.y*TILE+TILE/2, TILE/2-4, 0, Math.PI*2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(b.type==='speed'?'⚡':b.type==='shrink'?'–':'★', b.x*TILE+TILE/2, b.y*TILE+TILE/2);
+    ctx.globalAlpha = 1;
+  }
+
+  // змейка
+  for (let i = snake.length - 1; i >= 0; i--) {
+    const s = snake[i];
+    const t = 1 - i / snake.length;
+    ctx.fillStyle = i === 0 ? '#4ade80' : `rgba(74,222,128,${0.3 + t*0.6})`;
+    if (boosting) {
+      ctx.shadowColor = '#fbbf24'; ctx.shadowBlur = 10;
+    }
+    ctx.fillRect(s.x*TILE+2, s.y*TILE+2, TILE-4, TILE-4);
+    ctx.shadowBlur = 0;
+    if (i === 0) {
+      ctx.fillStyle = '#fff';
+      const ex = s.x*TILE + TILE/2 + dir.x*4;
+      const ey = s.y*TILE + TILE/2 + dir.y*4;
+      ctx.beginPath(); ctx.arc(ex-3, ey-3, 2, 0, Math.PI*2);
+      ctx.arc(ex+3, ey+3, 2, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  document.getElementById('score').textContent = score;
+  document.getElementById('best').textContent = best;
+  document.getElementById('len').textContent = len;
+  document.getElementById('boost').textContent = Math.floor(boostCharge) + '%';
+}
+
+function loop() {
+  tick();
+  draw();
+  if (gameOver) {
+    overlay.innerHTML = 'КОНЕЦ ИГРЫ<small>СЧЁТ ' + score + ' · R — ЗАНОВО</small>';
+    overlay.style.display = 'flex';
+  } else if (paused) {
+    overlay.innerHTML = 'ПАУЗА';
+    overlay.style.display = 'flex';
+  } else overlay.style.display = 'none';
+  requestAnimationFrame(loop);
+}
+
+document.addEventListener('keydown', e => {
+  const k = e.key;
+  if (k === 'r' || k === 'R') { reset(); return; }
+  if (k === 'p' || k === 'P') { paused = !paused; return; }
+  if (gameOver || paused) return;
+  const m = {ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],
+    w:[0,-1],s:[0,1],a:[-1,0],d:[1,0],W:[0,-1],S:[0,1],A:[-1,0],D:[1,0]};
+  if (m[k]) { pendingDir = {x:m[k][0], y:m[k][1]}; e.preventDefault(); }
+  if (k === 'Shift' && boostCharge > 10 && !boosting) {
+    boosting = true; boostTimer = 120;
+  }
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'Shift') boosting = false;
+});
+
+reset();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Арканоид — NZT-48</title>
+<style>
+  body { margin:0; min-height:100vh; background:#050510; color:#eaeaea;
+    font-family:'Segoe UI',sans-serif; display:flex; flex-direction:column;
+    justify-content:center; align-items:center; gap:14px; }
+  .hud { display:flex; gap:30px; font-size:16px; letter-spacing:2px; }
+  .hud b { color:#22d3ee; }
+  canvas { background:#000; border:2px solid #1e3a5e; box-shadow:0 0 30px rgba(34,211,238,0.3); }
+  .wrap { position:relative; }
+  .overlay { position:absolute; inset:0; display:none; justify-content:center;
+    align-items:center; flex-direction:column; background:rgba(0,0,0,0.8);
+    font-size:28px; color:#22d3ee; gap:8px; }
+  .overlay small { font-size:14px; color:#fff; letter-spacing:1px; }
+  .controls { font-size:12px; color:#667; letter-spacing:1px; }
+</style>
+</head>
+<body>
+  <div class="hud">
+    <div>СЧЁТ <b id="score">0</b></div>
+    <div>ЖИЗНИ <b id="lives">3</b></div>
+    <div>УРОВЕНЬ <b id="level">1</b></div>
+  </div>
+  <div class="wrap">
+    <canvas id="game" width="640" height="640"></canvas>
+    <div id="overlay" class="overlay"></div>
+  </div>
+  <div class="controls">МЫШЬ / ←→ — платформа · SPACE — запуск · P — пауза · R — заново</div>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const W = canvas.width, H = canvas.height;
+let paddle, balls, bricks, powerups, score, lives, level, gameOver, paused, launched, keys;
+
+function makeBricks(lvl) {
+  bricks = [];
+  const rows = Math.min(10, 4 + Math.floor(lvl/2));
+  const cols = 12;
+  const bw = (W - 40) / cols;
+  const bh = 22;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (lvl > 2 && (r + c) % 7 === 0 && Math.random() < 0.3) continue;
+      const hp = r < 2 ? 1 : r < 4 ? 2 : r < 6 ? 3 : 4;
+      const colors = ['#22d3ee','#4ade80','#fbbf24','#f43f5e','#a855f7'];
+      bricks.push({
+        x: 20 + c*bw, y: 60 + r*bh, w: bw-2, h: bh-2,
+        hp, maxHp: hp, color: colors[(hp-1) % colors.length]
+      });
+    }
+  }
+}
+
+function reset(full = true) {
+  if (full) { score = 0; lives = 3; level = 1; }
+  paddle = {x: W/2 - 60, y: H - 30, w: 120, h: 14, speed: 8};
+  balls = [{x: W/2, y: paddle.y - 10, vx: 0, vy: 0, r: 8}];
+  powerups = [];
+  launched = false;
+  gameOver = false; paused = false;
+  makeBricks(level);
+  overlay.style.display = 'none';
+}
+
+function launch() {
+  if (launched) return;
+  launched = true;
+  balls[0].vx = (Math.random() - 0.5) * 4;
+  balls[0].vy = -6;
+}
+
+function spawnPowerup(x, y) {
+  const types = ['expand','multi','slow','life'];
+  const t = types[Math.floor(Math.random()*types.length)];
+  powerups.push({x, y, vy: 2, r: 10, type: t});
+}
+
+function update() {
+  if (gameOver || paused) return;
+  if (keys['ArrowLeft'] || keys['a'] || keys['A']) paddle.x -= paddle.speed;
+  if (keys['ArrowRight'] || keys['d'] || keys['D']) paddle.x += paddle.speed;
+  paddle.x = Math.max(0, Math.min(W - paddle.w, paddle.x));
+
+  if (!launched) {
+    balls[0].x = paddle.x + paddle.w/2;
+    balls[0].y = paddle.y - balls[0].r - 2;
+  }
+
+  for (let bi = balls.length - 1; bi >= 0; bi--) {
+    const b = balls[bi];
+    b.x += b.vx; b.y += b.vy;
+    if (b.x < b.r) { b.x = b.r; b.vx *= -1; }
+    if (b.x > W - b.r) { b.x = W - b.r; b.vx *= -1; }
+    if (b.y < b.r) { b.y = b.r; b.vy *= -1; }
+    if (b.y > H) {
+      balls.splice(bi, 1);
+      if (balls.length === 0) {
+        lives--;
+        if (lives <= 0) { gameOver = true; return; }
+        balls = [{x: paddle.x + paddle.w/2, y: paddle.y - 10, vx: 0, vy: 0, r: 8}];
+        launched = false;
+      }
+      continue;
+    }
+
+    if (b.y + b.r >= paddle.y && b.y - b.r <= paddle.y + paddle.h &&
+        b.x > paddle.x && b.x < paddle.x + paddle.w && b.vy > 0) {
+      const hit = (b.x - (paddle.x + paddle.w/2)) / (paddle.w/2);
+      const angle = hit * 1.1;
+      const speed = Math.min(12, Math.hypot(b.vx, b.vy) * 1.02);
+      b.vx = Math.sin(angle) * speed;
+      b.vy = -Math.abs(Math.cos(angle) * speed);
+    }
+
+    for (let i = bricks.length - 1; i >= 0; i--) {
+      const br = bricks[i];
+      if (b.x + b.r > br.x && b.x - b.r < br.x + br.w &&
+          b.y + b.r > br.y && b.y - b.r < br.y + br.h) {
+        const overX = Math.min(b.x + b.r - br.x, br.x + br.w - (b.x - b.r));
+        const overY = Math.min(b.y + b.r - br.y, br.y + br.h - (b.y - b.r));
+        if (overX < overY) b.vx *= -1;
+        else b.vy *= -1;
+        br.hp--;
+        if (br.hp <= 0) {
+          score += 20 * br.maxHp;
+          if (Math.random() < 0.15) spawnPowerup(br.x + br.w/2, br.y + br.h/2);
+          bricks.splice(i, 1);
+        } else {
+          score += 5;
+        }
+        break;
+      }
+    }
+  }
+
+  for (let i = powerups.length - 1; i >= 0; i--) {
+    const p = powerups[i];
+    p.y += p.vy;
+    if (p.y > H) { powerups.splice(i,1); continue; }
+    if (p.y + p.r > paddle.y && p.y - p.r < paddle.y + paddle.h &&
+        p.x > paddle.x && p.x < paddle.x + paddle.w) {
+      if (p.type === 'expand') paddle.w = Math.min(240, paddle.w + 40);
+      else if (p.type === 'multi') {
+        const src = balls[0];
+        balls.push({x:src.x, y:src.y, vx:src.vx + 2, vy:src.vy, r:src.r});
+        balls.push({x:src.x, y:src.y, vx:src.vx - 2, vy:src.vy, r:src.r});
+      } else if (p.type === 'slow') {
+        for (const b of balls) { b.vx *= 0.7; b.vy *= 0.7; }
+      } else if (p.type === 'life') lives++;
+      score += 50;
+      powerups.splice(i, 1);
+    }
+  }
+
+  if (bricks.length === 0) {
+    level++;
+    score += 300;
+    reset(false);
+  }
+}
+
+function draw() {
+  ctx.fillStyle = '#000010';
+  ctx.fillRect(0,0,W,H);
+
+  // bricks
+  for (const br of bricks) {
+    const alpha = br.hp / br.maxHp;
+    ctx.fillStyle = br.color;
+    ctx.globalAlpha = 0.4 + alpha * 0.6;
+    ctx.fillRect(br.x, br.y, br.w, br.h);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fillRect(br.x+2, br.y+2, br.w-4, 3);
+  }
+
+  // paddle
+  ctx.fillStyle = '#22d3ee';
+  ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = 10;
+  ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillRect(paddle.x+2, paddle.y+2, paddle.w-4, 3);
+
+  // balls
+  for (const b of balls) {
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // powerups
+  for (const p of powerups) {
+    const col = p.type==='expand'?'#fbbf24':p.type==='multi'?'#a855f7':p.type==='slow'?'#22d3ee':'#4ade80';
+    ctx.fillStyle = col;
+    ctx.shadowColor = col; ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const lbl = p.type==='expand'?'E':p.type==='multi'?'M':p.type==='slow'?'S':'L';
+    ctx.fillText(lbl, p.x, p.y);
+  }
+
+  document.getElementById('score').textContent = score;
+  document.getElementById('lives').textContent = lives;
+  document.getElementById('level').textContent = level;
+}
+
+function loop() {
+  update(); draw();
+  if (gameOver) {
+    overlay.innerHTML = 'КОНЕЦ ИГРЫ<small>СЧЁТ ' + score + ' · R — ЗАНОВО</small>';
+    overlay.style.display = 'flex';
+  } else if (paused) {
+    overlay.innerHTML = 'ПАУЗА';
+    overlay.style.display = 'flex';
+  } else overlay.style.display = 'none';
+  requestAnimationFrame(loop);
+}
+
+keys = {};
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (e.key === ' ') { launch(); e.preventDefault(); }
+  if (e.key === 'r' || e.key === 'R') reset(true);
+  if (e.key === 'p' || e.key === 'P') paused = !paused;
+});
+document.addEventListener('keyup', e => { keys[e.key] = false; });
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  paddle.x = Math.max(0, Math.min(W - paddle.w, e.clientX - rect.left - paddle.w/2));
+});
+canvas.addEventListener('mousedown', () => launch());
+
+reset(true);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 /* Floating overlay nav for NZT pages */
 (function(){
   var BIO = [
+    {url:'poroshki-calculator.html', title:'🧪 Калькулятор порошков v4.7'},
     {url:'stack-denis.html',     title:'💊 Стек Дениса'},
     {url:'biohacking-map.html',  title:'🗺 Карта биохакинга'},
     {url:'nzt48-overview.html',  title:'🗺 NZT-48 v4'},

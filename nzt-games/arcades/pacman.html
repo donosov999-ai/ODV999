@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Пакман</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: #000;
+    color: #fff;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+  }
+  .hud {
+    display: flex;
+    gap: 40px;
+    font-size: 18px;
+    letter-spacing: 2px;
+  }
+  .hud b { color: #ffcc00; }
+  canvas {
+    background: #000;
+    box-shadow: 0 0 30px rgba(100, 100, 255, 0.3);
+  }
+  .wrap { position: relative; }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background: rgba(0,0,0,0.75);
+    font-size: 28px;
+    color: #ffcc00;
+    gap: 10px;
+  }
+  .overlay small { font-size: 14px; color: #fff; letter-spacing: 1px; }
+  .controls {
+    font-size: 12px;
+    color: #888;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+  <div class="hud">
+    <div>СЧЁТ <b id="score">0</b></div>
+    <div>ЖИЗНИ <b id="lives">3</b></div>
+    <div>УРОВЕНЬ <b id="level">1</b></div>
+  </div>
+  <div class="wrap">
+    <canvas id="game" width="448" height="496"></canvas>
+    <div id="overlay" class="overlay"></div>
+  </div>
+  <div class="controls">СТРЕЛКИ — движение · P — пауза · R — заново</div>
+<script>
+const TILE = 16;
+const MAP = [
+  "############################",
+  "#............##............#",
+  "#.####.#####.##.#####.####.#",
+  "#o####.#####.##.#####.####o#",
+  "#.####.#####.##.#####.####.#",
+  "#..........................#",
+  "#.####.##.########.##.####.#",
+  "#.####.##.########.##.####.#",
+  "#......##....##....##......#",
+  "######.##### ## #####.######",
+  "######.##### ## #####.######",
+  "######.##          ##.######",
+  "######.## ######## ##.######",
+  "######.## #      # ##.######",
+  "      .   #      #   .      ",
+  "######.## #      # ##.######",
+  "######.## ######## ##.######",
+  "######.##          ##.######",
+  "######.## ######## ##.######",
+  "######.## ######## ##.######",
+  "#............##............#",
+  "#.####.#####.##.#####.####.#",
+  "#.####.#####.##.#####.####.#",
+  "#o..##................##..o#",
+  "###.##.##.########.##.##.###",
+  "###.##.##.########.##.##.###",
+  "#......##....##....##......#",
+  "#.##########.##.##########.#",
+  "#.##########.##.##########.#",
+  "#..........................#",
+  "############################"
+];
+const ROWS = MAP.length;
+const COLS = MAP[0].length;
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+canvas.width = COLS * TILE;
+canvas.height = ROWS * TILE;
+
+let grid, score, lives, level, gameOver, won, paused, frightTimer, totalDots;
+let pac, ghosts, pendingDir;
+let mouthAnim = 0;
+
+const DIRS = {
+  up:    {x: 0, y: -1},
+  down:  {x: 0, y: 1},
+  left:  {x: -1, y: 0},
+  right: {x: 1, y: 0}
+};
+
+function buildGrid() {
+  grid = MAP.map(r => r.split(''));
+  totalDots = 0;
+  for (let y = 0; y < ROWS; y++)
+    for (let x = 0; x < COLS; x++)
+      if (grid[y][x] === '.' || grid[y][x] === 'o') totalDots++;
+}
+
+function isWall(x, y) {
+  if (y < 0 || y >= ROWS) return true;
+  if (x < 0 || x >= COLS) return false;
+  return grid[y][x] === '#';
+}
+
+function atTileCenter(e) {
+  return Math.abs(e.px - (e.tx * TILE + TILE / 2)) < 1 &&
+         Math.abs(e.py - (e.ty * TILE + TILE / 2)) < 1;
+}
+
+function resetPositions() {
+  pac = {
+    tx: 13, ty: 23, px: 13 * TILE + TILE, py: 23 * TILE + TILE / 2,
+    dir: 'left', speed: 1.8
+  };
+  pendingDir = null;
+  ghosts = [
+    {tx:13,ty:11,color:'#ff0000',dir:'left',mode:'chase',home:{x:25,y:0},name:'blinky'},
+    {tx:13,ty:14,color:'#ffb8ff',dir:'up',mode:'scatter',home:{x:2,y:0},name:'pinky'},
+    {tx:11,ty:14,color:'#00ffff',dir:'up',mode:'scatter',home:{x:27,y:30},name:'inky'},
+    {tx:15,ty:14,color:'#ffb852',dir:'up',mode:'scatter',home:{x:0,y:30},name:'clyde'}
+  ];
+  ghosts.forEach(g => {
+    g.px = g.tx * TILE + TILE / 2;
+    g.py = g.ty * TILE + TILE / 2;
+    g.speed = 1.5;
+    g.frightened = false;
+    g.eaten = false;
+  });
+  frightTimer = 0;
+}
+
+function reset(full = true) {
+  if (full) {
+    buildGrid();
+    score = 0;
+    lives = 3;
+    level = 1;
+    won = false;
+  }
+  gameOver = false;
+  paused = false;
+  resetPositions();
+  overlay.style.display = 'none';
+}
+
+function nextLevel() {
+  level++;
+  buildGrid();
+  resetPositions();
+}
+
+function canMove(tx, ty, dir, entity) {
+  const nx = tx + DIRS[dir].x;
+  const ny = ty + DIRS[dir].y;
+  if (ny === 14 && (nx < 0 || nx >= COLS)) return true;
+  return !isWall(nx, ny);
+}
+
+function moveEntity(e, dt) {
+  const centered = Math.abs(e.px - (e.tx * TILE + TILE / 2)) < e.speed &&
+                   Math.abs(e.py - (e.ty * TILE + TILE / 2)) < e.speed;
+  if (centered) {
+    e.px = e.tx * TILE + TILE / 2;
+    e.py = e.ty * TILE + TILE / 2;
+
+    if (e === pac && pendingDir && canMove(e.tx, e.ty, pendingDir, e)) {
+      e.dir = pendingDir;
+      pendingDir = null;
+    }
+
+    if (!canMove(e.tx, e.ty, e.dir, e)) return;
+
+    e.tx += DIRS[e.dir].x;
+    e.ty += DIRS[e.dir].y;
+
+    if (e.tx < 0) { e.tx = COLS - 1; e.px = (COLS - 1) * TILE + TILE / 2 + TILE; }
+    if (e.tx >= COLS) { e.tx = 0; e.px = -TILE / 2; }
+  }
+
+  e.px += DIRS[e.dir].x * e.speed;
+  e.py += DIRS[e.dir].y * e.speed;
+}
+
+function updatePac(dt) {
+  moveEntity(pac, dt);
+  mouthAnim += 0.2;
+
+  const cell = grid[pac.ty] && grid[pac.ty][pac.tx];
+  if (cell === '.') {
+    grid[pac.ty][pac.tx] = ' ';
+    score += 10;
+    totalDots--;
+  } else if (cell === 'o') {
+    grid[pac.ty][pac.tx] = ' ';
+    score += 50;
+    totalDots--;
+    frightTimer = 360;
+    ghosts.forEach(g => { if (!g.eaten) g.frightened = true; });
+  }
+
+  if (totalDots <= 0) {
+    won = true;
+    nextLevel();
+  }
+}
+
+function ghostChoose(g) {
+  const opposite = {up: 'down', down: 'up', left: 'right', right: 'left'};
+  const opts = ['up','down','left','right'].filter(d =>
+    d !== opposite[g.dir] && canMove(g.tx, g.ty, d, g)
+  );
+  if (opts.length === 0) { g.dir = opposite[g.dir]; return; }
+  if (opts.length === 1) { g.dir = opts[0]; return; }
+
+  let target;
+  if (g.eaten) target = {x: 13, y: 11};
+  else if (g.frightened) {
+    g.dir = opts[Math.floor(Math.random() * opts.length)];
+    return;
+  }
+  else if (g.mode === 'scatter') target = g.home;
+  else {
+    if (g.name === 'blinky') target = {x: pac.tx, y: pac.ty};
+    else if (g.name === 'pinky') target = {x: pac.tx + DIRS[pac.dir].x * 4, y: pac.ty + DIRS[pac.dir].y * 4};
+    else if (g.name === 'inky') target = {x: pac.tx + DIRS[pac.dir].x * 2 + 3, y: pac.ty + DIRS[pac.dir].y * 2};
+    else {
+      const dx = g.tx - pac.tx, dy = g.ty - pac.ty;
+      if (dx*dx + dy*dy > 64) target = {x: pac.tx, y: pac.ty};
+      else target = g.home;
+    }
+  }
+
+  let best = opts[0], bestDist = Infinity;
+  for (const d of opts) {
+    const nx = g.tx + DIRS[d].x, ny = g.ty + DIRS[d].y;
+    const dist = (nx - target.x) ** 2 + (ny - target.y) ** 2;
+    if (dist < bestDist) { bestDist = dist; best = d; }
+  }
+  g.dir = best;
+}
+
+function updateGhost(g, dt) {
+  g.speed = g.eaten ? 3 : (g.frightened ? 1 : 1.5 + (level - 1) * 0.1);
+
+  const centered = Math.abs(g.px - (g.tx * TILE + TILE / 2)) < g.speed &&
+                   Math.abs(g.py - (g.ty * TILE + TILE / 2)) < g.speed;
+
+  if (centered) {
+    g.px = g.tx * TILE + TILE / 2;
+    g.py = g.ty * TILE + TILE / 2;
+
+    if (g.eaten && g.tx === 13 && g.ty === 11) {
+      g.eaten = false;
+      g.frightened = false;
+    }
+
+    if (!canMove(g.tx, g.ty, g.dir, g)) ghostChoose(g);
+    else {
+      const nextX = g.tx + DIRS[g.dir].x, nextY = g.ty + DIRS[g.dir].y;
+      let openCount = 0;
+      for (const d of ['up','down','left','right'])
+        if (canMove(g.tx, g.ty, d, g)) openCount++;
+      if (openCount > 2) ghostChoose(g);
+    }
+
+    g.tx += DIRS[g.dir].x;
+    g.ty += DIRS[g.dir].y;
+
+    if (g.tx < 0) { g.tx = COLS - 1; g.px = (COLS - 1) * TILE + TILE / 2 + TILE; }
+    if (g.tx >= COLS) { g.tx = 0; g.px = -TILE / 2; }
+  }
+
+  g.px += DIRS[g.dir].x * g.speed;
+  g.py += DIRS[g.dir].y * g.speed;
+}
+
+function collideGhosts() {
+  for (const g of ghosts) {
+    if (g.eaten) continue;
+    const dx = g.px - pac.px, dy = g.py - pac.py;
+    if (dx * dx + dy * dy < TILE * TILE * 0.5) {
+      if (g.frightened) {
+        g.eaten = true;
+        g.frightened = false;
+        score += 200;
+      } else {
+        lives--;
+        if (lives <= 0) {
+          gameOver = true;
+        } else {
+          resetPositions();
+        }
+        return;
+      }
+    }
+  }
+}
+
+function drawMaze() {
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const c = grid[y][x];
+      if (c === '#') {
+        ctx.fillStyle = '#1a1a8a';
+        ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+        ctx.strokeStyle = '#3333ff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x * TILE + 0.5, y * TILE + 0.5, TILE - 1, TILE - 1);
+      } else if (c === '.') {
+        ctx.fillStyle = '#ffb897';
+        ctx.beginPath();
+        ctx.arc(x * TILE + TILE / 2, y * TILE + TILE / 2, 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (c === 'o') {
+        ctx.fillStyle = '#ffb897';
+        ctx.beginPath();
+        ctx.arc(x * TILE + TILE / 2, y * TILE + TILE / 2, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+}
+
+function drawPac() {
+  const angles = {right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2};
+  const a = angles[pac.dir];
+  const mouth = (Math.sin(mouthAnim) + 1) * 0.35;
+  ctx.fillStyle = '#ffff00';
+  ctx.beginPath();
+  ctx.moveTo(pac.px, pac.py);
+  ctx.arc(pac.px, pac.py, TILE * 0.55, a + mouth, a - mouth + Math.PI * 2);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawGhost(g) {
+  const r = TILE * 0.55;
+  let color = g.color;
+  if (g.eaten) color = 'rgba(255,255,255,0.3)';
+  else if (g.frightened) color = frightTimer < 120 && Math.floor(frightTimer / 15) % 2 ? '#fff' : '#0000aa';
+
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(g.px, g.py, r, Math.PI, 0);
+  ctx.lineTo(g.px + r, g.py + r * 0.8);
+  for (let i = 0; i < 3; i++) {
+    ctx.lineTo(g.px + r - (i * 2 + 1) * (r / 3), g.py + r * 0.6);
+    ctx.lineTo(g.px + r - (i * 2 + 2) * (r / 3), g.py + r * 0.8);
+  }
+  ctx.lineTo(g.px - r, g.py + r * 0.8);
+  ctx.closePath();
+  ctx.fill();
+
+  if (!g.eaten) {
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(g.px - r * 0.35, g.py - r * 0.1, r * 0.25, 0, Math.PI * 2);
+    ctx.arc(g.px + r * 0.35, g.py - r * 0.1, r * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+    const pupilX = DIRS[g.dir].x * r * 0.1;
+    const pupilY = DIRS[g.dir].y * r * 0.1;
+    ctx.fillStyle = '#0000aa';
+    ctx.beginPath();
+    ctx.arc(g.px - r * 0.35 + pupilX, g.py - r * 0.1 + pupilY, r * 0.12, 0, Math.PI * 2);
+    ctx.arc(g.px + r * 0.35 + pupilX, g.py - r * 0.1 + pupilY, r * 0.12, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(g.px - r * 0.35, g.py - r * 0.1, r * 0.2, 0, Math.PI * 2);
+    ctx.arc(g.px + r * 0.35, g.py - r * 0.1, r * 0.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function draw() {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawMaze();
+  drawPac();
+  ghosts.forEach(drawGhost);
+  document.getElementById('score').textContent = score;
+  document.getElementById('lives').textContent = lives;
+  document.getElementById('level').textContent = level;
+}
+
+function loop() {
+  if (!gameOver && !paused) {
+    updatePac();
+    ghosts.forEach(g => updateGhost(g));
+    collideGhosts();
+    if (frightTimer > 0) {
+      frightTimer--;
+      if (frightTimer === 0) ghosts.forEach(g => g.frightened = false);
+    }
+  }
+  draw();
+  if (gameOver) {
+    overlay.innerHTML = 'КОНЕЦ ИГРЫ<small>Нажмите R для рестарта</small>';
+    overlay.style.display = 'flex';
+  } else if (paused) {
+    overlay.innerHTML = 'ПАУЗА';
+    overlay.style.display = 'flex';
+  } else {
+    overlay.style.display = 'none';
+  }
+  requestAnimationFrame(loop);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'r' || e.key === 'R') { reset(true); return; }
+  if (e.key === 'p' || e.key === 'P') { paused = !paused; return; }
+  if (gameOver || paused) return;
+  const map = {ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right'};
+  if (map[e.key]) { pendingDir = map[e.key]; e.preventDefault(); }
+});
+
+reset(true);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

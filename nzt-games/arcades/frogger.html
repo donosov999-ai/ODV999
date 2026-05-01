@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Лягушка — NZT-48</title>
+<style>
+  body { margin:0; min-height:100vh; background:#05050f; color:#eaeaea;
+    font-family:'Segoe UI',sans-serif; display:flex; flex-direction:column;
+    justify-content:center; align-items:center; gap:14px; }
+  .hud { display:flex; gap:30px; font-size:16px; letter-spacing:2px; }
+  .hud b { color:#86efac; }
+  canvas { background:#0a0a1a; border:2px solid #1e3a2e; }
+  .wrap { position:relative; }
+  .overlay { position:absolute; inset:0; display:none; justify-content:center;
+    align-items:center; flex-direction:column; background:rgba(0,0,0,0.75);
+    font-size:28px; color:#86efac; gap:8px; }
+  .overlay small { font-size:14px; color:#fff; letter-spacing:1px; }
+  .controls { font-size:12px; color:#667; letter-spacing:1px; }
+</style>
+</head>
+<body>
+  <div class="hud">
+    <div>СЧЁТ <b id="score">0</b></div>
+    <div>ЖИЗНИ <b id="lives">3</b></div>
+    <div>ДОМА <b id="homes">0</b>/5</div>
+    <div>ВРЕМЯ <b id="time">60</b></div>
+  </div>
+  <div class="wrap">
+    <canvas id="game" width="560" height="640"></canvas>
+    <div id="overlay" class="overlay"></div>
+  </div>
+  <div class="controls">СТРЕЛКИ — прыжок · P — пауза · R — заново</div>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const TILE = 40, COLS = 14, ROWS = 16;
+let frog, lanes, score, lives, homes, homesFilled, gameOver, paused, timeLeft, tick, animT;
+
+function makeLanes() {
+  // row 0: homes, 1-5: water, 6: safe, 7-13: road, 14: safe, 15: start
+  lanes = [];
+  for (let y = 0; y < ROWS; y++) {
+    let type = 'safe', items = [], speed = 0, color = '#1a1a2e';
+    if (y === 0) { type = 'homes'; color = '#042f2e'; }
+    else if (y >= 1 && y <= 5) {
+      type = 'water'; color = '#164e63';
+      speed = (y%2===0 ? 1 : -1) * (1 + y*0.15);
+      const kind = y === 3 ? 'turtle' : 'log';
+      const w = kind === 'turtle' ? 3 : (y === 1 ? 4 : y === 5 ? 5 : 3);
+      const gap = kind === 'turtle' ? 4 : 5;
+      for (let i = 0; i < COLS + 4; i += (w + gap)) {
+        items.push({x: i * TILE, w: w * TILE, kind, sink: kind === 'turtle' ? Math.random() * 200 : -1});
+      }
+    }
+    else if (y === 6 || y === 14) { type = 'safe'; color = '#14532d'; }
+    else if (y >= 7 && y <= 13) {
+      type = 'road'; color = '#1f1f1f';
+      speed = (y%2===0 ? 1 : -1) * (1.2 + (13-y)*0.2);
+      const kinds = ['car','car','truck'];
+      const kind = kinds[y % kinds.length];
+      const w = kind === 'truck' ? 2 : 1;
+      const gap = 3 + (y % 2);
+      for (let i = 0; i < COLS + 4; i += (w + gap)) {
+        items.push({x: i * TILE + (y*7)%50, w: w * TILE, kind, color: ['#f43f5e','#fbbf24','#22d3ee','#a855f7'][(y+Math.floor(i/2))%4]});
+      }
+    }
+    lanes.push({type, items, speed, color, y});
+  }
+  homes = [];
+  for (let i = 0; i < 5; i++) homes.push({x: (i*3+0.5)*TILE, filled: false});
+}
+
+function reset(full = true) {
+  if (full) { score = 0; lives = 3; homesFilled = 0; makeLanes(); }
+  frog = {x: Math.floor(COLS/2)*TILE, y: (ROWS-1)*TILE, onLog: null, jump: 0};
+  timeLeft = 60; tick = 0; animT = 0;
+  gameOver = false; paused = false;
+  overlay.style.display = 'none';
+}
+
+function die() {
+  lives--;
+  if (lives <= 0) { gameOver = true; return; }
+  frog.x = Math.floor(COLS/2)*TILE; frog.y = (ROWS-1)*TILE;
+  frog.onLog = null; timeLeft = 60;
+}
+
+function update() {
+  if (gameOver || paused) return;
+  tick++; animT += 0.1;
+  if (tick % 60 === 0) {
+    timeLeft--;
+    if (timeLeft <= 0) die();
+  }
+  for (const l of lanes) {
+    if (l.type === 'road' || l.type === 'water') {
+      for (const it of l.items) {
+        it.x += l.speed;
+        const span = (COLS + 4) * TILE;
+        if (l.speed > 0 && it.x > COLS * TILE + 40) it.x -= span;
+        if (l.speed < 0 && it.x + it.w < -40) it.x += span;
+      }
+    }
+  }
+
+  const fx = frog.x + TILE/2, fy = frog.y + TILE/2;
+  const row = Math.floor(fy / TILE);
+  const lane = lanes[row];
+
+  if (frog.jump > 0) frog.jump--;
+
+  if (lane && lane.type === 'road') {
+    for (const it of lane.items) {
+      if (fx > it.x && fx < it.x + it.w) { die(); return; }
+    }
+    frog.onLog = null;
+  } else if (lane && lane.type === 'water') {
+    let on = null;
+    for (const it of lane.items) {
+      if (it.kind === 'turtle') {
+        const phase = (animT * 2 + it.sink) % 4;
+        if (phase > 2.5) continue; // под водой
+      }
+      if (fx > it.x && fx < it.x + it.w) { on = it; break; }
+    }
+    if (!on) { die(); return; }
+    frog.x += lane.speed;
+    frog.onLog = on;
+    if (frog.x < -TILE || frog.x > COLS*TILE) { die(); return; }
+  } else if (lane && lane.type === 'homes') {
+    let hit = null;
+    for (const h of homes) {
+      if (!h.filled && Math.abs(fx - (h.x + TILE/2)) < TILE*0.6) { hit = h; break; }
+    }
+    if (hit) {
+      hit.filled = true;
+      homesFilled++;
+      score += 200 + timeLeft * 10;
+      if (homesFilled >= 5) { score += 1000; homesFilled = 0; for (const h of homes) h.filled = false; }
+      reset(false);
+    } else die();
+    return;
+  } else {
+    frog.onLog = null;
+  }
+}
+
+function draw() {
+  for (const l of lanes) {
+    ctx.fillStyle = l.color;
+    ctx.fillRect(0, l.y*TILE, COLS*TILE, TILE);
+    if (l.type === 'water') {
+      for (const it of l.items) {
+        if (it.kind === 'log') {
+          ctx.fillStyle = '#78350f';
+          ctx.fillRect(it.x, l.y*TILE+6, it.w, TILE-12);
+          ctx.fillStyle = '#92400e';
+          ctx.fillRect(it.x+4, l.y*TILE+10, it.w-8, 4);
+        } else {
+          const phase = (animT * 2 + it.sink) % 4;
+          const under = phase > 2.5;
+          ctx.fillStyle = under ? 'rgba(34,197,94,0.25)' : '#16a34a';
+          for (let k = 0; k < 3; k++) {
+            ctx.beginPath();
+            ctx.arc(it.x + k*TILE + TILE/2, l.y*TILE+TILE/2, TILE/2-4, 0, Math.PI*2);
+            ctx.fill();
+          }
+        }
+      }
+    } else if (l.type === 'road') {
+      ctx.strokeStyle = 'rgba(255,255,200,0.3)';
+      ctx.setLineDash([12,8]);
+      ctx.beginPath();
+      ctx.moveTo(0, l.y*TILE + TILE/2); ctx.lineTo(COLS*TILE, l.y*TILE + TILE/2);
+      ctx.stroke(); ctx.setLineDash([]);
+      for (const it of l.items) {
+        ctx.fillStyle = it.color;
+        ctx.fillRect(it.x+2, l.y*TILE+6, it.w-4, TILE-12);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(it.x+6, l.y*TILE+10, it.w-12, 4);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(it.x + (l.speed>0?it.w-6:2), l.y*TILE+TILE/2-2, 4, 4);
+      }
+    } else if (l.type === 'homes') {
+      ctx.fillStyle = '#064e3b';
+      ctx.fillRect(0, l.y*TILE, COLS*TILE, TILE);
+      for (const h of homes) {
+        ctx.fillStyle = h.filled ? '#16a34a' : '#022c22';
+        ctx.fillRect(h.x, l.y*TILE+4, TILE*2, TILE-8);
+        if (h.filled) {
+          ctx.fillStyle = '#86efac';
+          ctx.beginPath();
+          ctx.arc(h.x + TILE, l.y*TILE+TILE/2, TILE/3, 0, Math.PI*2);
+          ctx.fill();
+        }
+      }
+    } else if (l.type === 'safe') {
+      ctx.fillStyle = '#14532d';
+      ctx.fillRect(0, l.y*TILE, COLS*TILE, TILE);
+    }
+  }
+
+  // лягушка
+  ctx.save();
+  ctx.translate(frog.x + TILE/2, frog.y + TILE/2);
+  const scale = 1 + Math.sin(animT*4) * 0.05;
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#22c55e';
+  ctx.fillRect(-TILE/2+6, -TILE/2+6, TILE-12, TILE-12);
+  ctx.fillStyle = '#16a34a';
+  ctx.fillRect(-TILE/2+10, -TILE/2+10, TILE-20, TILE-20);
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(-6, -4, 3, 0, Math.PI*2);
+  ctx.arc(6, -4, 3, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.arc(-6, -4, 1.5, 0, Math.PI*2);
+  ctx.arc(6, -4, 1.5, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+
+  document.getElementById('score').textContent = score;
+  document.getElementById('lives').textContent = lives;
+  document.getElementById('homes').textContent = homesFilled;
+  document.getElementById('time').textContent = timeLeft;
+}
+
+function loop() {
+  update();
+  draw();
+  if (gameOver) {
+    overlay.innerHTML = 'КОНЕЦ ИГРЫ<small>СЧЁТ ' + score + ' · R — ЗАНОВО</small>';
+    overlay.style.display = 'flex';
+  } else if (paused) {
+    overlay.innerHTML = 'ПАУЗА';
+    overlay.style.display = 'flex';
+  } else overlay.style.display = 'none';
+  requestAnimationFrame(loop);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'r' || e.key === 'R') { reset(true); return; }
+  if (e.key === 'p' || e.key === 'P') { paused = !paused; return; }
+  if (gameOver || paused) return;
+  const m = {ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]};
+  if (m[e.key]) {
+    const [dx, dy] = m[e.key];
+    const nx = frog.x + dx*TILE, ny = frog.y + dy*TILE;
+    if (nx >= 0 && nx < COLS*TILE && ny >= 0 && ny < ROWS*TILE) {
+      frog.x = nx; frog.y = ny; frog.jump = 8;
+      if (dy < 0) score += 10;
+    }
+    e.preventDefault();
+  }
+});
+
+reset(true);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

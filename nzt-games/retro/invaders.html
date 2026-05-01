@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Space Invaders — NZT-48</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: #000;
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+  }
+  .hud {
+    display: flex;
+    gap: 30px;
+    font-size: 16px;
+    letter-spacing: 2px;
+  }
+  .hud b { color: #0f0; }
+  canvas {
+    background: #000;
+    border: 2px solid #0f0;
+    image-rendering: pixelated;
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
+  }
+  .wrap { position: relative; }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.85);
+    font-size: 28px;
+    color: #f33;
+    gap: 10px;
+    text-shadow: 0 0 20px #f33;
+  }
+  .overlay small {
+    font-size: 12px;
+    color: #fff;
+    letter-spacing: 2px;
+    text-shadow: none;
+  }
+  .controls {
+    font-size: 11px;
+    color: #090;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+  <div class="hud">
+    <div>СЧЁТ <b id="score">0</b></div>
+    <div>ЖИЗНИ <b id="lives">3</b></div>
+    <div>ВОЛНА <b id="wave">1</b></div>
+    <div>РЕКОРД <b id="best">0</b></div>
+  </div>
+  <div class="wrap">
+    <canvas id="game" width="672" height="600"></canvas>
+    <div id="overlay" class="overlay"></div>
+  </div>
+  <div class="controls">←→ / A D — движение · SPACE — огонь · P — пауза · R — заново</div>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const W = canvas.width, H = canvas.height;
+
+let player, bullets, enemies, enemyBullets, bunkers, ufo, stars, particles;
+let wave, score, lives, gameOver, paused, moveDir, shouldDrop, stepTimer, keys;
+let best = +localStorage.getItem('nzt_invaders_best') || 0;
+
+// Пиксельные спрайты инопланетян 3 типов x 2 кадра анимации
+const SPRITES = {
+  small: [
+    ['.....XX.....',
+     '....XXXX....',
+     '...XXXXXX...',
+     '..XX.XX.XX..',
+     '..XXXXXXXX..',
+     '....X..X....',
+     '...X.XX.X...',
+     '..X......X..'],
+    ['.....XX.....',
+     '....XXXX....',
+     '...XXXXXX...',
+     '..XX.XX.XX..',
+     '..XXXXXXXX..',
+     '....X..X....',
+     '...X....X...',
+     '....X..X....']
+  ],
+  mid: [
+    ['..X.....X..',
+     '...X...X...',
+     '..XXXXXXX..',
+     '.XX.XXX.XX.',
+     'XXXXXXXXXXX',
+     'X.XXXXXXX.X',
+     'X.X.....X.X',
+     '...XX.XX...'],
+    ['..X.....X..',
+     'X..X...X..X',
+     'X.XXXXXXX.X',
+     'XXX.XXX.XXX',
+     'XXXXXXXXXXX',
+     '.XXXXXXXXX.',
+     '..X.....X..',
+     '.X.......X.']
+  ],
+  big: [
+    ['....XXXXXX....',
+     '..XXXXXXXXXX..',
+     'XXXXXXXXXXXXXX',
+     'XXX..XX..XX.XX',
+     'XXXXXXXXXXXXXX',
+     '...XXX..XXX...',
+     '..XX.XXXX.XX..',
+     'XX..........XX'],
+    ['....XXXXXX....',
+     '..XXXXXXXXXX..',
+     'XXXXXXXXXXXXXX',
+     'XXX..XX..XX.XX',
+     'XXXXXXXXXXXXXX',
+     '...XXX..XXX...',
+     '..XX.XXXX.XX..',
+     '.X.XX....XX.X.']
+  ]
+};
+
+function makeStars() {
+  stars = [];
+  for (let i = 0; i < 80; i++) {
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      s: Math.random() * 1.5 + 0.3,
+      b: Math.random() * 0.7 + 0.3
+    });
+  }
+}
+
+function reset(full = true) {
+  if (full) { score = 0; lives = 3; wave = 1; }
+  player = { x: W / 2, y: H - 50, w: 44, h: 18, cooldown: 0, invul: 60 };
+  bullets = [];
+  enemyBullets = [];
+  ufo = null;
+  moveDir = 1;
+  shouldDrop = false;
+  stepTimer = 0;
+  particles = [];
+  makeEnemies();
+  makeBunkers();
+  makeStars();
+  gameOver = false;
+  paused = false;
+  overlay.style.display = 'none';
+}
+
+function makeEnemies() {
+  enemies = [];
+  const rows = 5, cols = 11;
+  const startX = 80, startY = 80;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const type = r === 0 ? 'small' : r < 3 ? 'mid' : 'big';
+      enemies.push({
+        x: startX + c * 44,
+        y: startY + r * 38,
+        w: type === 'big' ? 32 : type === 'mid' ? 28 : 26,
+        h: 20,
+        type,
+        alive: true
+      });
+    }
+  }
+}
+
+function makeBunkers() {
+  bunkers = [];
+  const shape = [
+    '..XXXXXX..',
+    '.XXXXXXXX.',
+    'XXXXXXXXXX',
+    'XXXXXXXXXX',
+    'XXX....XXX',
+    'XX......XX'
+  ];
+  const bunkerW = 10, bunkerH = 6, cell = 6;
+  for (let i = 0; i < 4; i++) {
+    const bx = 80 + i * 150;
+    const by = H - 140;
+    for (let py = 0; py < bunkerH; py++) {
+      for (let px = 0; px < bunkerW; px++) {
+        if (shape[py][px] === 'X') {
+          bunkers.push({ x: bx + px * cell, y: by + py * cell, w: cell, h: cell, hp: 3 });
+        }
+      }
+    }
+  }
+}
+
+function shoot() {
+  if (player.cooldown > 0 || gameOver) return;
+  player.cooldown = 16;
+  bullets.push({ x: player.x, y: player.y - 10, vy: -10 });
+}
+
+function enemyShoot() {
+  const alive = enemies.filter(e => e.alive);
+  if (!alive.length) return;
+  // Чаще стреляют нижние инопланетяне
+  const columns = {};
+  for (const e of alive) {
+    const col = Math.round(e.x);
+    if (!columns[col] || e.y > columns[col].y) columns[col] = e;
+  }
+  const shooters = Object.values(columns);
+  const e = shooters[Math.floor(Math.random() * shooters.length)];
+  enemyBullets.push({
+    x: e.x + e.w / 2,
+    y: e.y + e.h,
+    vy: 3 + wave * 0.3
+  });
+}
+
+function burst(x, y, color, n = 14) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const s = Math.random() * 3 + 0.5;
+    particles.push({
+      x, y,
+      vx: Math.cos(a) * s,
+      vy: Math.sin(a) * s,
+      life: 20 + Math.random() * 20,
+      max: 40,
+      color
+    });
+  }
+}
+
+function update() {
+  if (gameOver || paused) return;
+
+  // Движение игрока
+  if (keys['ArrowLeft'] || keys['a'] || keys['A']) player.x = Math.max(28, player.x - 5);
+  if (keys['ArrowRight'] || keys['d'] || keys['D']) player.x = Math.min(W - 28, player.x + 5);
+  if (keys[' ']) shoot();
+  if (player.cooldown > 0) player.cooldown--;
+  if (player.invul > 0) player.invul--;
+
+  // Шаг волны инопланетян
+  stepTimer++;
+  const alive = enemies.filter(e => e.alive).length;
+  const total = enemies.length;
+  const speedFactor = Math.max(0.1, alive / total);
+  const interval = Math.max(4, Math.floor(36 * speedFactor) - wave * 2);
+
+  if (stepTimer >= interval) {
+    stepTimer = 0;
+    let edge = false;
+    for (const e of enemies) {
+      if (!e.alive) continue;
+      if (moveDir > 0 && e.x + e.w >= W - 30) edge = true;
+      if (moveDir < 0 && e.x <= 30) edge = true;
+    }
+    if (edge) { moveDir *= -1; shouldDrop = true; }
+    for (const e of enemies) {
+      if (!e.alive) continue;
+      e.x += moveDir * 12;
+      if (shouldDrop) e.y += 18;
+      if (e.y + e.h > player.y - 10) gameOver = true;
+    }
+    shouldDrop = false;
+    if (Math.random() < 0.35 + wave * 0.03) enemyShoot();
+  }
+
+  // UFO
+  if (!ufo && Math.random() < 0.0018) {
+    const fromLeft = Math.random() < 0.5;
+    ufo = {
+      x: fromLeft ? -50 : W + 50,
+      y: 45,
+      vx: fromLeft ? 2.5 : -2.5,
+      w: 44,
+      h: 20,
+      value: [50, 100, 150, 300][Math.floor(Math.random() * 4)]
+    };
+  }
+  if (ufo) {
+    ufo.x += ufo.vx;
+    if (ufo.x < -60 || ufo.x > W + 60) ufo = null;
+  }
+
+  // Пули игрока
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    const b = bullets[i];
+    b.y += b.vy;
+    if (b.y < 0) { bullets.splice(i, 1); continue; }
+    let hit = false;
+    // Инопланетяне
+    for (const e of enemies) {
+      if (!e.alive) continue;
+      if (b.x > e.x && b.x < e.x + e.w && b.y > e.y && b.y < e.y + e.h) {
+        e.alive = false;
+        const points = e.type === 'small' ? 30 : e.type === 'mid' ? 20 : 10;
+        score += points;
+        burst(e.x + e.w / 2, e.y + e.h / 2,
+          e.type === 'small' ? '#ff3366' : e.type === 'mid' ? '#fbbf24' : '#4ade80');
+        hit = true;
+        break;
+      }
+    }
+    // UFO
+    if (!hit && ufo && b.x > ufo.x && b.x < ufo.x + ufo.w && b.y > ufo.y && b.y < ufo.y + ufo.h) {
+      score += ufo.value;
+      burst(ufo.x + ufo.w / 2, ufo.y + ufo.h / 2, '#f0f', 30);
+      ufo = null;
+      hit = true;
+    }
+    // Бункеры
+    if (!hit) {
+      for (let j = bunkers.length - 1; j >= 0; j--) {
+        const bk = bunkers[j];
+        if (b.x > bk.x && b.x < bk.x + bk.w && b.y > bk.y && b.y < bk.y + bk.h) {
+          bk.hp--;
+          if (bk.hp <= 0) bunkers.splice(j, 1);
+          hit = true;
+          break;
+        }
+      }
+    }
+    if (hit) bullets.splice(i, 1);
+  }
+
+  // Пули врагов
+  for (let i = enemyBullets.length - 1; i >= 0; i--) {
+    const b = enemyBullets[i];
+    b.y += b.vy;
+    if (b.y > H) { enemyBullets.splice(i, 1); continue; }
+    let hit = false;
+    // Игрок
+    if (player.invul === 0 &&
+        b.x > player.x - player.w / 2 && b.x < player.x + player.w / 2 &&
+        b.y > player.y - player.h / 2 && b.y < player.y + player.h / 2) {
+      lives--;
+      burst(player.x, player.y, '#ff3366', 30);
+      player.invul = 100;
+      if (lives <= 0) gameOver = true;
+      hit = true;
+    }
+    // Бункеры
+    if (!hit) {
+      for (let j = bunkers.length - 1; j >= 0; j--) {
+        const bk = bunkers[j];
+        if (b.x > bk.x && b.x < bk.x + bk.w && b.y > bk.y && b.y < bk.y + bk.h) {
+          bk.hp--;
+          if (bk.hp <= 0) bunkers.splice(j, 1);
+          hit = true;
+          break;
+        }
+      }
+    }
+    if (hit) enemyBullets.splice(i, 1);
+  }
+
+  // Частицы
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life--;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  // Звёзды (мигают)
+  for (const s of stars) {
+    s.b += (Math.random() - 0.5) * 0.1;
+    s.b = Math.max(0.2, Math.min(1, s.b));
+  }
+
+  // Новая волна
+  if (enemies.every(e => !e.alive)) {
+    wave++;
+    score += 100 * wave;
+    makeEnemies();
+    makeBunkers();
+  }
+
+  if (gameOver && score > best) {
+    best = score;
+    localStorage.setItem('nzt_invaders_best', best);
+  }
+}
+
+function drawSprite(sprite, x, y, scale, color) {
+  ctx.fillStyle = color;
+  for (let py = 0; py < sprite.length; py++) {
+    for (let px = 0; px < sprite[py].length; px++) {
+      if (sprite[py][px] === 'X') {
+        ctx.fillRect(x + px * scale, y + py * scale, scale, scale);
+      }
+    }
+  }
+}
+
+function draw() {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+
+  // Звёзды
+  for (const s of stars) {
+    ctx.fillStyle = `rgba(255,255,255,${s.b * 0.5})`;
+    ctx.fillRect(s.x, s.y, s.s, s.s);
+  }
+
+  // Инопланетяне
+  const frame = Math.floor(Date.now() / 350) % 2;
+  for (const e of enemies) {
+    if (!e.alive) continue;
+    const sprite = SPRITES[e.type][frame];
+    const scale = 2;
+    const color = e.type === 'small' ? '#ff3366' : e.type === 'mid' ? '#fbbf24' : '#4ade80';
+    drawSprite(sprite, e.x, e.y, scale, color);
+  }
+
+  // Бункеры
+  for (const b of bunkers) {
+    const c = b.hp === 3 ? '#22c55e' : b.hp === 2 ? '#fbbf24' : '#f43f5e';
+    ctx.fillStyle = c;
+    ctx.fillRect(b.x, b.y, b.w, b.h);
+  }
+
+  // UFO
+  if (ufo) {
+    ctx.fillStyle = '#f0f';
+    ctx.shadowColor = '#f0f';
+    ctx.shadowBlur = 10;
+    ctx.fillRect(ufo.x + 6, ufo.y + 4, ufo.w - 12, ufo.h - 8);
+    ctx.fillRect(ufo.x, ufo.y + 8, ufo.w, 6);
+    ctx.fillRect(ufo.x + 14, ufo.y, 4, 4);
+    ctx.fillRect(ufo.x + 26, ufo.y, 4, 4);
+    ctx.shadowBlur = 0;
+  }
+
+  // Игрок
+  if (player.invul === 0 || Math.floor(player.invul / 4) % 2 === 0) {
+    ctx.fillStyle = '#0f0';
+    ctx.shadowColor = '#0f0';
+    ctx.shadowBlur = 8;
+    // Основание
+    ctx.fillRect(player.x - player.w / 2, player.y + 6, player.w, 8);
+    // Корпус
+    ctx.fillRect(player.x - 10, player.y, 20, 8);
+    // Пушка
+    ctx.fillRect(player.x - 3, player.y - 8, 6, 8);
+    ctx.shadowBlur = 0;
+  }
+
+  // Пули игрока
+  ctx.fillStyle = '#fff';
+  for (const b of bullets) ctx.fillRect(b.x - 1, b.y, 3, 10);
+
+  // Пули врагов
+  ctx.fillStyle = '#f33';
+  for (const b of enemyBullets) {
+    const wiggle = Math.sin(b.y * 0.3) * 2;
+    ctx.fillRect(b.x - 1 + wiggle, b.y, 3, 10);
+  }
+
+  // Частицы
+  for (const p of particles) {
+    const a = p.life / p.max;
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = a;
+    ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+  }
+  ctx.globalAlpha = 1;
+
+  // HUD
+  document.getElementById('score').textContent = score;
+  document.getElementById('lives').textContent = lives;
+  document.getElementById('wave').textContent = wave;
+  document.getElementById('best').textContent = best;
+}
+
+function loop() {
+  update();
+  draw();
+  if (gameOver) {
+    overlay.innerHTML = 'КОНЕЦ ИГРЫ<small>СЧЁТ ' + score + ' · R — заново</small>';
+    overlay.style.display = 'flex';
+  } else if (paused) {
+    overlay.innerHTML = 'ПАУЗА';
+    overlay.style.display = 'flex';
+  } else {
+    overlay.style.display = 'none';
+  }
+  requestAnimationFrame(loop);
+}
+
+keys = {};
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (e.key === 'r' || e.key === 'R') reset(true);
+  if (e.key === 'p' || e.key === 'P') paused = !paused;
+  if (e.key === ' ') e.preventDefault();
+});
+document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+reset(true);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

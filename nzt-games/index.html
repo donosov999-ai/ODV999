@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NZT-48 · Игровой зал</title>
+<style>
+  :root {
+    --bg: #0a0a15;
+    --bg-card: #14142a;
+    --bg-hover: #1c1c40;
+    --accent: #22d3ee;
+    --accent-2: #fbbf24;
+    --text: #eaeaea;
+    --muted: #6b7280;
+    --border: #1e1e3a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(34, 211, 238, 0.08), transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(251, 191, 36, 0.05), transparent 50%);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 24px;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .logo {
+    display: inline-block;
+    font-size: 56px;
+    font-weight: 900;
+    letter-spacing: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 40px rgba(34, 211, 238, 0.3);
+  }
+  .tagline {
+    color: var(--muted);
+    font-size: 14px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .lead {
+    text-align: center;
+    color: #c7c9d6;
+    font-size: 17px;
+    max-width: 680px;
+    margin: 28px auto 0;
+  }
+  .lead em {
+    color: var(--accent-2);
+    font-style: normal;
+  }
+  h2 {
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 56px 0 18px;
+    border-left: 3px solid var(--accent);
+    padding-left: 12px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .card:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(34, 211, 238, 0.15);
+  }
+  .card:hover::before { opacity: 1; }
+  .card-icon {
+    font-size: 28px;
+    line-height: 1;
+  }
+  .card-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .card-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--accent-2);
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+    text-transform: uppercase;
+  }
+  footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">NZT-48</div>
+      <div class="tagline">UNLOCK THE OTHER 80%</div>
+      <p class="lead">
+        Игровой зал. Ретро-аркады, головоломки и шутеры для тренировки <em>внимания, памяти и реакции</em>.
+        Разогнанный мозг — разогнанные рефлексы.
+      </p>
+    </header>
+
+    <h2>🎯 Шутеры NZT</h2>
+    <div class="grid">
+      <a class="card" href="shooters/space-shooter.html">
+        <div class="card-icon">🚀</div>
+        <div class="card-title">Космошутер <span class="badge">NZT</span></div>
+        <div class="card-desc">Вертикальный shoot'em up: мощь до 100, 10 напарников, 30 дронов, 10 классов корабля, самонаводящиеся ракеты, боссы.</div>
+      </a>
+      <a class="card" href="shooters/rtype.html">
+        <div class="card-icon">⚡</div>
+        <div class="card-title">R-Type <span class="badge">NZT</span></div>
+        <div class="card-desc">Горизонтальный сайд-скролл: заряд-луч, Force-модуль, мощь до 100, напарники, дроны, рельеф, боссы.</div>
+      </a>
+    </div>
+
+    <h2>🕹️ Аркады</h2>
+    <div class="grid">
+      <a class="card" href="arcades/tetris.html">
+        <div class="card-icon">🟦</div>
+        <div class="card-title">Тетрис</div>
+        <div class="card-desc">Заполняй линии, не дай стакану переполниться. С предпросмотром следующей фигуры и «призраком».</div>
+      </a>
+      <a class="card" href="arcades/pacman.html">
+        <div class="card-icon">👻</div>
+        <div class="card-title">Пакман</div>
+        <div class="card-desc">Ешь точки, избегай 4 призраков с уникальным ИИ, лови энергетики и охоться в режиме испуга.</div>
+      </a>
+      <a class="card" href="arcades/snake.html">
+        <div class="card-icon">🐍</div>
+        <div class="card-title">Змейка</div>
+        <div class="card-desc">С бустами (скорость / сжатие / бонус) и туннелями по краям поля. Зажми Shift для ускорения.</div>
+      </a>
+      <a class="card" href="arcades/frogger.html">
+        <div class="card-icon">🐸</div>
+        <div class="card-title">Лягушка (Frogger)</div>
+        <div class="card-desc">Прыгай через дорогу с машинами и реку с брёвнами и ныряющими черепахами. Заселяй 5 домиков.</div>
+      </a>
+      <a class="card" href="arcades/boulder.html">
+        <div class="card-icon">💎</div>
+        <div class="card-title">Копатель (Boulder Dash)</div>
+        <div class="card-desc">Копай землю, собирай алмазы, толкай камни и уворачивайся от падающих валунов и монстров.</div>
+      </a>
+      <a class="card" href="arcades/breakout.html">
+        <div class="card-icon">🔨</div>
+        <div class="card-title">Арканоид (Breakout)</div>
+        <div class="card-desc">Отбивай шарик платформой, круши кирпичи разных уровней прочности, лови бонусы (E/M/S/L).</div>
+      </a>
+    </div>
+
+    <h2>🎮 Ретро-классика</h2>
+    <div class="grid">
+      <a class="card" href="retro/invaders.html">
+        <div class="card-icon">👾</div>
+        <div class="card-title">Space Invaders (1978)</div>
+        <div class="card-desc">3 типа пришельцев с пиксель-арт спрайтами, 4 разрушаемых бункера, UFO-бонус. Темп растёт по мере убийств.</div>
+      </a>
+      <a class="card" href="retro/asteroids.html">
+        <div class="card-icon">🌑</div>
+        <div class="card-title">Asteroids (1979)</div>
+        <div class="card-desc">Векторный стиль, корабль с инерцией, астероиды 3 размеров, 2 типа UFO, гиперпрыжок (H).</div>
+      </a>
+      <a class="card" href="retro/missile.html">
+        <div class="card-icon">🛡️</div>
+        <div class="card-title">Missile Command (1980)</div>
+        <div class="card-desc">Защита 6 городов от баллистических ракет. 3 базы (ЛКМ/СКМ/ПКМ), MIRV и Smart-ракеты со старших волн.</div>
+      </a>
+    </div>
+
+    <h2>🧠 Логика и мозг</h2>
+    <div class="grid">
+      <a class="card" href="logic/2048.html">
+        <div class="card-icon">🔢</div>
+        <div class="card-title">2048</div>
+        <div class="card-desc">Числовая ловушка: сливай одинаковые плитки, доберись до 2048. Стрелки или WASD.</div>
+      </a>
+      <a class="card" href="logic/lightsout.html">
+        <div class="card-icon">💡</div>
+        <div class="card-title">Lights Out</div>
+        <div class="card-desc">Погаси все клетки. Клик переключает клетку и 4 соседних. Размеры от 3×3 до 7×7.</div>
+      </a>
+      <a class="card" href="logic/minesweeper.html">
+        <div class="card-icon">💣</div>
+        <div class="card-title">Сапёр (Minesweeper)</div>
+        <div class="card-desc">Классика логики: открой все безопасные клетки, не наступив на мину. Три размера поля.</div>
+      </a>
+      <a class="card" href="logic/sokoban.html">
+        <div class="card-icon">📦</div>
+        <div class="card-title">Сокобан</div>
+        <div class="card-desc">Толкай ящики на цели в тесных комнатах. 4 уровня. U — отмена хода, N — следующий уровень.</div>
+      </a>
+      <a class="card" href="logic/nonogram.html">
+        <div class="card-icon">🎨</div>
+        <div class="card-title">Нонограмма (японский кроссворд)</div>
+        <div class="card-desc">Восстанавливай картинку по числовым подсказкам. Размеры 5×5, 10×10, 15×15.</div>
+      </a>
+    </div>
+
+    <footer>
+      Сделано в стилистике <a href="https://999.fydao.ru" target="_blank">NZT-48</a> ·
+      <a href="https://github.com" target="_blank">GitHub Pages</a>-ready
+    </footer>
+  </div>
+</body>
+</html>

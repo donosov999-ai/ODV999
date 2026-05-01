@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Сапёр — NZT-48</title>
+<style>
+  body { margin:0; min-height:100vh; background:#2a2a3a; color:#eaeaea;
+    font-family:'Segoe UI',sans-serif; display:flex; flex-direction:column;
+    justify-content:center; align-items:center; gap:14px; }
+  .hud { display:flex; gap:30px; font-size:16px; letter-spacing:2px; }
+  .hud b { color:#fbbf24; }
+  .board { display:grid; gap:2px; padding:8px; background:#444; border-radius:4px; }
+  .cell { width:32px; height:32px; background:#bdbdbd; display:flex; justify-content:center;
+    align-items:center; font-weight:bold; font-size:16px; cursor:pointer;
+    border:2px outset #eee; user-select:none; font-family:monospace; }
+  .cell.open { background:#dbdbdb; border:1px solid #999; }
+  .cell.mine { background:#f43f5e; }
+  .cell.flag { background:#fde68a; }
+  .controls { font-size:12px; color:#aaa; letter-spacing:1px; }
+  .sizes { display:flex; gap:8px; }
+  .sizes button { background:#1e1e3a; color:#fff; border:1px solid #444;
+    padding:6px 14px; cursor:pointer; border-radius:4px; }
+  .sizes button.active { background:#fbbf24; color:#000; }
+  .wrap { position:relative; }
+  .overlay { position:absolute; inset:0; display:none; justify-content:center;
+    align-items:center; flex-direction:column; background:rgba(0,0,0,0.8);
+    font-size:28px; color:#fbbf24; gap:8px; border-radius:4px; }
+  .overlay small { font-size:14px; color:#fff; }
+  .n1{color:#2563eb} .n2{color:#16a34a} .n3{color:#dc2626} .n4{color:#7c3aed}
+  .n5{color:#9a3412} .n6{color:#0891b2} .n7{color:#111} .n8{color:#555}
+</style>
+</head>
+<body>
+  <div class="hud">
+    <div>МИНЫ <b id="mines">0</b></div>
+    <div>ФЛАГИ <b id="flags">0</b></div>
+    <div>ВРЕМЯ <b id="time">0</b></div>
+  </div>
+  <div class="sizes">
+    <button data-c="9" data-r="9" data-m="10" class="active">9×9 · 10</button>
+    <button data-c="16" data-r="16" data-m="40">16×16 · 40</button>
+    <button data-c="24" data-r="16" data-m="80">24×16 · 80</button>
+  </div>
+  <div class="wrap">
+    <div class="board" id="board"></div>
+    <div id="overlay" class="overlay"></div>
+  </div>
+  <div class="controls">ЛКМ — открыть · ПКМ — флаг · R — заново</div>
+<script>
+const boardEl = document.getElementById('board');
+const overlay = document.getElementById('overlay');
+let COLS = 9, ROWS = 9, MINES = 10;
+let grid, opened, flagged, gameOver, won, firstClick, startTime, timerId, flagCount;
+
+function emptyGrid() {
+  grid = Array.from({length:ROWS}, () => Array(COLS).fill(0));
+  opened = Array.from({length:ROWS}, () => Array(COLS).fill(false));
+  flagged = Array.from({length:ROWS}, () => Array(COLS).fill(false));
+}
+
+function placeMines(exX, exY) {
+  let placed = 0;
+  while (placed < MINES) {
+    const x = Math.floor(Math.random()*COLS);
+    const y = Math.floor(Math.random()*ROWS);
+    if (grid[y][x] === -1) continue;
+    if (Math.abs(x-exX) <= 1 && Math.abs(y-exY) <= 1) continue;
+    grid[y][x] = -1;
+    placed++;
+  }
+  for (let y=0; y<ROWS; y++) for (let x=0; x<COLS; x++) {
+    if (grid[y][x] === -1) continue;
+    let n = 0;
+    for (let dy=-1; dy<=1; dy++) for (let dx=-1; dx<=1; dx++) {
+      const nx=x+dx, ny=y+dy;
+      if (nx>=0 && nx<COLS && ny>=0 && ny<ROWS && grid[ny][nx] === -1) n++;
+    }
+    grid[y][x] = n;
+  }
+}
+
+function reset(full = true) {
+  emptyGrid();
+  gameOver = false; won = false; firstClick = true; flagCount = 0;
+  if (timerId) clearInterval(timerId);
+  document.getElementById('time').textContent = '0';
+  document.getElementById('mines').textContent = MINES;
+  document.getElementById('flags').textContent = 0;
+  boardEl.style.gridTemplateColumns = `repeat(${COLS}, 32px)`;
+  render();
+  overlay.style.display = 'none';
+}
+
+function open(x, y) {
+  if (x<0||x>=COLS||y<0||y>=ROWS||opened[y][x]||flagged[y][x]) return;
+  opened[y][x] = true;
+  if (grid[y][x] === -1) { gameOver = true; return; }
+  if (grid[y][x] === 0) {
+    for (let dy=-1; dy<=1; dy++) for (let dx=-1; dx<=1; dx++)
+      if (dx||dy) open(x+dx, y+dy);
+  }
+}
+
+function checkWin() {
+  for (let y=0; y<ROWS; y++) for (let x=0; x<COLS; x++) {
+    if (grid[y][x] !== -1 && !opened[y][x]) return false;
+  }
+  return true;
+}
+
+function render() {
+  boardEl.innerHTML = '';
+  for (let y=0; y<ROWS; y++) for (let x=0; x<COLS; x++) {
+    const c = document.createElement('div');
+    c.className = 'cell';
+    if (flagged[y][x]) { c.classList.add('flag'); c.textContent = '⚑'; }
+    else if (opened[y][x]) {
+      c.classList.add('open');
+      if (grid[y][x] === -1) { c.classList.add('mine'); c.textContent = '💣'; }
+      else if (grid[y][x] > 0) { c.textContent = grid[y][x]; c.classList.add('n'+grid[y][x]); }
+    }
+    c.onclick = () => handleClick(x, y);
+    c.oncontextmenu = e => { e.preventDefault(); handleRight(x, y); };
+    boardEl.appendChild(c);
+  }
+  document.getElementById('flags').textContent = flagCount;
+}
+
+function handleClick(x, y) {
+  if (gameOver || won) return;
+  if (firstClick) {
+    placeMines(x, y);
+    firstClick = false;
+    startTime = Date.now();
+    timerId = setInterval(() => {
+      document.getElementById('time').textContent = Math.floor((Date.now()-startTime)/1000);
+    }, 500);
+  }
+  open(x, y);
+  if (gameOver) {
+    // раскрыть все мины
+    for (let y=0; y<ROWS; y++) for (let x=0; x<COLS; x++)
+      if (grid[y][x] === -1) opened[y][x] = true;
+    clearInterval(timerId);
+    overlay.innerHTML = 'BOOM<small>R — заново</small>';
+    overlay.style.display = 'flex';
+  } else if (checkWin()) {
+    won = true;
+    clearInterval(timerId);
+    overlay.innerHTML = 'ПОБЕДА<small>' + Math.floor((Date.now()-startTime)/1000) + ' сек · R — заново</small>';
+    overlay.style.display = 'flex';
+  }
+  render();
+}
+
+function handleRight(x, y) {
+  if (gameOver || won || opened[y][x]) return;
+  flagged[y][x] = !flagged[y][x];
+  flagCount += flagged[y][x] ? 1 : -1;
+  render();
+}
+
+document.querySelectorAll('.sizes button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.sizes button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    COLS = +b.dataset.c; ROWS = +b.dataset.r; MINES = +b.dataset.m;
+    reset();
+  };
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'r' || e.key === 'R') reset();
+});
+document.addEventListener('contextmenu', e => { if (e.target.closest('.board')) e.preventDefault(); });
+
+reset();
+</script>
+</body>
+</html>

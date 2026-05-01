@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Нонограмма — NZT-48</title>
+<style>
+  body { margin:0; min-height:100vh; background:#0a1020; color:#eaeaea;
+    font-family:'Segoe UI',sans-serif; display:flex; flex-direction:column;
+    justify-content:center; align-items:center; gap:14px; padding:20px 0; }
+  .hud { display:flex; gap:30px; font-size:16px; letter-spacing:2px; }
+  .hud b { color:#60a5fa; }
+  .board { display:grid; gap:0; background:#1e3a5e; padding:2px; }
+  .cell { width:30px; height:30px; background:#0f1e3a; cursor:pointer;
+    display:flex; justify-content:center; align-items:center; user-select:none;
+    font-size:14px; font-weight:bold; }
+  .cell.block-r { border-right:2px solid #60a5fa; }
+  .cell.block-b { border-bottom:2px solid #60a5fa; }
+  .cell.filled { background:#60a5fa; }
+  .cell.cross { color:#f43f5e; }
+  .cell.clue { background:#1e3a5e; color:#93c5fd; font-size:11px; cursor:default; flex-direction:column; padding:1px; line-height:1.1; }
+  .sizes { display:flex; gap:8px; }
+  .sizes button { background:#1e3a5e; color:#fff; border:1px solid #333;
+    padding:6px 14px; cursor:pointer; border-radius:4px; }
+  .sizes button.active { background:#60a5fa; color:#000; }
+  .controls { font-size:12px; color:#667; letter-spacing:1px; text-align:center; }
+  .wrap { position:relative; }
+  .overlay { position:absolute; inset:0; display:none; justify-content:center;
+    align-items:center; flex-direction:column; background:rgba(0,0,0,0.85);
+    font-size:28px; color:#60a5fa; gap:8px; }
+  .overlay small { font-size:14px; color:#fff; }
+</style>
+</head>
+<body>
+  <div class="hud">
+    <div>РАЗМЕР <b id="sz">5</b></div>
+    <div>ОШИБКИ <b id="errors">0</b></div>
+    <div>ВРЕМЯ <b id="time">0</b></div>
+  </div>
+  <div class="sizes">
+    <button data-n="5" class="active">5×5</button>
+    <button data-n="10">10×10</button>
+    <button data-n="15">15×15</button>
+  </div>
+  <div class="wrap">
+    <div class="board" id="board"></div>
+    <div id="overlay" class="overlay"></div>
+  </div>
+  <div class="controls">ЛКМ — закрасить · ПКМ — крестик (исключить) · R — новая · цель — повторить картинку по цифрам-подсказкам</div>
+<script>
+const boardEl = document.getElementById('board');
+const overlay = document.getElementById('overlay');
+let N = 5;
+let solution, state, rowClues, colClues, errors, startTime, timerId, gameOver;
+// state: 0 = empty, 1 = filled, 2 = cross
+
+function genSolution() {
+  solution = [];
+  const density = 0.55;
+  for (let y=0; y<N; y++) {
+    const r = [];
+    for (let x=0; x<N; x++) r.push(Math.random() < density ? 1 : 0);
+    solution.push(r);
+  }
+  // убедиться что есть хотя бы одна заполненная
+  if (!solution.some(r => r.some(v => v))) solution[0][0] = 1;
+}
+
+function buildClues(line) {
+  const res = [];
+  let run = 0;
+  for (const v of line) {
+    if (v) run++;
+    else if (run) { res.push(run); run = 0; }
+  }
+  if (run) res.push(run);
+  if (res.length === 0) res.push(0);
+  return res;
+}
+
+function buildAllClues() {
+  rowClues = solution.map(r => buildClues(r));
+  colClues = [];
+  for (let x=0; x<N; x++) {
+    const col = [];
+    for (let y=0; y<N; y++) col.push(solution[y][x]);
+    colClues.push(buildClues(col));
+  }
+}
+
+function reset(full = true) {
+  if (full) {
+    genSolution();
+    buildAllClues();
+  }
+  state = Array.from({length:N}, () => Array(N).fill(0));
+  errors = 0;
+  if (timerId) clearInterval(timerId);
+  startTime = Date.now();
+  timerId = setInterval(() => {
+    document.getElementById('time').textContent = Math.floor((Date.now()-startTime)/1000);
+  }, 500);
+  gameOver = false;
+  render();
+  overlay.style.display = 'none';
+}
+
+function render() {
+  const maxRowClue = Math.max(...rowClues.map(r => r.length));
+  const maxColClue = Math.max(...colClues.map(c => c.length));
+  boardEl.style.gridTemplateColumns = `repeat(${N + maxRowClue}, 30px)`;
+
+  boardEl.innerHTML = '';
+  // угловая область + клоны
+  for (let cy = 0; cy < maxColClue; cy++) {
+    // пустые ячейки слева
+    for (let cx = 0; cx < maxRowClue; cx++) {
+      const e = document.createElement('div');
+      e.className = 'cell clue';
+      boardEl.appendChild(e);
+    }
+    // подсказки столбцов
+    for (let x = 0; x < N; x++) {
+      const e = document.createElement('div');
+      e.className = 'cell clue';
+      if (x % 5 === 4 && x < N-1) e.classList.add('block-r');
+      const clues = colClues[x];
+      const idx = clues.length - maxColClue + cy;
+      if (idx >= 0) e.textContent = clues[idx];
+      boardEl.appendChild(e);
+    }
+  }
+  // строки
+  for (let y = 0; y < N; y++) {
+    // подсказки строки
+    for (let cx = 0; cx < maxRowClue; cx++) {
+      const e = document.createElement('div');
+      e.className = 'cell clue';
+      if (y % 5 === 4 && y < N-1) e.classList.add('block-b');
+      const clues = rowClues[y];
+      const idx = clues.length - maxRowClue + cx;
+      if (idx >= 0) e.textContent = clues[idx];
+      boardEl.appendChild(e);
+    }
+    // ячейки
+    for (let x = 0; x < N; x++) {
+      const e = document.createElement('div');
+      e.className = 'cell';
+      if (x % 5 === 4 && x < N-1) e.classList.add('block-r');
+      if (y % 5 === 4 && y < N-1) e.classList.add('block-b');
+      if (state[y][x] === 1) e.classList.add('filled');
+      else if (state[y][x] === 2) { e.classList.add('cross'); e.textContent = '✕'; }
+      e.onclick = () => { handleClick(x, y, 1); };
+      e.oncontextmenu = ev => { ev.preventDefault(); handleClick(x, y, 2); };
+      boardEl.appendChild(e);
+    }
+  }
+  document.getElementById('sz').textContent = N;
+  document.getElementById('errors').textContent = errors;
+}
+
+function handleClick(x, y, kind) {
+  if (gameOver) return;
+  if (state[y][x] === kind) state[y][x] = 0;
+  else {
+    if (kind === 1 && solution[y][x] !== 1) { errors++; state[y][x] = 2; }
+    else state[y][x] = kind;
+  }
+  render();
+  // проверка
+  let ok = true;
+  for (let yy=0; yy<N; yy++) for (let xx=0; xx<N; xx++) {
+    if (solution[yy][xx] === 1 && state[yy][xx] !== 1) ok = false;
+  }
+  if (ok) {
+    gameOver = true;
+    clearInterval(timerId);
+    overlay.innerHTML = 'КАРТИНКА РАСКРЫТА<small>Ошибок: ' + errors + ' · ' + Math.floor((Date.now()-startTime)/1000) + ' сек · R — новая</small>';
+    overlay.style.display = 'flex';
+  }
+}
+
+document.querySelectorAll('.sizes button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.sizes button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    N = +b.dataset.n;
+    reset(true);
+  };
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'r' || e.key === 'R') reset(true);
+});
+document.addEventListener('contextmenu', e => { if (e.target.closest('.board')) e.preventDefault(); });
+
+reset(true);
+</script>
+</body>
+</html>

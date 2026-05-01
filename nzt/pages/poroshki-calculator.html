@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Порошки v4.7 · Калькулятор · NZT</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
+<style>
+.bank-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 24px; }
+.bank-tab {
+  background: var(--bg-card); border: 1px solid var(--border);
+  padding: 10px 16px; border-radius: 8px; cursor: pointer;
+  font-size: 14px; font-weight: 600; color: var(--text-dim); user-select: none;
+  transition: all .15s;
+}
+.bank-tab:hover { border-color: var(--text-muted); color: var(--text); }
+.bank-tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+.bank-tab .badge { font-size: 11px; opacity: .8; margin-left: 6px; }
+.bank-meta {
+  background: var(--bg-elev); border: 1px solid var(--border-soft);
+  border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;
+  font-size: 14px; color: var(--text-dim);
+}
+.bank-meta strong { color: var(--text); }
+.calc-row {
+  display: grid;
+  grid-template-columns: 1fr 100px 100px 100px;
+  gap: 12px; align-items: center;
+  padding: 12px 0; border-bottom: 1px solid var(--border-soft);
+  font-size: 14px;
+}
+.calc-row.head { font-weight: 700; color: var(--text-dim); font-size: 12px; text-transform: uppercase; }
+.calc-row .name { font-weight: 600; color: var(--text); }
+.calc-row .name .why { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 2px; font-style: italic; }
+.calc-row input[type=number] {
+  width: 100%; padding: 8px 10px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--bg-card);
+  color: var(--text); font-family: var(--mono); font-size: 14px;
+  text-align: right; outline: none;
+}
+.calc-row input[type=number]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(207,34,46,.15); }
+.calc-row .static { font-family: var(--mono); color: var(--text-dim); text-align: right; font-size: 13px; }
+.calc-row.driver input { border-color: var(--accent); background: rgba(207,34,46,.06); font-weight: 700; }
+.summary {
+  margin-top: 18px; padding: 16px 18px;
+  background: linear-gradient(135deg, rgba(26,127,55,.08), rgba(26,127,55,.02));
+  border: 1px solid rgba(26,127,55,.3);
+  border-radius: 10px;
+}
+.summary .stat { font-size: 28px; font-weight: 800; color: var(--green); margin: 0; }
+.summary .stat .lbl { font-size: 14px; color: var(--text-dim); font-weight: 500; }
+.summary .meta { color: var(--text-dim); font-size: 13px; margin-top: 6px; }
+@media (max-width: 700px) {
+  .calc-row { grid-template-columns: 1fr 80px; gap: 8px; }
+  .calc-row .col-month, .calc-row .col-portion { display: none; }
+  .calc-row.head .col-month, .calc-row.head .col-portion { display: none; }
+}
+</style>
+</head>
+<body data-theme="light">
+
+<div class="container">
+  <div class="hero">
+    <h1>Порошки NZT v4.7 · Калькулятор<span class="v">v1.0</span></h1>
+    <p>4 банки порошков. Введи граммы одного компонента — остальные пересчитаются автоматически. Также покажет на сколько дней хватит порции и общий вес банки.</p>
+  </div>
+
+  <div class="bank-tabs" id="bankTabs"></div>
+
+  <div class="bank-meta" id="bankMeta"></div>
+
+  <div class="card" style="padding:18px 22px;">
+    <div class="calc-row head">
+      <div>Компонент</div>
+      <div class="col-portion" style="text-align:right;">Порция, г</div>
+      <div class="col-month" style="text-align:right;">На 30 дн, г</div>
+      <div style="text-align:right;">Твоё, г</div>
+    </div>
+    <div id="calcRows"></div>
+  </div>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" id="resetBtn" type="button">Сбросить (вернуть стандарт 30 дн)</button>
+  </div>
+
+  <details>
+    <summary>Как пользоваться</summary>
+    <p><strong>Сценарий 1 — «У меня осталось N грамм одного компонента»:</strong> введи это значение в колонке «Твоё, г» против нужной строки. Все остальные компоненты пересчитаются пропорционально, чтобы соотношение в банке осталось правильным. Снизу будет «На столько-то дней хватит при стандартной порции».</p>
+    <p><strong>Сценарий 2 — «Хочу замешать на M дней»:</strong> поменяй любую строку в нужное соотношение, или бери дозу-на-30-дн, разделённую на 30 и умноженную на M.</p>
+    <p><strong>Микродозы (Спермидин, Литий) НЕ в банку</strong> — добавляются по таблетке/капсуле в шейкер при размешивании. В калькуляторе не учтены.</p>
+  </details>
+
+  <details>
+    <summary>Профиль</summary>
+    <p>Денис: 43г, 100кг, АД ~135 · Валя: 36л, 59.4кг, АД 117/73. SUNRISE BASE и REPAIR BASE — общие. NZT BOOST и NZT NIGHT BOOST — только Денис.</p>
+  </details>
+
+  <details>
+    <summary>Источник</summary>
+    <p><strong>DENIS_POROSHKI_GUIDE_v4.7</strong> от 26.04.2026 (синхрон с MOZG v8.0). Автор: Denis Onosov (ODV999). Конфиденциально.</p>
+  </details>
+
+  <div class="footer">
+    Не является медицинским советом. Все вещества и дозы — личный исследовательский проект.<br>
+    <a href="../index.html" style="color:var(--blue);">← На главную NZT</a>
+  </div>
+</div>
+
+<script src="../assets/inject-overlay.js"></script>
+<script>
+var BANKS = [
+  {
+    id: 'sunrise',
+    name: '☀ SUNRISE BASE',
+    label: 'Банка 1 — общая (Денис + Валя)',
+    portion: 14,
+    days: 30,
+    note: 'Утреннее. <strong>1 черпак = 14г</strong> в 400мл воды. Без изменений в v4.7.',
+    items: [
+      {name:'Какао натуральный',         portion:5,    why:'BDNF↑, кровоток мозга +30%'},
+      {name:'Креатин',                    portion:3,    why:'АТФ мозга +20%'},
+      {name:'Инулин',                     portion:3,    why:'Пребиотик, усвоение Ca/Mg↑'},
+      {name:'Лецитин подсолнечный',       portion:2,    why:'Холин → АЦХ + печень'},
+      {name:'L-Карнитин L-тартрат',       portion:1,    why:'Мито, жиросжигание'}
+    ]
+  },
+  {
+    id: 'boost',
+    name: '🚀 NZT BOOST v4.7',
+    label: 'Банка 2 — только Денис',
+    portion: 29.85,
+    days: 30,
+    note: 'Утреннее. <strong>1 черпак ~30г</strong> поверх SUNRISE BASE. <em>v4.7 NEW:</em> +TMG 2г, +Glycine 5г (GlyNAC утро), MSM ↑3г, Тирозин убран в капсулы 06:35.',
+    items: [
+      {name:'Какао (добивка)',            portion:5,    why:'итого утром 10г какао (BDNF, теобромин)'},
+      {name:'Креатин (добивка)',          portion:2,    why:'итого 5г креатина'},
+      {name:'Свекольный порошок',         portion:5,    why:'NO↑ → ↓АД 5–8мм, кровоток'},
+      {name:'Инулин (добивка)',           portion:2,    why:'итого 5г инулина'},
+      {name:'Лецитин (добивка)',          portion:1,    why:'итого 3г лецитина'},
+      {name:'MSM (v8.0: ↑1.5→3г)',        portion:3,    why:'Сера, суставы. RCT Kim 2006/Debbi 2011'},
+      {name:'Кордицепс экстракт',         portion:1.5,  why:'VO₂max↑, АТФ'},
+      {name:'Калий цитрат',               portion:1,    why:'Na:K баланс, ↓АД, ↓судороги'},
+      {name:'HMB',                        portion:1.5,  why:'Антикатаболик при дефиците'},
+      {name:'🆕 TMG безводный',           portion:2,    why:'↓Hcy 10.73, защита метилов от NNMT при NMN'},
+      {name:'🆕 Glycine (GlyNAC утро)',   portion:5,    why:'GlyNAC ramp Sekhar — утренняя половина'},
+      {name:'Глюкозамин сульфат',         portion:0.75, why:'Хрящ, синовиальная жидкость'},
+      {name:'Хондроитин сульфат',         portion:0.6,  why:'Удержание воды в хряще'}
+    ]
+  },
+  {
+    id: 'repair',
+    name: '🌙 REPAIR BASE',
+    label: 'Банка 3 — общая (Денис + Валя)',
+    portion: 17.95,
+    days: 30,
+    note: 'Ночное. <strong>1 черпак ~18г</strong> в 250мл тёплого молока (НЕ кипяток — коллаген). Без изменений в v4.7.',
+    items: [
+      {name:'Коллаген говяжий',           portion:10,   why:'Суставы, связки, кожа. GH-пик ночью'},
+      {name:'Глицин',                     portion:2.5,  why:'↓Темп. ядра → глубокий сон. Сладкий вкус'},
+      {name:'Таурин',                     portion:1.75, why:'ГАМК-А → ↓возбуждение, ↓кортизол'},
+      {name:'TMG (бетаин)',               portion:1.5,  why:'Метилирование, ↓гомоцистеин'},
+      {name:'Рейши',                      portion:1.5,  why:'Адаптоген: ↓кортизол, тритерпены → ГАМК'},
+      {name:'Mg-L-треонат',               portion:1,    why:'Единственный Mg через ГЭБ → сон + мозг'},
+      {name:'Витамин C',                  portion:0.5,  why:'Кофактор коллагена'},
+      {name:'L-Триптофан',                portion:0.2,  why:'Серотонин → мелатонин'}
+    ]
+  },
+  {
+    id: 'night',
+    name: '🌌 NZT NIGHT BOOST v4.7',
+    label: 'Банка 4 — только Денис',
+    portion: 11.7,
+    days: 30,
+    note: 'Ночное. <strong>1 черпак ~12.7г</strong> поверх REPAIR BASE. <em>v4.7 NEW:</em> +Glycine добивка 5.5г (GlyNAC вечер). Литий оротат — таблеткой в кружку, не в банку.',
+    items: [
+      {name:'Бета-аланин',                portion:3.2,  why:'Буфер карнозина → выносливость'},
+      {name:'Таурин (добивка)',           portion:2,    why:'итого ночью 3.75г таурина (↓кортизол)'},
+      {name:'TMG (добивка)',              portion:1,    why:'итого ночной TMG 2.5г → суточно 4.5г'},
+      {name:'🆕 Glycine (GlyNAC вечер + базовая)', portion:5.5, why:'GlyNAC 5г + 0.5г для сна. Ночной Glycine у Дениса = 8г'}
+    ]
+  }
+];
+
+var currentBank = 0;
+var driverIndex = -1;  // index ингредиента, который "ведущий" (введён вручную)
+var driverValue = null;
+var basisDays = 30;    // используется только для display ("на 30 дней по умолчанию")
+
+function buildTabs(){
+  var tabs = document.getElementById('bankTabs');
+  tabs.innerHTML = '';
+  BANKS.forEach(function(b, i){
+    var btn = document.createElement('button');
+    btn.className = 'bank-tab' + (i === currentBank ? ' active' : '');
+    btn.innerHTML = b.name + '<span class="badge">' + b.items.length + '</span>';
+    btn.addEventListener('click', function(){
+      currentBank = i; driverIndex = -1; driverValue = null;
+      build();
+    });
+    tabs.appendChild(btn);
+  });
+}
+
+function build(){
+  buildTabs();
+  var b = BANKS[currentBank];
+  document.getElementById('bankMeta').innerHTML =
+    '<div><strong>' + b.label + '</strong></div>' +
+    '<div style="margin-top:6px;">' + b.note + '</div>';
+
+  // Расчёт scale
+  var scale = 1;
+  if (driverIndex >= 0 && driverValue != null && driverValue > 0) {
+    var standardOnDays = b.items[driverIndex].portion * basisDays;
+    scale = driverValue / standardOnDays;
+  }
+
+  var rows = document.getElementById('calcRows');
+  rows.innerHTML = '';
+  var totalGrams = 0;
+  b.items.forEach(function(it, i){
+    var standard30 = it.portion * basisDays;
+    var actual = scale * standard30;
+    totalGrams += actual;
+    var row = document.createElement('div');
+    row.className = 'calc-row' + (i === driverIndex ? ' driver' : '');
+    row.innerHTML =
+      '<div class="name">' + it.name + '<span class="why">' + it.why + '</span></div>' +
+      '<div class="static col-portion">' + it.portion + ' г</div>' +
+      '<div class="static col-month">' + standard30.toFixed(1) + ' г</div>' +
+      '<div><input type="number" min="0" step="0.1" value="' + actual.toFixed(1) + '" data-i="' + i + '"></div>';
+    rows.appendChild(row);
+  });
+
+  rows.querySelectorAll('input').forEach(function(inp){
+    inp.addEventListener('input', function(e){
+      var i = parseInt(e.target.dataset.i, 10);
+      var v = parseFloat(e.target.value);
+      if (isNaN(v) || v <= 0) return;
+      driverIndex = i;
+      driverValue = v;
+      build();
+    });
+  });
+
+  // Summary
+  var totalPortion = b.items.reduce(function(s, x){ return s + x.portion; }, 0);
+  var days = totalGrams / totalPortion;
+  document.getElementById('summary').innerHTML =
+    '<div class="stat">' + days.toFixed(0) + ' дней <span class="lbl">хватит при порции ' + totalPortion.toFixed(2) + ' г/день</span></div>' +
+    '<div class="meta">Общий вес банки: <strong>' + totalGrams.toFixed(1) + ' г</strong>' +
+      (driverIndex >= 0 ? ' · ведущий компонент: <strong>' + b.items[driverIndex].name + '</strong> (' + driverValue.toFixed(1) + ' г)' : ' · стандартная закладка на 30 дней') +
+    '</div>';
+}
+
+document.getElementById('resetBtn').addEventListener('click', function(){
+  driverIndex = -1; driverValue = null;
+  build();
+});
+
+build();
+</script>
+</body>
+</html>

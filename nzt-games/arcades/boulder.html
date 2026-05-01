@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Копатель — NZT-48</title>
+<style>
+  body { margin:0; min-height:100vh; background:#1a0f05; color:#eaeaea;
+    font-family:'Segoe UI',sans-serif; display:flex; flex-direction:column;
+    justify-content:center; align-items:center; gap:14px; }
+  .hud { display:flex; gap:28px; font-size:16px; letter-spacing:2px; }
+  .hud b { color:#fbbf24; }
+  canvas { background:#0f0805; border:2px solid #92400e; }
+  .wrap { position:relative; }
+  .overlay { position:absolute; inset:0; display:none; justify-content:center;
+    align-items:center; flex-direction:column; background:rgba(0,0,0,0.8);
+    font-size:28px; color:#fbbf24; gap:8px; }
+  .overlay small { font-size:14px; color:#fff; letter-spacing:1px; }
+  .controls { font-size:12px; color:#776; letter-spacing:1px; }
+</style>
+</head>
+<body>
+  <div class="hud">
+    <div>СЧЁТ <b id="score">0</b></div>
+    <div>АЛМАЗЫ <b id="gems">0</b>/<b id="need">0</b></div>
+    <div>ЖИЗНИ <b id="lives">3</b></div>
+    <div>УРОВЕНЬ <b id="level">1</b></div>
+  </div>
+  <div class="wrap">
+    <canvas id="game" width="640" height="560"></canvas>
+    <div id="overlay" class="overlay"></div>
+  </div>
+  <div class="controls">СТРЕЛКИ — копать и идти · P — пауза · R — заново · соберите все алмазы и дойдите до выхода</div>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const TILE = 32, COLS = 20, ROWS = 14;
+// E=empty, D=dirt, W=wall, R=rock, G=gem, P=player, X=exit, M=monster
+let grid, player, monsters, gems, gemsNeeded, score, lives, level, gameOver, paused, won, tick, fall;
+
+function genLevel(lvl) {
+  grid = [];
+  for (let y = 0; y < ROWS; y++) {
+    const row = [];
+    for (let x = 0; x < COLS; x++) {
+      if (x === 0 || y === 0 || x === COLS-1 || y === ROWS-1) row.push('W');
+      else {
+        const r = Math.random();
+        if (r < 0.04 + lvl*0.01) row.push('R');
+        else if (r < 0.08 + lvl*0.015) row.push('G');
+        else if (r < 0.1) row.push('E');
+        else row.push('D');
+      }
+    }
+    grid.push(row);
+  }
+  player = {x:1, y:1};
+  grid[1][1] = 'E';
+  grid[1][2] = 'E';
+  monsters = [];
+  const mCount = Math.min(4, lvl);
+  for (let i = 0; i < mCount; i++) {
+    let mx, my;
+    do { mx = Math.floor(Math.random()*(COLS-4))+2; my = Math.floor(Math.random()*(ROWS-4))+2; }
+    while (Math.abs(mx-1) + Math.abs(my-1) < 8 || grid[my][mx] === 'W');
+    grid[my][mx] = 'E';
+    monsters.push({x:mx, y:my, dir:['up','down','left','right'][i%4]});
+  }
+  // выход
+  let ex, ey;
+  do { ex = COLS-2 - Math.floor(Math.random()*3); ey = ROWS-2 - Math.floor(Math.random()*3); }
+  while (grid[ey][ex] === 'W');
+  grid[ey][ex] = 'X';
+  gems = 0;
+  gemsNeeded = 0;
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (grid[y][x] === 'G') gemsNeeded++;
+  gemsNeeded = Math.max(5, Math.floor(gemsNeeded * 0.7));
+  fall = {};
+}
+
+function reset(full = true) {
+  if (full) { score = 0; lives = 3; level = 1; }
+  won = false; gameOver = false; paused = false; tick = 0;
+  genLevel(level);
+  overlay.style.display = 'none';
+}
+
+function tryMove(dx, dy) {
+  const nx = player.x + dx, ny = player.y + dy;
+  const c = grid[ny][nx];
+  if (c === 'W') return;
+  if (c === 'R') {
+    // толкнуть камень по горизонтали
+    if (dy === 0 && grid[ny][nx+dx] === 'E') {
+      grid[ny][nx+dx] = 'R';
+      grid[ny][nx] = 'E';
+    } else return;
+  }
+  if (c === 'G') { gems++; score += 50; }
+  if (c === 'D') score += 1;
+  if (c === 'X') {
+    if (gems >= gemsNeeded) {
+      score += 500 + level*100;
+      level++;
+      genLevel(level);
+      return;
+    } else return;
+  }
+  grid[ny][nx] = 'E';
+  player.x = nx; player.y = ny;
+}
+
+function physics() {
+  // камни и алмазы падают
+  for (let y = ROWS - 2; y >= 0; y--) {
+    for (let x = 0; x < COLS; x++) {
+      const c = grid[y][x];
+      if (c !== 'R' && c !== 'G') continue;
+      if (grid[y+1][x] === 'E') {
+        grid[y+1][x] = c; grid[y][x] = 'E';
+        fall[x+','+(y+1)] = 4;
+        // убить игрока если падает на него
+        if (player.x === x && player.y === y+2) { lives--; if (lives<=0) gameOver = true; else reset(false); return; }
+      } else if ((grid[y+1][x] === 'R' || grid[y+1][x] === 'G') && grid[y][x+1] === 'E' && grid[y+1][x+1] === 'E') {
+        grid[y][x+1] = c; grid[y][x] = 'E';
+      } else if ((grid[y+1][x] === 'R' || grid[y+1][x] === 'G') && grid[y][x-1] === 'E' && grid[y+1][x-1] === 'E') {
+        grid[y][x-1] = c; grid[y][x] = 'E';
+      }
+    }
+  }
+}
+
+function moveMonsters() {
+  const opp = {up:'down',down:'up',left:'right',right:'left'};
+  const D = {up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+  for (const m of monsters) {
+    const dirs = Object.keys(D).filter(d => {
+      const [dx,dy] = D[d];
+      const c = grid[m.y+dy][m.x+dx];
+      return c === 'E';
+    });
+    if (dirs.length === 0) continue;
+    // предпочитаем текущее направление
+    let d = dirs.includes(m.dir) && Math.random() < 0.7 ? m.dir :
+            dirs.filter(x=>x!==opp[m.dir])[Math.floor(Math.random()*Math.max(1,dirs.filter(x=>x!==opp[m.dir]).length))] || dirs[0];
+    const [dx,dy] = D[d];
+    m.x += dx; m.y += dy; m.dir = d;
+    if (m.x === player.x && m.y === player.y) {
+      lives--; if (lives<=0) gameOver = true; else reset(false);
+      return;
+    }
+  }
+  // монстр под падающим камнем умирает
+  for (const key in fall) {
+    const [x,y] = key.split(',').map(Number);
+    for (let i = monsters.length-1; i >= 0; i--) {
+      const m = monsters[i];
+      if (m.x === x && m.y === y) {
+        monsters.splice(i,1);
+        score += 200;
+      }
+    }
+    fall[key]--;
+    if (fall[key] <= 0) delete fall[key];
+  }
+}
+
+function update() {
+  if (gameOver || paused) return;
+  tick++;
+  if (tick % 6 === 0) physics();
+  if (tick % 14 === 0) moveMonsters();
+  // проверить: игрок в ту же клетку что монстр
+  for (const m of monsters) if (m.x === player.x && m.y === player.y) {
+    lives--; if (lives<=0) gameOver = true; else reset(false); return;
+  }
+}
+
+function draw() {
+  ctx.fillStyle = '#0f0805';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const c = grid[y][x];
+      const px = x*TILE, py = y*TILE;
+      if (c === 'W') {
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(px, py, TILE, TILE);
+        ctx.fillStyle = '#92400e';
+        ctx.fillRect(px+2, py+2, TILE-4, TILE-4);
+        ctx.fillStyle = '#451a03';
+        ctx.fillRect(px+6, py+6, TILE-12, 3);
+      } else if (c === 'D') {
+        ctx.fillStyle = '#451a03';
+        ctx.fillRect(px, py, TILE, TILE);
+        ctx.fillStyle = '#78350f';
+        for (let i = 0; i < 4; i++) {
+          const dx = (x*31 + i*7) % TILE;
+          const dy = (y*23 + i*11) % TILE;
+          ctx.fillRect(px+dx, py+dy, 2, 2);
+        }
+      } else if (c === 'R') {
+        ctx.fillStyle = '#737373';
+        ctx.beginPath();
+        ctx.arc(px+TILE/2, py+TILE/2, TILE/2-3, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = '#a3a3a3';
+        ctx.beginPath();
+        ctx.arc(px+TILE/2-4, py+TILE/2-4, TILE/4, 0, Math.PI*2);
+        ctx.fill();
+      } else if (c === 'G') {
+        ctx.fillStyle = '#22d3ee';
+        ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.moveTo(px+TILE/2, py+4);
+        ctx.lineTo(px+TILE-4, py+TILE/2);
+        ctx.lineTo(px+TILE/2, py+TILE-4);
+        ctx.lineTo(px+4, py+TILE/2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#cffafe';
+        ctx.fillRect(px+TILE/2-3, py+8, 4, 8);
+      } else if (c === 'X') {
+        const ok = gems >= gemsNeeded;
+        ctx.fillStyle = ok ? '#4ade80' : '#334155';
+        if (ok) { ctx.shadowColor = '#4ade80'; ctx.shadowBlur = 20; }
+        ctx.fillRect(px+4, py+4, TILE-8, TILE-8);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = ok ? '#022c22' : '#475569';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('▲', px+TILE/2, py+TILE/2);
+      }
+    }
+  }
+
+  // монстры
+  for (const m of monsters) {
+    const px = m.x*TILE, py = m.y*TILE;
+    ctx.fillStyle = '#f43f5e';
+    ctx.beginPath();
+    ctx.arc(px+TILE/2, py+TILE/2, TILE/2-4, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(px+TILE/2-4, py+TILE/2-2, 3, 0, Math.PI*2);
+    ctx.arc(px+TILE/2+4, py+TILE/2-2, 3, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.arc(px+TILE/2-4, py+TILE/2-2, 1.5, 0, Math.PI*2);
+    ctx.arc(px+TILE/2+4, py+TILE/2-2, 1.5, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = '#7f1d1d';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(px+TILE/2-5, py+TILE/2+5);
+    ctx.lineTo(px+TILE/2+5, py+TILE/2+5);
+    ctx.stroke();
+  }
+
+  // игрок
+  const px = player.x*TILE, py = player.y*TILE;
+  ctx.fillStyle = '#fbbf24';
+  ctx.fillRect(px+6, py+4, TILE-12, TILE-8);
+  ctx.fillStyle = '#92400e';
+  ctx.fillRect(px+8, py+6, TILE-16, 8);
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(px+TILE/2-4, py+TILE/2, 2, 0, Math.PI*2);
+  ctx.arc(px+TILE/2+4, py+TILE/2, 2, 0, Math.PI*2);
+  ctx.fill();
+
+  document.getElementById('score').textContent = score;
+  document.getElementById('gems').textContent = gems;
+  document.getElementById('need').textContent = gemsNeeded;
+  document.getElementById('lives').textContent = lives;
+  document.getElementById('level').textContent = level;
+}
+
+function loop() {
+  update();
+  draw();
+  if (gameOver) {
+    overlay.innerHTML = 'КОНЕЦ ИГРЫ<small>СЧЁТ ' + score + ' · R — ЗАНОВО</small>';
+    overlay.style.display = 'flex';
+  } else if (paused) {
+    overlay.innerHTML = 'ПАУЗА';
+    overlay.style.display = 'flex';
+  } else overlay.style.display = 'none';
+  requestAnimationFrame(loop);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'r' || e.key === 'R') { reset(true); return; }
+  if (e.key === 'p' || e.key === 'P') { paused = !paused; return; }
+  if (gameOver || paused) return;
+  const m = {ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]};
+  if (m[e.key]) { tryMove(m[e.key][0], m[e.key][1]); e.preventDefault(); }
+});
+
+reset(true);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
