@@ -43,7 +43,6 @@
     <option value="relation-os-overview.html">🗺 Карта 22 книги</option>
     <option value="relation-guide.html">🗺 RELATION OS гайд</option>
   </select>
-  <button class="topnav-theme" id="topnavTheme">🌙</button>
 </nav>
 
 <div class="intro">
@@ -199,16 +198,10 @@
 </div>
 
 <script>
-var btn = document.getElementById('topnavTheme');
-var stored = localStorage.getItem('theme') || 'light';
-document.body.dataset.theme = stored;
-btn.textContent = stored === 'dark' ? '☀' : '🌙';
-btn.addEventListener('click', function(){
-  var next = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
-  document.body.dataset.theme = next;
-  localStorage.setItem('theme', next);
-  btn.textContent = next === 'dark' ? '☀' : '🌙';
-});
+// Force light theme for the relationship guide (per Денис's request).
+// Old preference left in localStorage is ignored — guide always renders light.
+document.body.dataset.theme = 'light';
+try { localStorage.removeItem('theme'); } catch (e) {}
 </script>
 </body>
 </html>

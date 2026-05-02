@@ -319,3 +319,78 @@ details p { font-size: 14px; color: var(--text-dim); margin-top: 10px; line-heig
   .topnav-brand { font-size: 12px; }
   .slider-q .slider-min, .slider-q .slider-max { min-width: 70px; font-size: 11px; }
 }
+
+/* =====================================================================
+   READING ENHANCEMENT (2026-05) — force light theme + larger text.
+   Per Денис: «сделай светлую тему и увеличь текст чтобы лучше читались».
+   Override block — keeps original sizes documented above, just ups the
+   defaults so the guide is comfortable to read on desktop and mobile.
+   ===================================================================== */
+
+/* Force-disable dark theme (override any data-theme="dark") */
+[data-theme="dark"] {
+  --bg: #ffffff;
+  --bg-elev: #fafbfc;
+  --bg-card: #ffffff;
+  --border: #d0d7de;
+  --border-soft: #eaeef2;
+  --text: #1f2328;
+  --text-dim: #4a5160;
+  --text-muted: #6e7681;
+  --accent: #cf222e;
+  --accent-soft: #d1242f;
+  --green: #1a7f37;
+  --yellow: #9a6700;
+  --blue: #0969da;
+  --purple: #8250df;
+  --pink: #bf3989;
+  --code-bg: #f6f8fa;
+  --hl: #ddf4ff;
+  --shadow: 0 4px 14px rgba(0,0,0,.08);
+}
+[data-theme="dark"] .topnav { background: rgba(255,255,255,.94); }
+.topnav-theme { display: none !important; }  /* remove theme toggle button */
+
+/* Bigger, more readable text across the guide */
+body { font-size: 20px; line-height: 1.7; }
+.intro h1 { font-size: 36px; line-height: 1.25; }
+.intro .sub { font-size: 18px; }
+.section-title { font-size: 15px; }
+.hero h1 { font-size: 38px; }
+.hero p { font-size: 19px; line-height: 1.7; }
+.card-title { font-size: 19px; }
+.card-text { font-size: 16px; line-height: 1.75; }
+.card-attrib { font-size: 15px; }
+.field label { font-size: 17px; }
+.field input, .field select, .field textarea, input[type="text"], input[type="number"], select, textarea {
+  font-size: 18px;
+}
+.btn, button { font-size: 17px; }
+.checklist li { font-size: 17px; }
+.checklist .meta { font-size: 14px; }
+.q-text { font-size: 19px; line-height: 1.6; }
+.grid-card h3 { font-size: 19px; }
+.grid-card p { font-size: 16px; line-height: 1.6; }
+.tag { font-size: 12px; }
+.result-box h3 { font-size: 22px; }
+.result-box .stat { font-size: 40px; }
+.result-box .stat .lbl { font-size: 17px; }
+.col h2 { font-size: 19px; }
+table { font-size: 17px; }
+th { font-size: 13px; }
+details summary { font-size: 18px; }
+details p { font-size: 16px; line-height: 1.7; }
+.footer { font-size: 14px; line-height: 1.75; }
+
+/* Mobile: a notch up over old defaults too */
+@media (max-width: 700px) {
+  body { font-size: 18px; line-height: 1.65; }
+  .intro h1 { font-size: 28px; }
+  .hero h1 { font-size: 30px; }
+  .hero p { font-size: 17px; }
+  .card-title { font-size: 17px; }
+  .field input, .field select, .field textarea { font-size: 17px; }
+  .q-text { font-size: 17px; }
+  .grid-card h3 { font-size: 17px; }
+  .grid-card p { font-size: 15px; }
+}
