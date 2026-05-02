@@ -318,7 +318,7 @@ function endGame(won){
   ov.querySelector('button').textContent='REPLAY';
   const ps=ov.querySelectorAll('p');ps[0].textContent='Score: '+score+' · Round '+(roundN-1)+'/5';ps[1].textContent='Best: '+best;
 }
-function loop(){update();draw();requestAnimationFrame(loop)}
+function loop(){if(started){update();draw();}requestAnimationFrame(loop)}
 
 startBtn.onclick=()=>{ov.classList.add('hide');reset();started=true};
 addEventListener('keydown',e=>{

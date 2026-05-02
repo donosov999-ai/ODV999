@@ -307,7 +307,7 @@ function endGame(won){
   const ps=ov.querySelectorAll('p');ps[0].textContent='Score: '+score+' · Saved: '+saved+'/'+need;ps[1].textContent='Best: '+best;
 }
 
-function loop(){update();draw();requestAnimationFrame(loop)}
+function loop(){if(started){update();draw();}requestAnimationFrame(loop)}
 
 startBtn.onclick=()=>{ov.classList.add('hide');reset();started=true};
 addEventListener('keydown',e=>{if(e.key==='p'||e.key==='P')paused=!paused;if(e.key==='r'||e.key==='R'){ov.classList.add('hide');reset()}});

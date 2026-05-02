@@ -294,7 +294,7 @@ function endGame(){
   ov.querySelector('button').textContent='REPLAY';
   const ps=ov.querySelectorAll('p');ps[0].textContent='Score: '+score+' · Level: '+level;ps[1].textContent='Best: '+best;
 }
-function loop(){update();draw();requestAnimationFrame(loop)}
+function loop(){if(started){update();draw();}requestAnimationFrame(loop)}
 
 startBtn.onclick=()=>{ov.classList.add('hide');reset();started=true};
 addEventListener('keydown',e=>{keys[e.key]=true;if(e.key===' '){e.preventDefault();placeBomb()}if(e.key==='p'||e.key==='P')paused=!paused;if(e.key==='r'||e.key==='R'){ov.classList.add('hide');reset()}});
