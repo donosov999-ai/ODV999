@@ -26,9 +26,20 @@
   .sizes button { background:#1e1e4a; color:#fff; border:1px solid #333;
     padding:6px 14px; cursor:pointer; border-radius:4px; }
   .sizes button.active { background:#fbbf24; color:#000; }
+
+header.nzt-nav { padding: 8px 16px; display: flex; justify-content: space-between;
+  align-items: center; width: 100%; max-width: 720px; margin: 0 auto;
+  color: #22d3ee; font-size: 14px; font-weight: 700; font-family: 'Courier New', monospace;
+  box-sizing: border-box; }
+header.nzt-nav a { color: #fbbf24; text-decoration: none; border: 1px solid #fbbf24;
+  padding: 4px 10px; border-radius: 4px; font-family: inherit; font-size: 13px;
+  font-weight: 700; }
+header.nzt-nav a:hover { background: #fbbf24; color: #000; }
 </style>
 </head>
 <body>
+<header class="nzt-nav"><span>◀ NZT-48 · Lights Out</span><a href="../index.html">Меню</a></header>
+
   <div class="hud">
     <div>ХОДЫ <b id="moves">0</b></div>
     <div>УРОВЕНЬ <b id="level">1</b></div>

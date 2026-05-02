@@ -46,9 +46,20 @@
     color: #888;
     letter-spacing: 1px;
   }
+
+header.nzt-nav { padding: 8px 16px; display: flex; justify-content: space-between;
+  align-items: center; width: 100%; max-width: 720px; margin: 0 auto;
+  color: #22d3ee; font-size: 14px; font-weight: 700; font-family: 'Courier New', monospace;
+  box-sizing: border-box; }
+header.nzt-nav a { color: #fbbf24; text-decoration: none; border: 1px solid #fbbf24;
+  padding: 4px 10px; border-radius: 4px; font-family: inherit; font-size: 13px;
+  font-weight: 700; }
+header.nzt-nav a:hover { background: #fbbf24; color: #000; }
 </style>
 </head>
 <body>
+<header class="nzt-nav"><span>◀ NZT-48 · Пакман</span><a href="../index.html">Меню</a></header>
+
   <div class="hud">
     <div>СЧЁТ <b id="score">0</b></div>
     <div>ЖИЗНИ <b id="lives">3</b></div>
