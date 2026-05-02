@@ -135,10 +135,10 @@ function update(){
   frame++;
   // player movement
   let vx=0,vy=0;
-  if(keys.ArrowUp||keys.w||keys.W){vy=-1;player.dir=3}
-  else if(keys.ArrowDown||keys.s||keys.S){vy=1;player.dir=1}
-  else if(keys.ArrowLeft||keys.a||keys.A){vx=-1;player.dir=2}
-  else if(keys.ArrowRight||keys.d||keys.D){vx=1;player.dir=0}
+  if(keys.ArrowUp||keys.KeyW){vy=-1;player.dir=3}
+  else if(keys.ArrowDown||keys.KeyS){vy=1;player.dir=1}
+  else if(keys.ArrowLeft||keys.KeyA){vx=-1;player.dir=2}
+  else if(keys.ArrowRight||keys.KeyD){vx=1;player.dir=0}
   if(vx||vy){
     const nx=player.x+vx*player.speed,ny=player.y+vy*player.speed;
     // collision check via center
@@ -297,8 +297,8 @@ function endGame(){
 function loop(){if(started){update();draw();}requestAnimationFrame(loop)}
 
 startBtn.onclick=()=>{ov.classList.add('hide');reset();started=true};
-addEventListener('keydown',e=>{keys[e.key]=true;if(e.key===' '){e.preventDefault();placeBomb()}if(e.key==='p'||e.key==='P')paused=!paused;if(e.key==='r'||e.key==='R'){ov.classList.add('hide');reset()}});
-addEventListener('keyup',e=>{keys[e.key]=false});
+addEventListener('keydown',e=>{keys[e.key]=true;keys[e.code]=true;if(e.code==='Space'){e.preventDefault();placeBomb()}if(e.code==='KeyP')paused=!paused;if(e.code==='KeyR'){ov.classList.add('hide');reset()}});
+addEventListener('keyup',e=>{keys[e.key]=false;keys[e.code]=false});
 loop();
 })();
 </script>

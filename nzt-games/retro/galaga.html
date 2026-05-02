@@ -92,12 +92,12 @@ function update(){
   frame++;
   // player
   const sp=4;
-  if(keys.ArrowLeft||keys.a||keys.A)player.x-=sp;
-  if(keys.ArrowRight||keys.d||keys.D)player.x+=sp;
+  if(keys.ArrowLeft||keys.KeyA)player.x-=sp;
+  if(keys.ArrowRight||keys.KeyD)player.x+=sp;
   player.x=Math.max(20,Math.min(W-20,player.x));
   if(player.cool>0)player.cool--;
   if(doublefire>0)doublefire--;
-  if((keys[' ']||keys.Space)&&player.cool===0&&!player.captured){
+  if((keys.Space||keys.Space)&&player.cool===0&&!player.captured){
     if(doublefire>0){bullets.push({x:player.x-8,y:player.y-12,vy:-8});bullets.push({x:player.x+8,y:player.y-12,vy:-8});}
     else bullets.push({x:player.x,y:player.y-14,vy:-8});
     player.cool=8;
@@ -299,8 +299,8 @@ function endGame(){
 }
 
 startBtn.onclick=()=>{ov.classList.add('hide');reset();started=true};
-addEventListener('keydown',e=>{keys[e.key]=true;if(e.key===' ')e.preventDefault();if(e.key==='p'||e.key==='P')paused=!paused;if(e.key==='r'||e.key==='R'){ov.classList.add('hide');reset()}});
-addEventListener('keyup',e=>{keys[e.key]=false});
+addEventListener('keydown',e=>{keys[e.key]=true;keys[e.code]=true;if(e.code==='Space')e.preventDefault();if(e.code==='KeyP')paused=!paused;if(e.code==='KeyR'){ov.classList.add('hide');reset()}});
+addEventListener('keyup',e=>{keys[e.key]=false;keys[e.code]=false});
 loop();
 })();
 </script>

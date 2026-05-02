@@ -180,10 +180,10 @@ function update(){
   if(finishT>0)finishT--;
   // input only if alive
   if(p1.state!=='dead'&&!finishMsg){
-    if(keys.a||keys.A){p1.vx=-2.5;p1.facing=-1}
-    if(keys.d||keys.D){p1.vx=2.5;p1.facing=1}
-    if(keys.w||keys.W)tryJump(p1);
-    if(keys.s||keys.S)tryCrouch(p1);
+    if(keys.KeyA){p1.vx=-2.5;p1.facing=-1}
+    if(keys.KeyD){p1.vx=2.5;p1.facing=1}
+    if(keys.KeyW)tryJump(p1);
+    if(keys.KeyS)tryCrouch(p1);
   }
   // player attack damage check at mid-frame
   if(p1.attackT>0&&p1.attackT===10&&!p1.hasHit){
@@ -322,15 +322,15 @@ function loop(){if(started){update();draw();}requestAnimationFrame(loop)}
 
 startBtn.onclick=()=>{ov.classList.add('hide');reset();started=true};
 addEventListener('keydown',e=>{
-  keys[e.key]=true;
-  if(e.key===' '){e.preventDefault();tryAttack(p1,'h')}
-  else if(e.key==='q'||e.key==='Q')tryAttack(p1,'s');
-  else if(e.key==='e'||e.key==='E')tryBlock(p1,'h');
-  else if(e.key==='z'||e.key==='Z')tryBlock(p1,'l');
-  else if(e.key==='p'||e.key==='P')paused=!paused;
-  else if(e.key==='r'||e.key==='R'){ov.classList.add('hide');reset()}
+  keys[e.key]=true;keys[e.code]=true;
+  if(e.code==='Space'){e.preventDefault();tryAttack(p1,'h')}
+  else if(e.code==='KeyQ')tryAttack(p1,'s');
+  else if(e.code==='KeyE')tryBlock(p1,'h');
+  else if(e.code==='KeyZ')tryBlock(p1,'l');
+  else if(e.code==='KeyP')paused=!paused;
+  else if(e.code==='KeyR'){ov.classList.add('hide');reset()}
 });
-addEventListener('keyup',e=>{keys[e.key]=false});
+addEventListener('keyup',e=>{keys[e.key]=false;keys[e.code]=false});
 loop();
 })();
 </script>

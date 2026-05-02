@@ -336,7 +336,7 @@ function endGame(won){
 function loop(){if(started){update();draw();}requestAnimationFrame(loop)}
 
 startBtn.onclick=()=>{ov.classList.add('hide');reset();started=true};
-addEventListener('keydown',e=>{if(e.key==='p'||e.key==='P')paused=!paused;if(e.key==='r'||e.key==='R'){ov.classList.add('hide');reset()}});
+addEventListener('keydown',e=>{if(e.code==='KeyP')paused=!paused;if(e.code==='KeyR'){ov.classList.add('hide');reset()}});
 loop();
 })();
 </script>
