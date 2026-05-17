@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📖 Гайд + Карта + Шпаргалка · RELATION OS</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
+<style>
+.intro { padding: 28px 22px 12px; max-width: 880px; margin: 0 auto; }
+.intro h1 { font-size: 32px; margin-bottom: 8px; line-height: 1.2; }
+.intro .sub { color: var(--text-dim); font-size: 16px; }
+.section-title { font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin: 22px auto 12px; padding: 0 22px; max-width: 880px; }
+.cards-wrap { padding: 0 22px; max-width: 880px; margin: 0 auto 28px; }
+.crumb { font-size: 13px; color: var(--text-muted); padding: 10px 22px 0; max-width: 880px; margin: 0 auto; }
+.crumb a { color: var(--accent); text-decoration: none; }
+.hub-meta { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin: 0 auto 18px; max-width: 880px; font-size: 14px; line-height: 1.65; color: var(--text-dim); }
+.hub-meta b { color: var(--text); }
+.format-row { display: flex; gap: 14px; flex-wrap: wrap; padding: 0 22px; max-width: 880px; margin: 0 auto; }
+.format-card { flex: 1; min-width: 240px; background: var(--bg-elev); border: 2px solid var(--border); border-radius: 14px; padding: 22px; text-decoration: none; color: inherit; transition: border-color .2s, transform .2s; }
+.format-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.format-card .ic { font-size: 36px; margin-bottom: 10px; }
+.format-card h3 { font-size: 20px; color: var(--text); margin: 0 0 6px; }
+.format-card .when { font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 8px; }
+.format-card p { font-size: 14px; color: var(--text-dim); line-height: 1.55; }
+.format-card .stat { font-size: 11px; color: var(--text-muted); margin-top: 10px; font-family: var(--mono); }
+</style>
+</head>
+<body data-theme="light">
+
+<nav class="topnav">
+  <div class="topnav-brand">⌂ RELATION OS</div>
+  <a class="topnav-select" href="../index.html" style="color:var(--text); text-decoration:none; padding: 6px 14px; border:1px solid var(--border); border-radius:8px;">← На главную</a>
+</nav>
+
+<div class="crumb"><a href="../index.html">RELATION OS</a> · 📖 Гайд</div>
+
+<div class="intro">
+  <h1>📖 Гайд по отношениям</h1>
+  <p class="sub">Один и тот же контент в трёх форматах — выбирай как удобнее прямо сейчас.</p>
+</div>
+
+<div class="cards-wrap">
+  <div class="hub-meta">
+    <b>Что это:</b> синтез 22 книг про отношения (Готтман, Перель, Tatkin, Bowlby и др.) — без воды, только то что подтверждено исследованиями и работает на практике.
+    <br><br>
+    <b>Какой формат когда:</b> «Полный» — для чтения вечером с чаем. «Карта» — когда хочется визуально увидеть структуру. «Шпаргалка» — когда уже прочёл, нужен быстрый чек-лист в моменте.
+  </div>
+</div>
+
+<div class="format-row">
+  <a class="format-card" href="relation-guide.html">
+    <div class="ic">📖</div>
+    <div class="when">для чтения</div>
+    <h3>Полный гайд</h3>
+    <p>Длинная версия. Контекст, нюансы, истории, источники. Читаешь — понимаешь почему так работает.</p>
+    <div class="stat">~30–45 мин чтения</div>
+  </a>
+  <a class="format-card" href="relation-os-overview.html">
+    <div class="ic">🗺</div>
+    <div class="when">визуально</div>
+    <h3>Карта 22 книг</h3>
+    <p>Интерактивная схема. 5 истин · 3 столпа · 22 источника. Видишь как всё связано на одном экране.</p>
+    <div class="stat">~10 мин навигации</div>
+  </a>
+  <a class="format-card" href="relation-os-cheatsheet.html">
+    <div class="ic">📋</div>
+    <div class="when">в моменте</div>
+    <h3>Шпаргалка NZT-48</h3>
+    <p>7 коротких блоков: что делать ВО ВРЕМЯ ссоры, ПОСЛЕ, ежедневно, биохимия, цифровая гигиена, сегодня вечером, кризис.</p>
+    <div class="stat">~3 мин сканирования</div>
+  </a>
+</div>
+
+<div class="cards-wrap" style="margin-top: 22px;">
+  <div class="hub-meta">
+    <b>Рекомендуемый порядок первого знакомства:</b><br>
+    1. Полный гайд (один раз, целиком) → понимаешь концепцию<br>
+    2. Карта → закрепляешь структуру<br>
+    3. Шпаргалка → используешь ежедневно в моменте
+    <br><br>
+    После этого вернёшься на главную и пройдёшь тесты («🪞 Узнай себя», «🔗 Привязанность», 4-всадника) — уже с пониманием контекста.
+  </div>
+</div>
+
+</body>
+</html>

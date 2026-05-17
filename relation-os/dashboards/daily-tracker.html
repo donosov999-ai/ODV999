@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📊 Daily Relationship Tracker · RELATION OS</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
+<style>
+.intro { padding: 28px 22px 12px; max-width: 880px; margin: 0 auto; }
+.intro h1 { font-size: 30px; margin-bottom: 8px; line-height: 1.2; }
+.intro .sub { color: var(--text-dim); font-size: 16px; }
+.crumb { font-size: 13px; color: var(--text-muted); padding: 10px 22px 0; max-width: 880px; margin: 0 auto; }
+.crumb a { color: var(--accent); text-decoration: none; }
+.wrap { padding: 0 22px; max-width: 880px; margin: 0 auto 28px; }
+
+.date-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; margin-bottom: 18px; border-bottom: 1px solid var(--border); }
+.date-row .today { font-size: 18px; font-weight: 700; color: var(--text); }
+.date-row .meta { font-size: 13px; color: var(--text-muted); font-family: var(--mono); }
+.date-row .nav-btn { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px; color: var(--text); margin: 0 4px; }
+.date-row .nav-btn:hover { border-color: var(--accent); }
+
+.tracker { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; border-left: 4px solid var(--accent); }
+.tracker.m6h { border-left-color: var(--blue); }
+.tracker.habits { border-left-color: var(--green); }
+.tracker.ratio { border-left-color: var(--amber); }
+.tracker.phub { border-left-color: var(--red); }
+.tracker h2 { font-size: 17px; color: var(--text); margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+.tracker .src { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 14px; font-family: var(--mono); }
+
+/* M6H — checklist */
+.m6h-list { display: flex; flex-direction: column; gap: 8px; }
+.m6h-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: background .15s, border-color .15s; user-select: none; }
+.m6h-item:hover { border-color: var(--blue); }
+.m6h-item.done { background: rgba(9,105,218,.06); border-color: var(--blue); }
+[data-theme="dark"] .m6h-item.done { background: rgba(88,166,255,.1); }
+.m6h-item input { width: 18px; height: 18px; accent-color: var(--blue); cursor: pointer; }
+.m6h-item .lbl { flex: 1; font-size: 14px; color: var(--text); line-height: 1.4; }
+.m6h-item .min { font-size: 12px; color: var(--text-muted); font-family: var(--mono); }
+.m6h-progress { margin-top: 12px; font-size: 13px; color: var(--text-dim); }
+.m6h-progress .bar { display: inline-block; width: 200px; height: 8px; background: var(--bg-card); border-radius: 4px; overflow: hidden; vertical-align: middle; margin: 0 8px; border: 1px solid var(--border); }
+.m6h-progress .fill { display: block; height: 100%; background: var(--blue); transition: width .3s; }
+
+/* Habits */
+.habits-list { display: flex; flex-direction: column; gap: 6px; }
+.habit { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; user-select: none; }
+.habit:hover { border-color: var(--green); }
+.habit.done { background: rgba(26,127,55,.06); border-color: var(--green); }
+[data-theme="dark"] .habit.done { background: rgba(63,185,80,.1); }
+.habit input { accent-color: var(--green); cursor: pointer; }
+.habit .lbl { flex: 1; font-size: 14px; }
+.habit .streak { font-size: 11px; color: var(--green); font-weight: 700; font-family: var(--mono); }
+
+/* Ratio counter */
+.ratio-controls { display: flex; gap: 14px; align-items: center; }
+.ratio-btn { flex: 1; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text); }
+.ratio-btn.pos { border-color: var(--green); color: var(--green); }
+.ratio-btn.neg { border-color: var(--red); color: var(--red); }
+.ratio-btn:hover { background: var(--bg-elev); }
+.ratio-stat { margin-top: 14px; font-size: 14px; color: var(--text-dim); display: flex; gap: 18px; flex-wrap: wrap; }
+.ratio-stat b { font-family: var(--mono); font-size: 16px; }
+.ratio-stat .ok { color: var(--green); }
+.ratio-stat .bad { color: var(--red); }
+
+/* Phubbing */
+.phub-controls { display: flex; gap: 10px; align-items: center; }
+.phub-controls input { width: 80px; padding: 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 16px; font-family: var(--mono); text-align: center; }
+.phub-controls label { font-size: 14px; color: var(--text-dim); }
+
+/* Footer history */
+.history-link { display: inline-block; margin-top: 6px; font-size: 12px; color: var(--accent); text-decoration: none; }
+.history-link:hover { text-decoration: underline; }
+
+.legacy-link { display: block; margin-top: 18px; padding: 12px 16px; background: var(--bg-elev); border: 1px dashed var(--border); border-radius: 8px; font-size: 13px; color: var(--text-muted); text-align: center; text-decoration: none; }
+.legacy-link:hover { color: var(--accent); border-color: var(--accent); }
+</style>
+</head>
+<body data-theme="light">
+
+<nav class="topnav">
+  <div class="topnav-brand">⌂ RELATION OS</div>
+  <a class="topnav-select" href="../index.html" style="color:var(--text); text-decoration:none; padding: 6px 14px; border:1px solid var(--border); border-radius:8px;">← На главную</a>
+</nav>
+
+<div class="crumb"><a href="../index.html">RELATION OS</a> · 📊 Daily Tracker</div>
+
+<div class="intro">
+  <h1>📊 Daily Tracker</h1>
+  <p class="sub">4 главные ежедневные практики в одном экране. Магия в стабильности — 60 дней подряд &gt; 1 час раз в неделю.</p>
+</div>
+
+<div class="wrap">
+  <div class="date-row">
+    <button class="nav-btn" onclick="changeDay(-1)">←</button>
+    <div>
+      <div class="today" id="dateLabel">—</div>
+      <div class="meta" id="dateISO">—</div>
+    </div>
+    <button class="nav-btn" onclick="changeDay(+1)">→</button>
+  </div>
+
+  <!-- M6H -->
+  <div class="tracker m6h">
+    <h2>💞 Magic 6 Hours (Готтман)</h2>
+    <div class="src">6 категорий контакта в неделю · отметь что сделал сегодня</div>
+    <div class="m6h-list" id="m6hList"></div>
+    <div class="m6h-progress">
+      <span id="m6hProgressLbl">0 / 6 сегодня</span>
+      <span class="bar"><span class="fill" id="m6hFill" style="width:0%"></span></span>
+      <span id="m6hWeek">неделя: 0 / 6 категорий</span>
+    </div>
+  </div>
+
+  <!-- Daily Habits -->
+  <div class="tracker habits">
+    <h2>🌱 Daily Habits (Fogg B=MAP)</h2>
+    <div class="src">5 микропривычек · стрик до устойчивости (~60-90 дней)</div>
+    <div class="habits-list" id="habitsList"></div>
+  </div>
+
+  <!-- Ratio -->
+  <div class="tracker ratio">
+    <h2>⚖ 5:1 Magic Ratio</h2>
+    <div class="src">Готтман: на 1 негативное взаимодействие нужно 5 позитивных · считай за день</div>
+    <div class="ratio-controls">
+      <button class="ratio-btn pos" onclick="ratioAdd('+')">+ Позитив</button>
+      <button class="ratio-btn neg" onclick="ratioAdd('-')">− Негатив</button>
+      <button class="ratio-btn" onclick="ratioReset()" style="flex:0; padding: 14px 16px;">↻</button>
+    </div>
+    <div class="ratio-stat">
+      <span>Позитив: <b class="ok" id="ratioPos">0</b></span>
+      <span>Негатив: <b class="bad" id="ratioNeg">0</b></span>
+      <span>Ratio: <b id="ratioVal">—</b></span>
+      <span id="ratioVerdict"></span>
+    </div>
+  </div>
+
+  <!-- Phubbing -->
+  <div class="tracker phub">
+    <h2>📵 Phubbing (телефон при партнёре)</h2>
+    <div class="src">Сколько раз сегодня залез в телефон когда партнёр обращался · цель → 0</div>
+    <div class="phub-controls">
+      <button class="ratio-btn neg" style="flex:0; padding: 10px 16px;" onclick="phubAdd(-1)">−</button>
+      <input type="number" id="phubVal" min="0" value="0" onchange="phubSet()">
+      <button class="ratio-btn neg" style="flex:0; padding: 10px 16px;" onclick="phubAdd(+1)">+</button>
+      <label id="phubWeek" style="margin-left: auto;">за неделю: 0</label>
+    </div>
+  </div>
+
+  <!-- Legacy links -->
+  <a class="legacy-link" href="magic-6-hours-tracker.html">→ Старая страница Magic 6 Hours (история, графики)</a>
+  <a class="legacy-link" href="daily-habits.html">→ Старая страница Daily Habits (детальные настройки)</a>
+  <a class="legacy-link" href="magic-ratio-counter.html">→ Старая страница 5:1 счётчик</a>
+  <a class="legacy-link" href="phubbing-tracker.html">→ Старая страница Phubbing</a>
+</div>
+
+<script>
+const LS_KEY = 'relos_daily_v1';
+
+const M6H_ITEMS = [
+  { id: 'parting',  lbl: 'Расставание утром: спросил/спросила что у партнёра сегодня',  min: '2 мин' },
+  { id: 'reunion',  lbl: 'Встреча вечером: 6 мин слушал/слушала без телефона',          min: '6 мин' },
+  { id: 'affection',lbl: 'Физический контакт: объятие 20+ сек, поцелуй',                min: '5 мин' },
+  { id: 'admire',   lbl: 'Признание/благодарность: сказал/сказала что ценю',            min: '1 мин' },
+  { id: 'date',     lbl: '1 раз/нед — настоящий разговор/свидание 2 часа',              min: '2 ч' },
+  { id: 'state',    lbl: '1 раз/нед — State of the Union (1 час)',                      min: '1 ч' },
+];
+
+const HABITS = [
+  { id: 'h1', lbl: 'Не залазить в телефон первые 30 мин утром' },
+  { id: 'h2', lbl: '1 искренний комплимент партнёру' },
+  { id: 'h3', lbl: 'Спросить про чувства (не «как день?», а «что чувствовал?»)' },
+  { id: 'h4', lbl: 'Поцелуй 6+ сек на прощание/встречу' },
+  { id: 'h5', lbl: 'Перед сном 5 мин разговора в кровати без экранов' },
+];
+
+let viewDate = new Date();
+let data = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+
+function save() {
+  localStorage.setItem(LS_KEY, JSON.stringify(data));
+}
+
+function dayKey(d) {
+  return d.toISOString().slice(0, 10);
+}
+
+function getDay(d) {
+  const k = dayKey(d);
+  if (!data[k]) data[k] = { m6h: {}, habits: {}, ratio_pos: 0, ratio_neg: 0, phub: 0 };
+  return data[k];
+}
+
+function changeDay(delta) {
+  viewDate.setDate(viewDate.getDate() + delta);
+  render();
+}
+
+function render() {
+  const day = getDay(viewDate);
+  document.getElementById('dateLabel').textContent =
+    viewDate.toLocaleDateString('ru-RU', { weekday: 'long', day: '2-digit', month: 'long' });
+  document.getElementById('dateISO').textContent = dayKey(viewDate);
+
+  // M6H
+  const m6hEl = document.getElementById('m6hList');
+  m6hEl.innerHTML = '';
+  M6H_ITEMS.forEach(it => {
+    const done = !!day.m6h[it.id];
+    const div = document.createElement('div');
+    div.className = 'm6h-item' + (done ? ' done' : '');
+    div.innerHTML = `<input type="checkbox" ${done ? 'checked' : ''}><div class="lbl">${it.lbl}</div><div class="min">${it.min}</div>`;
+    div.onclick = () => {
+      day.m6h[it.id] = !day.m6h[it.id];
+      save(); render();
+    };
+    m6hEl.appendChild(div);
+  });
+  const m6hDoneToday = M6H_ITEMS.filter(it => day.m6h[it.id]).length;
+  document.getElementById('m6hProgressLbl').textContent = `${m6hDoneToday} / ${M6H_ITEMS.length} сегодня`;
+  document.getElementById('m6hFill').style.width = (m6hDoneToday / M6H_ITEMS.length * 100) + '%';
+  // weekly count of unique categories touched
+  const weekStart = new Date(viewDate); weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+  const weekKeys = new Set();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart); d.setDate(d.getDate() + i);
+    const dk = dayKey(d);
+    if (data[dk]) Object.keys(data[dk].m6h || {}).forEach(k => { if (data[dk].m6h[k]) weekKeys.add(k); });
+  }
+  document.getElementById('m6hWeek').textContent = `неделя: ${weekKeys.size} / ${M6H_ITEMS.length} категорий`;
+
+  // Habits
+  const habEl = document.getElementById('habitsList');
+  habEl.innerHTML = '';
+  HABITS.forEach(h => {
+    const done = !!day.habits[h.id];
+    const streak = computeStreak(h.id);
+    const div = document.createElement('div');
+    div.className = 'habit' + (done ? ' done' : '');
+    div.innerHTML = `<input type="checkbox" ${done ? 'checked' : ''}><div class="lbl">${h.lbl}</div><div class="streak">🔥 ${streak}д</div>`;
+    div.onclick = () => {
+      day.habits[h.id] = !day.habits[h.id];
+      save(); render();
+    };
+    habEl.appendChild(div);
+  });
+
+  // Ratio
+  document.getElementById('ratioPos').textContent = day.ratio_pos;
+  document.getElementById('ratioNeg').textContent = day.ratio_neg;
+  const ratio = day.ratio_neg === 0 ? (day.ratio_pos > 0 ? '∞' : '—') : (day.ratio_pos / day.ratio_neg).toFixed(1);
+  document.getElementById('ratioVal').textContent = ratio;
+  const verdEl = document.getElementById('ratioVerdict');
+  if (day.ratio_pos === 0 && day.ratio_neg === 0) {
+    verdEl.textContent = '';
+  } else if (day.ratio_neg === 0 || day.ratio_pos / day.ratio_neg >= 5) {
+    verdEl.innerHTML = '<span class="ok">✓ здоровый коридор</span>';
+  } else {
+    verdEl.innerHTML = '<span class="bad">⚠ ниже 5:1</span>';
+  }
+
+  // Phubbing
+  document.getElementById('phubVal').value = day.phub;
+  const weekPhub = sumWeek('phub');
+  document.getElementById('phubWeek').textContent = `за неделю: ${weekPhub}`;
+}
+
+function computeStreak(habitId) {
+  let s = 0;
+  let d = new Date(viewDate);
+  while (true) {
+    const dk = dayKey(d);
+    if (data[dk] && data[dk].habits && data[dk].habits[habitId]) {
+      s++;
+      d.setDate(d.getDate() - 1);
+    } else break;
+  }
+  return s;
+}
+
+function sumWeek(field) {
+  const weekStart = new Date(viewDate); weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+  let sum = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart); d.setDate(d.getDate() + i);
+    const dk = dayKey(d);
+    if (data[dk] && typeof data[dk][field] === 'number') sum += data[dk][field];
+  }
+  return sum;
+}
+
+function ratioAdd(sign) {
+  const day = getDay(viewDate);
+  if (sign === '+') day.ratio_pos++;
+  else day.ratio_neg++;
+  save(); render();
+}
+
+function ratioReset() {
+  const day = getDay(viewDate);
+  day.ratio_pos = 0; day.ratio_neg = 0;
+  save(); render();
+}
+
+function phubAdd(delta) {
+  const day = getDay(viewDate);
+  day.phub = Math.max(0, day.phub + delta);
+  save(); render();
+}
+
+function phubSet() {
+  const day = getDay(viewDate);
+  day.phub = Math.max(0, parseInt(document.getElementById('phubVal').value, 10) || 0);
+  save(); render();
+}
+
+render();
+</script>
+
+</body>
+</html>

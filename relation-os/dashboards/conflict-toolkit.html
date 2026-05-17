@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🛠 После ссоры · Toolkit · RELATION OS</title>
+<link rel="stylesheet" href="../assets/dashboard-shared.css">
+<style>
+.intro { padding: 28px 22px 12px; max-width: 880px; margin: 0 auto; }
+.intro h1 { font-size: 32px; margin-bottom: 8px; line-height: 1.2; }
+.intro .sub { color: var(--text-dim); font-size: 16px; }
+.crumb { font-size: 13px; color: var(--text-muted); padding: 10px 22px 0; max-width: 880px; margin: 0 auto; }
+.crumb a { color: var(--accent); text-decoration: none; }
+.wrap { padding: 0 22px; max-width: 880px; margin: 0 auto 28px; }
+.hub-meta { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin: 0 auto 18px; max-width: 880px; font-size: 14px; line-height: 1.65; color: var(--text-dim); }
+.hub-meta b { color: var(--text); }
+
+.dt-question { background: var(--bg-elev); border: 2px solid var(--accent); border-radius: 16px; padding: 22px 24px; margin-bottom: 18px; }
+.dt-question .q { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 14px; line-height: 1.4; }
+.dt-options { display: flex; flex-direction: column; gap: 10px; }
+.dt-option { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; cursor: pointer; transition: border-color .15s, background .15s; text-align: left; font-size: 15px; color: var(--text); }
+.dt-option:hover { border-color: var(--accent); background: rgba(207,34,46,.05); }
+[data-theme="dark"] .dt-option:hover { background: rgba(248,81,73,.1); }
+.dt-option .arrow { float: right; color: var(--text-muted); margin-left: 10px; }
+
+.tool-card { background: var(--bg-elev); border-left: 4px solid var(--accent); border-radius: 12px; padding: 22px 24px; margin-bottom: 16px; display: block; text-decoration: none; color: inherit; transition: transform .2s; }
+.tool-card:hover { transform: translateX(2px); }
+.tool-card.crisis { border-left-color: var(--red); background: linear-gradient(90deg, rgba(207,34,46,.06), var(--bg-elev) 70%); }
+.tool-card.kalm { border-left-color: var(--blue); }
+.tool-card.detect { border-left-color: var(--purple); }
+.tool-card.after { border-left-color: var(--green); }
+.tool-card h3 { font-size: 19px; color: var(--text); margin: 0 0 6px; }
+.tool-card .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--bg-card); color: var(--text-dim); margin-bottom: 8px; font-weight: 600; letter-spacing: .3px; }
+.tool-card p { font-size: 14px; color: var(--text-dim); line-height: 1.55; margin: 0; }
+.tool-card .step { display: inline-block; background: var(--accent); color: #fff; font-size: 12px; padding: 2px 8px; border-radius: 10px; font-weight: 700; margin-right: 6px; }
+
+.back-btn { font-size: 13px; color: var(--accent); background: none; border: none; cursor: pointer; padding: 8px 0; }
+.back-btn:hover { text-decoration: underline; }
+
+.scenario { display: none; }
+.scenario.active { display: block; }
+</style>
+</head>
+<body data-theme="light">
+
+<nav class="topnav">
+  <div class="topnav-brand">⌂ RELATION OS</div>
+  <a class="topnav-select" href="../index.html" style="color:var(--text); text-decoration:none; padding: 6px 14px; border:1px solid var(--border); border-radius:8px;">← На главную</a>
+</nav>
+
+<div class="crumb"><a href="../index.html">RELATION OS</a> · 🛠 После ссоры</div>
+
+<div class="intro">
+  <h1>🛠 После ссоры — что делать прямо сейчас</h1>
+  <p class="sub">Decision tree. Ответь на 1-2 вопроса — получи нужный инструмент.</p>
+</div>
+
+<div class="wrap">
+
+  <!-- START -->
+  <div class="scenario active" id="start">
+    <div class="dt-question">
+      <div class="q">Что происходит прямо сейчас?</div>
+      <div class="dt-options">
+        <button class="dt-option" onclick="show('crisis')">
+          ⚠ Угрозы, физическое насилие, мысли о суициде <span class="arrow">→</span>
+        </button>
+        <button class="dt-option" onclick="show('mid-fight')">
+          🔥 Сейчас ссоримся, эмоции на пределе <span class="arrow">→</span>
+        </button>
+        <button class="dt-option" onclick="show('post-fight')">
+          😔 Ссора уже была. Прошло от часа до пары дней <span class="arrow">→</span>
+        </button>
+        <button class="dt-option" onclick="show('want-say')">
+          💬 Хочу сказать важное так, чтобы не превратилось в новую ссору <span class="arrow">→</span>
+        </button>
+        <button class="dt-option" onclick="show('partner-labels')">
+          🪞 Партнёр кидает ярлыки/диагнозы («ты нарцисс», «у тебя манипуляции») <span class="arrow">→</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CRISIS -->
+  <div class="scenario" id="crisis">
+    <button class="back-btn" onclick="show('start')">← к выбору</button>
+    <a class="tool-card crisis" href="crisis-navigator.html">
+      <span class="tag">⚠ КРИЗИС</span>
+      <h3>Кризис-навигатор</h3>
+      <p>Не для откладывания. Список горячих линий (детский телефон доверия, экстренная психологическая помощь, скорая), маркеры когда нужно ехать в больницу, что говорить если партнёр угрожает суицидом.</p>
+    </a>
+    <div class="hub-meta">
+      <b>Базовое правило:</b> при физической угрозе или мыслях о суициде — сначала безопасность, потом всё остальное. Не пытайся «решить» ссору в этом состоянии.
+    </div>
+  </div>
+
+  <!-- MID-FIGHT -->
+  <div class="scenario" id="mid-fight">
+    <button class="back-btn" onclick="show('start')">← к выбору</button>
+    <div class="dt-question">
+      <div class="q">Можешь физически выйти на 20 минут?</div>
+      <div class="dt-options">
+        <button class="dt-option" onclick="show('cool-down')">
+          Да, могу уйти/выйти на улицу <span class="arrow">→</span>
+        </button>
+        <button class="dt-option" onclick="show('want-say')">
+          Нет, надо сказать сейчас <span class="arrow">→</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="scenario" id="cool-down">
+    <button class="back-btn" onclick="show('start')">← к выбору</button>
+    <div class="hub-meta">
+      <b>Готтман: flooding rule.</b> При пульсе &gt;100 уд/мин кора отключается, говоришь не ты — говорит лимбическая система. Любое сказанное в этом состоянии повышает разрушение в 7 раз.
+      <br><br>
+      <b>Действие:</b> скажи «Мне нужно 20 минут, я вернусь продолжить». Уйди (комната/улица/душ). НЕ продолжай мысленно ссору — это поддерживает физиологию. Дыши 4-7-8, посмотри в окно, погладь кота. Через 20 мин возвращайся и используй ↓
+    </div>
+    <a class="tool-card kalm" href="i-message-generator.html">
+      <span class="tag">когда вернулся</span>
+      <h3>💬 Я-сообщение генератор</h3>
+      <p>Шаблон «Я чувствую X, когда Y, потому что Z. Хочу W». Безопасный формат высказать что было больно — не атакуя.</p>
+    </a>
+  </div>
+
+  <!-- POST-FIGHT -->
+  <div class="scenario" id="post-fight">
+    <button class="back-btn" onclick="show('start')">← к выбору</button>
+    <a class="tool-card after" href="aftermath-assistant.html">
+      <span class="tag">основной инструмент</span>
+      <h3><span class="step">5 шагов</span>Aftermath of a Fight (Готтман)</h3>
+      <p>Пошаговое восстановление: 1) чувства каждого, 2) реальность каждого, 3) триггеры из детства, 4) принятие ответственности, 5) конструктивный план. ~45–60 мин совместно.</p>
+    </a>
+    <div class="hub-meta">
+      <b>Когда делать:</b> через 12–48 часов после ссоры. Не сразу — оба должны быть calm. Не позже недели — забудете детали, разговор обесценится.
+    </div>
+  </div>
+
+  <!-- WANT TO SAY -->
+  <div class="scenario" id="want-say">
+    <button class="back-btn" onclick="show('start')">← к выбору</button>
+    <a class="tool-card kalm" href="i-message-generator.html">
+      <span class="tag">основной</span>
+      <h3>💬 Я-сообщение генератор</h3>
+      <p>«Я чувствую X, когда Y, потому что Z. Хочу W». Превращает «ты опять...» в формат который партнёр услышит, а не защитится.</p>
+    </a>
+    <div class="hub-meta">
+      <b>Совет:</b> прежде чем говорить — запиши Я-сообщение в текст. Перечитай через 5 мин. Если звучит как обвинение, переписывай пока не станет о СВОИХ чувствах. Только потом говори.
+    </div>
+  </div>
+
+  <!-- PARTNER USES LABELS -->
+  <div class="scenario" id="partner-labels">
+    <button class="back-btn" onclick="show('start')">← к выбору</button>
+    <a class="tool-card detect" href="therapy-speak-detector.html">
+      <span class="tag">детектор манипуляций</span>
+      <h3>🪞 Therapy-speak детектор</h3>
+      <p>«Ты газлайтишь», «ты нарцисс», «у тебя избегающий тип» — терапевтические термины часто используются как ярлык, а не диагноз. Чек-лист: это реальное наблюдение или попытка обесценить?</p>
+    </a>
+    <div class="hub-meta">
+      <b>База:</b> диагноз ставит только профильный специалист после серии встреч. «Ты нарцисс» от партнёра во время ссоры — это эмоциональное оружие, а не валидный анализ. Не оправдывайся, не доказывай — переведи разговор на конкретное поведение.
+    </div>
+  </div>
+
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.scenario').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>
