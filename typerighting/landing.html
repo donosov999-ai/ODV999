@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TypeRIGHTing — бесплатный тренажёр слепой печати (EN + RU)</title>
-<meta name="description" content="TypeRIGHTing — бесплатный тренажёр слепой печати на русском и английском: 4846 упражнений, интерактивная клавиатура с подсказками, детский игровой режим, тест скорости печати с сертификатом. Работает офлайн на Windows, macOS, Linux и в браузере." />
+<title>TypeRIGHTing — бесплатный тренажёр слепой печати на 7 языках</title>
+<meta name="description" content="TypeRIGHTing — бесплатный тренажёр слепой печати на 7 языках (RU·EN·ES·DE·FR·IT·PT): структурированный курс с нуля, AI-обучение по слабым клавишам, соревнование с онлайн-рейтингом, тест скорости с сертификатом, литература (По, Пушкин, Шекспир, Данте). Офлайн на Windows, macOS, Linux и в браузере." />
 <link rel="canonical" href="https://donosov999-ai.github.io/ODV999/typerighting/landing.html" />
 <!-- Open Graph -->
 <meta property="og:type" content="website" />
-<meta property="og:title" content="TypeRIGHTing — тренажёр слепой печати (EN + RU)" />
-<meta property="og:description" content="4846 упражнений, интерактивная клавиатура, детский режим, тест скорости с сертификатом. Бесплатно, офлайн, для всех платформ." />
+<meta property="og:title" content="TypeRIGHTing — тренажёр слепой печати на 7 языках" />
+<meta property="og:description" content="Курс с нуля, AI-обучение по слабым клавишам, соревнование с онлайн-рейтингом, тест с сертификатом, литература на 7 языках. Бесплатно, офлайн, для всех платформ." />
 <meta property="og:url" content="https://donosov999-ai.github.io/ODV999/typerighting/landing.html" />
 <meta property="og:image" content="https://donosov999-ai.github.io/ODV999/typerighting/images/keyboard.jpg" />
 <meta name="twitter:card" content="summary_large_image" />
@@ -45,7 +45,7 @@
   h1{font-size:clamp(34px,6vw,58px);font-weight:850;letter-spacing:-1.5px;line-height:1.05}
   h1 .grad{background:linear-gradient(90deg,var(--accent),#5b8def);
     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-  .lead{font-size:clamp(16px,2.4vw,20px);color:var(--muted);max-width:620px;
+  .lead{font-size:clamp(16px,2.4vw,20px);color:var(--muted);max-width:660px;
     margin:20px auto 0}
   .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:34px}
   .btn{padding:15px 30px;border-radius:13px;font-weight:750;font-size:16px;
@@ -55,10 +55,16 @@
   .btn-ghost{background:var(--surface);color:var(--text);border-color:var(--border)}
   .btn-ghost:hover{border-color:var(--accent);transform:translateY(-2px)}
 
+  /* lang chips */
+  .langs{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:30px}
+  .chip{background:var(--surface);border:1px solid var(--border);border-radius:999px;
+    padding:7px 15px;font-size:14px;font-weight:650;box-shadow:var(--shadow)}
+  .chip .fl{margin-right:6px}
+
   /* stats */
-  .stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:48px}
+  .stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:42px}
   .stat{background:var(--surface);border:1px solid var(--border);border-radius:16px;
-    padding:18px 26px;min-width:130px;box-shadow:var(--shadow)}
+    padding:18px 26px;min-width:128px;box-shadow:var(--shadow)}
   .stat b{display:block;font-size:30px;font-weight:850;color:var(--accent)}
   .stat span{font-size:13px;color:var(--muted)}
 
@@ -108,8 +114,6 @@
   footer{border-top:1px solid var(--border);padding:38px 0;text-align:center;
     color:var(--muted);font-size:13.5px;margin-top:40px}
   footer b{color:var(--text)}
-  .conf{display:inline-block;margin-top:8px;background:var(--surface2);
-    border:1px solid var(--border);border-radius:8px;padding:4px 12px;font-size:12px}
 </style>
 </head>
 <body>
@@ -120,79 +124,94 @@
 </div></nav>
 
 <header class="hero"><div class="wrap">
-  <div class="badge">Бесплатно · Офлайн · Русский и английский</div>
-  <h1>Научись печатать<br><span class="grad">вслепую</span> — играя</h1>
-  <p class="lead">Тренажёр слепой печати с интерактивной клавиатурой-подсказкой, режимом без остановок и детской игрой с уровнями. 4846 упражнений, тест скорости с сертификатом. Работает прямо в браузере или офлайн на компьютере.</p>
+  <div class="badge">Бесплатно · Офлайн · 7 языков</div>
+  <h1>Научись печатать<br><span class="grad">вслепую</span> — на 7 языках</h1>
+  <p class="lead">Структурированный курс с нуля, AI-обучение, которое находит твои слабые клавиши, соревнование с онлайн-рейтингом и тест скорости с сертификатом. Интерфейс и упражнения на семи языках — программа сама определяет язык твоей системы. Работает в браузере и офлайн на компьютере.</p>
   <div class="cta-row">
     <a class="btn btn-primary" href="./index.html">▶ Открыть в браузере</a>
     <a class="btn btn-ghost" href="#download">⬇ Скачать на компьютер</a>
   </div>
 
+  <div class="langs">
+    <span class="chip"><span class="fl">🇷🇺</span>Русский</span>
+    <span class="chip"><span class="fl">🇬🇧</span>English</span>
+    <span class="chip"><span class="fl">🇪🇸</span>Español</span>
+    <span class="chip"><span class="fl">🇩🇪</span>Deutsch</span>
+    <span class="chip"><span class="fl">🇫🇷</span>Français</span>
+    <span class="chip"><span class="fl">🇮🇹</span>Italiano</span>
+    <span class="chip"><span class="fl">🇵🇹</span>Português</span>
+  </div>
+
   <div class="stats">
+    <div class="stat"><b>7</b><span>языков</span></div>
     <div class="stat"><b>4846</b><span>упражнений</span></div>
-    <div class="stat"><b>33</b><span>уровня детям</span></div>
-    <div class="stat"><b>3</b><span>профиля</span></div>
-    <div class="stat"><b>EN·RU</b><span>два языка</span></div>
+    <div class="stat"><b>6</b><span>режимов</span></div>
+    <div class="stat"><b>★</b><span>онлайн-рейтинг</span></div>
     <div class="stat"><b>0 ₽</b><span>навсегда</span></div>
   </div>
 
   <div class="shot">
     <img src="./images/keyboard.jpg" alt="Интерактивная клавиатура TypeRIGHTing: раскладка QWERTY/ЙЦУКЕН со стрелками правильного движения пальцев" loading="lazy" />
   </div>
-  <p class="shot-cap">Та самая клавиатурная схема со стрелками движения пальцев — теперь подсказывает следующую клавишу в реальном времени</p>
+  <p class="shot-cap">Та самая клавиатурная схема со стрелками движения пальцев — теперь подсвечивает следующую клавишу и зоны пальцев в реальном времени</p>
 </div></header>
 
 <section><div class="wrap">
   <div class="sec-head">
     <h2>Что внутри</h2>
-    <p>Всё, что нужно для постановки слепого набора — и ничего лишнего</p>
+    <p>От первого нажатия до беглого набора сложных литературных текстов</p>
   </div>
   <div class="grid">
+    <div class="card"><div class="ic">🌍</div><h3>Семь языков</h3>
+      <p>Интерфейс и упражнения на русском, английском, испанском, немецком, французском, итальянском и португальском. Язык определяется по системе автоматически.</p></div>
     <div class="card"><div class="ic">⌨️</div><h3>Интерактивная клавиатура</h3>
-      <p>Подсвечивает следующую клавишу, нужный Shift и стрелку движения пальца от домашнего ряда. Раскладка QWERTY ↔ ЙЦУКЕН из классического тренажёра.</p></div>
-    <div class="card"><div class="ic">📚</div><h3>4 банка упражнений</h3>
-      <p>Слова в предложениях, англо-русские пары с переводом, набор по буквам и стихи по строфам. От первых нажатий до беглого текста.</p></div>
-    <div class="card"><div class="ic">🌊</div><h3>Режим «Поток»</h3>
-      <p>Упражнения идут одно за другим без пауз и экранов «готово» — как в классической «Стамине». Темп не сбивается, статистика копится за всю серию.</p></div>
+      <p>Подсвечивает следующую клавишу, нужный Shift, зоны пальцев и стрелку движения от домашнего ряда. Буква Ё стоит там, где она реально на Mac и Windows.</p></div>
+    <div class="card"><div class="ic">📚</div><h3>Курс с нуля</h3>
+      <p>Уроки по нарастающей: от домашнего ряда (fj dk sl) до заглавных, цифр, знаков и целых предложений. Карта с замками и звёздами за точность.</p></div>
+    <div class="card"><div class="ic">🤖</div><h3>AI-обучение</h3>
+      <p>Генерирует связные слова, насыщенные именно теми буквами, что тебе даются хуже всего. Метрики: Мастерство, Темп и Ритмичность нажатий.</p></div>
+    <div class="card"><div class="ic">🎯</div><h3>Слабые клавиши + карта тепла</h3>
+      <p>Программа сама находит проблемные клавиши по статистике ошибок, раскрашивает их на схеме и даёт прицельную тренировку именно по ним.</p></div>
+    <div class="card"><div class="ic">🏆</div><h3>Соревнование и онлайн-рейтинг</h3>
+      <p>Пять дисциплин — алфавит, слова, цифры, спринт — с медалями и таблицей лучших результатов в реальном времени.</p></div>
     <div class="card"><div class="ic">⏱️</div><h3>Тест скорости + сертификат</h3>
       <p>Таймер на 1, 5 или 10 минут, цель по Net WPM, честный подсчёт Gross/Net и точности. В конце — PNG-сертификат с именем и результатом.</p></div>
-    <div class="card"><div class="ic">🐱</div><h3>Детский игровой режим</h3>
-      <p>Карта уровней, звёзды за точность (не за скорость!), котик-помощник и простые слова. Малыш учится печатать как в игре.</p></div>
-    <div class="card"><div class="ic">💾</div><h3>Офлайн и везде</h3>
-      <p>Всего ~1.5 МБ. Работает без интернета на Windows, macOS и Linux, а ещё прямо в браузере телефона или планшета. Без рекламы и регистрации.</p></div>
+    <div class="card"><div class="ic">📖</div><h3>Литература на 7 языках</h3>
+      <p>Два банка готовых текстов: «Ворон» Эдгара По на всех языках и «Классика» — Пушкин, Шекспир, Сервантес, Кафка, Пруст, Данте, Машаду де Ассис.</p></div>
+    <div class="card"><div class="ic">🌊</div><h3>Поток и одна рука</h3>
+      <p>Режим без пауз и экранов «готово» — темп не сбивается, как в классической «Стамине». Плюс одноручные режимы для реабилитации или слабой руки.</p></div>
   </div>
 </div></section>
 
 <section style="background:var(--surface2)"><div class="wrap">
   <div class="sec-head">
     <h2>Три версии в одном</h2>
-    <p>Выбери оформление под себя — настройки и прогресс сохраняются</p>
+    <p>Выбери оформление под себя — настройки, прогресс и язык сохраняются</p>
   </div>
   <div class="profiles">
-    <div class="prof m"><div class="ic">⌨️</div><h3>Классический</h3><p>Светлая деловая тема, акцент на скорости и личных рекордах.</p></div>
+    <div class="prof m"><div class="ic">⌨️</div><h3>Классический</h3><p>Светлая деловая тема, акцент на скорости, рекордах и соревновании. Светлая и тёмная темы.</p></div>
     <div class="prof f"><div class="ic">🌸</div><h3>Мягкий</h3><p>Тёплая светлая палитра и спокойный темп без давления секундомера.</p></div>
-    <div class="prof kids"><div class="ic">🐱</div><h3>Детский</h3><p>Игра с уровнями, звёздами и котиком. Точность важнее скорости.</p></div>
+    <div class="prof kids"><div class="ic">🐱</div><h3>Детский</h3><p>Игра с уровнями, звёздами и котиком-помощником. Точность важнее скорости.</p></div>
   </div>
 </div></section>
 
 <section id="download"><div class="wrap">
   <div class="dl">
     <h2>Скачать TypeRIGHTing</h2>
-    <p>Версия 2.5.0 · бесплатно · без рекламы · ~1.5 МБ</p>
+    <p>Версия 2.24.0 · бесплатно · без рекламы · ~2 МБ</p>
     <div class="dl-row">
       <a class="dl-btn" href="https://github.com/donosov999-ai/typerighting/releases/latest"><span class="os">🍎</span> macOS</a>
       <a class="dl-btn" href="https://github.com/donosov999-ai/typerighting/releases/latest"><span class="os">🪟</span> Windows</a>
       <a class="dl-btn" href="https://github.com/donosov999-ai/typerighting/releases/latest"><span class="os">🐧</span> Linux</a>
       <a class="dl-btn" href="./index.html"><span class="os">🌐</span> В браузере</a>
     </div>
-    <p class="dl-note">Самый быстрый способ попробовать — <a href="./index.html" style="color:var(--accent);font-weight:700">открыть в браузере</a>, ничего устанавливать не нужно.</p>
+    <p class="dl-note">Самый быстрый способ попробовать — <a href="./index.html" style="color:var(--accent);font-weight:700">открыть в браузере</a>, ничего устанавливать не нужно. Работает офлайн на Windows, macOS и Linux.</p>
   </div>
 </div></section>
 
 <footer><div class="wrap">
   <p>Сделано на базе классического тренажёра <b>TypeRIGHTing</b> — переписан с .NET на современный веб + desktop.</p>
   <p style="margin-top:6px">Автор: <b>Denis Onosov (ODV999)</b></p>
-  <span class="conf">⚠️ Информация конфиденциальная</span>
 </div></footer>
 
 </body>
