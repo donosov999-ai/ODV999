@@ -245,14 +245,16 @@ Time and tide wait for no one so make the most of each day and never put off unt
         <button id="next" class="ghost">${s("tb.next")}</button>
       </div>
 
-      <div class="toolbar toolbar2">
-        <button id="learn" class="ghost">${s("tb.learn")}</button>
-        <button id="compete" class="ghost">${s("tb.compete")}</button>
-        <button id="course" class="ghost">${s("tb.course")}</button>
-        <button id="weak" class="ghost ${b==="weak"?"on":""}">${s("tb.weak")}</button>
-        <button id="custom" class="ghost ${b==="custom"?"on":""}">${s("tb.custom")}</button>
-        <button id="progress" class="ghost">${s("tb.progress")}</button>
-        <button id="exam" class="ghost">⏱ ${s("tb.exam")}</button>
+      <div class="modes-main">
+        <button id="learn" class="mode-btn">${s("tb.learn")}</button>
+        <button id="compete" class="mode-btn">${s("tb.compete")}</button>
+        <button id="course" class="mode-btn">${s("tb.course")}</button>
+        <button id="exam" class="mode-btn">⏱ ${s("tb.exam")}</button>
+      </div>
+      <div class="modes-tools">
+        <button id="weak" class="tool-btn ${b==="weak"?"on":""}">${s("tb.weak")}</button>
+        <button id="custom" class="tool-btn ${b==="custom"?"on":""}">${s("tb.custom")}</button>
+        <button id="progress" class="tool-btn">${s("tb.progress")}</button>
       </div>
 
       <div class="card">
