@@ -216,6 +216,7 @@ Devagar se vai ao longe e pequenos passos constantes levam com o tempo a grandes
       <p class="c-intro">${r("compete.intro")}</p>
       <div class="cp-grid">
         ${bi.map(t=>{const a=rt[rr(t,e)]??0;return`<button class="cp-disc" data-d="${t}">
+            <img class="disc-ic" src="images/icons/disc-${t}.jpg" alt=""/>
             <span class="cp-name">${r("comp."+t)}</span>
             <span class="cp-best">${a>0?`${r("comp.best")}: ${a} ${r("st.wpm")}`:"—"}</span>
           </button>`}).join("")}
