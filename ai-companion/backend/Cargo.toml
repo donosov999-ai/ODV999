@@ -1,0 +1,39 @@
+[package]
+name = "ai-companion"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+loco-rs = { version = "0.13" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+axum = "0.7"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# DB / ORM
+sea-orm = { version = "1", features = [
+  "sqlx-postgres",
+  "runtime-tokio-rustls",
+  "macros",
+] }
+migration = { path = "migration" }
+
+# Auth
+jsonwebtoken = "9"
+bcrypt = "0.15"
+
+# HTTP-клиент к Ollama / ComfyUI
+reqwest = { version = "0.12", features = ["json", "stream"] }
+futures-util = "0.3"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+validator = { version = "0.18", features = ["derive"] }
+
+[dev-dependencies]
+loco-rs = { version = "0.13", features = ["testing"] }
+serial_test = "3"
+</content>
