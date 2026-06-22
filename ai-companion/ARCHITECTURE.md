@@ -1,30 +1,32 @@
-# Архитектура AI Companion
+# AI Companion architecture
 
-Документ описывает, как устроена платформа AI-компаньонов и почему выбраны
-именно эти технологии.
+🌐 **English** · [Русский](./ARCHITECTURE.ru.md)
 
-## 1. Принцип
+This document describes how the AI-companion platform is structured and why these
+technologies were chosen.
 
-AI-компаньон = **персона** (характер + стиль) + **движок** (LLM, генерация
-картинок) + **память** (история диалога). Платформа даёт пользователям
-каталог таких персонажей и интерфейс общения с монетизацией.
+## 1. Principle
 
-Бэкенд (Loco) — это «оркестратор»: он не считает нейросети сам, а собирает
-промпт и проксирует запрос в LLM-движок. Тяжёлые вычисления вынесены в
-отдельные сервисы (Ollama, ComfyUI), которым нужен GPU.
+An AI companion = **persona** (character + style) + **engine** (LLM, image
+generation) + **memory** (conversation history). The platform gives users a
+catalog of such characters and a chat interface with monetization.
 
-## 2. Слои
+The backend (Loco) is the "orchestrator": it doesn't run the neural networks
+itself, it assembles the prompt and proxies the request to the LLM engine. Heavy
+computation is offloaded to separate services (Ollama, ComfyUI) that need a GPU.
 
-| Слой | Технология | Зачем |
+## 2. Layers
+
+| Layer | Technology | Why |
 |---|---|---|
-| Фронтенд | Next.js + React + Tailwind | SSR-каталог, чат со стримингом |
-| Бэкенд | Loco (Rust, на Axum) | API, auth, сборка промпта, проксирование |
-| LLM-чат | Ollama | Бесплатный self-hosted запуск моделей |
-| Картинки | ComfyUI (опц.) | Генерация изображений персонажа |
-| БД | PostgreSQL (SeaORM) | Пользователи, персонажи, диалоги |
-| Кэш/очереди | Redis | Сессии, rate-limit, фоновые задачи |
+| Frontend | Next.js + React + Tailwind | SSR catalog, streamed chat |
+| Backend | Loco (Rust, on Axum) | API, auth, prompt assembly, proxying |
+| LLM chat | Ollama | Free self-hosted model serving |
+| Images | ComfyUI (optional) | Character image generation |
+| DB | PostgreSQL (SeaORM) | Users, characters, conversations |
+| Cache/queues | Redis | Sessions, rate-limit, background jobs |
 
-## 3. Модель данных
+## 3. Data model
 
 ```
 users ──< conversations >── characters
@@ -32,74 +34,74 @@ users ──< conversations >── characters
                 └──< messages   (role: user|assistant|system, content)
 ```
 
-- **users** — аккаунты (email, password_hash, role, age_verified)
-- **characters** — персонажи (name, persona, greeting, avatar, is_public, owner)
-- **conversations** — диалог пользователя с персонажем
-- **messages** — сообщения диалога (role + content + created_at)
+- **users** — accounts (email, password_hash, role, age_verified)
+- **characters** — characters (name, persona, greeting, avatar, is_public, owner)
+- **conversations** — a user's conversation with a character
+- **messages** — conversation messages (role + content + created_at)
 
-Схема создаётся миграциями в `backend/migration/`.
+The schema is created by migrations in `backend/migration/`.
 
-## 4. Поток «отправка сообщения»
+## 4. "Send message" flow
 
 ```
 1. Frontend POST /api/chat/:conversation_id  { content }
 2. Loco:
-   a. проверяет JWT
-   b. // TODO(legal): проверка age_verified
-   c. сохраняет user-сообщение в БД
-   d. собирает промпт: system(persona) + последние N сообщений
-   e. // TODO(legal): модерация ввода
-   f. шлёт запрос в Ollama (stream=true)
-3. Loco стримит токены клиенту через SSE
-4. По завершении — сохраняет assistant-сообщение в БД
+   a. validates the JWT
+   b. // TODO(legal): check age_verified
+   c. saves the user message to the DB
+   d. assembles the prompt: system(persona) + last N messages
+   e. // TODO(legal): moderate the input
+   f. sends the request to Ollama (stream=true)
+3. Loco streams tokens to the client via SSE
+4. On completion — saves the assistant message to the DB
 ```
 
-Стриминг сделан через **Server-Sent Events (SSE)** — проще, чем WebSocket,
-и достаточно для одностороннего потока токенов.
+Streaming uses **Server-Sent Events (SSE)** — simpler than WebSocket and
+sufficient for a one-way stream of tokens.
 
-## 5. Сборка промпта (персона)
+## 5. Prompt assembly (persona)
 
-System-промпт собирается из полей персонажа:
+The system prompt is assembled from the character's fields:
 
 ```
-Ты — {name}. {persona}
-Стиль общения: {style}.
-Всегда оставайся в образе. Не упоминай, что ты ИИ.
+You are {name}. {persona}
+Conversation style: {style}.
+Always stay in character. Do not mention that you are an AI.
 ```
 
-Далее добавляется история диалога (последние N сообщений из БД). Для
-длинной памяти позже подключается vector store (саммаризация + эмбеддинги).
+The conversation history (last N messages from the DB) is then appended. For
+long-term memory, a vector store is added later (summarization + embeddings).
 
-## 6. Почему Loco (Rust)
+## 6. Why Loco (Rust)
 
-- Низкое потребление памяти при множестве долгих SSE-соединений
-- Встроены: auth, миграции (SeaORM), фоновые воркеры, конфиги по окружениям
-- Один бинарник на деплой
-- Минус: экосистема младше — клиенты к Ollama/ComfyUI пишем через `reqwest`
+- Low memory footprint with many long-lived SSE connections
+- Built-in: auth, migrations (SeaORM), background workers, per-environment config
+- Single binary to deploy
+- Downside: younger ecosystem — Ollama/ComfyUI clients are written via `reqwest`
 
-## 7. Масштабирование
+## 7. Scaling
 
-- **Loco** — stateless, масштабируется горизонтально за балансировщиком
-- **Ollama** — узкое место (GPU). Масштабируется пулом GPU-воркеров +
-  очередью запросов в Redis
-- **PostgreSQL** — read-реплики для каталога
-- **CDN** — для аватаров и сгенерированных картинок (S3/R2 + CDN)
+- **Loco** — stateless, scales horizontally behind a load balancer
+- **Ollama** — the bottleneck (GPU). Scales with a pool of GPU workers + a request
+  queue in Redis
+- **PostgreSQL** — read replicas for the catalog
+- **CDN** — for avatars and generated images (S3/R2 + CDN)
 
-## 8. Этапы разработки
+## 8. Development stages
 
-1. **MVP (этот каркас)** — auth, персонажи, чат со стримингом
-2. **Монетизация** — подписки/токены + adult-платёжка (CCBill/Segpay)
-3. **Compliance** — age verification, модерация, маркировка AI
-4. **Картинки** — интеграция ComfyUI (генерация по запросу в чате)
-5. **Память** — vector store для долгосрочной памяти персонажа
-6. **Голос** — TTS, опционально клонирование голоса
+1. **MVP (this scaffold)** — auth, characters, streamed chat
+2. **Monetization** — subscriptions/tokens + adult payment processor (CCBill/Segpay)
+3. **Compliance** — age verification, moderation, AI labeling
+4. **Images** — ComfyUI integration (generation on demand in chat)
+5. **Memory** — vector store for long-term character memory
+6. **Voice** — TTS, optionally voice cloning
 
-## 9. Безопасность и соответствие (критично)
+## 9. Security and compliance (critical)
 
-Места в коде помечены `// TODO(legal)`:
-- возрастная верификация перед доступом к 18+ контенту
-- модерация ввода и вывода (текст + картинки)
-- маркировка сгенерированного контента
-- запрет генерации образов реальных людей без согласия
-- логи согласий и аудита
+Spots in the code are marked with `// TODO(legal)`:
+- age verification before access to 18+ content
+- moderation of input and output (text + images)
+- labeling of generated content
+- ban on generating likenesses of real people without consent
+- consent and audit logs
 </content>

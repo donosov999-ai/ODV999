@@ -1,9 +1,9 @@
-//! Аутентификация: регистрация и логин с выдачей JWT.
+//! Authentication: registration and login, issuing a JWT.
 //!
-//! Это базовая реализация для каркаса. В продакшене добавить:
-//!  - подтверждение email
-//!  - rate-limiting на логин (через Redis)
-//!  - TODO(legal): шаг возрастной верификации после регистрации
+//! This is a basic implementation for the scaffold. In production add:
+//!  - email confirmation
+//!  - rate-limiting on login (via Redis)
+//!  - TODO(legal): an age-verification step after registration
 
 use chrono::{Duration, Utc};
 use jsonwebtoken::{encode, EncodingKey, Header};
@@ -87,7 +87,7 @@ async fn register(
         password_hash: Set(hash),
         display_name: Set(params.display_name.clone()),
         role: Set("user".to_string()),
-        age_verified: Set(false), // TODO(legal): верификация возраста
+        age_verified: Set(false), // TODO(legal): age verification
         ..Default::default()
     }
     .insert(&ctx.db)

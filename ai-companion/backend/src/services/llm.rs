@@ -1,13 +1,13 @@
-//! Клиент к LLM-движку Ollama.
+//! Client for the Ollama LLM engine.
 //!
-//! Ollama — бесплатный self-hosted сервер для запуска моделей. Мы используем
-//! его `/api/chat` эндпоинт со стримингом: он отдаёт ответ построчно (NDJSON),
-//! а мы пробрасываем токены клиенту через SSE.
+//! Ollama is a free self-hosted server for running models. We use its
+//! `/api/chat` streaming endpoint: it returns the response line by line
+//! (NDJSON), and we forward the tokens to the client via SSE.
 
 use futures_util::{Stream, StreamExt};
 use serde::{Deserialize, Serialize};
 
-/// Одно сообщение в формате, который понимает Ollama.
+/// A single message in the format Ollama understands.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatMessage {
     pub role: String, // "system" | "user" | "assistant"
@@ -21,7 +21,7 @@ struct ChatRequest {
     stream: bool,
 }
 
-/// Кусок ответа из стрима Ollama.
+/// A chunk of the response from the Ollama stream.
 #[derive(Debug, Deserialize)]
 struct ChatChunk {
     #[serde(default)]
@@ -52,10 +52,10 @@ impl LlmClient {
         }
     }
 
-    /// Стримит ответ модели токен за токеном.
+    /// Streams the model response token by token.
     ///
-    /// Возвращает поток строк — каждая строка это очередной кусок текста ответа.
-    /// Вызывающий код (контроллер) оборачивает их в SSE-события.
+    /// Returns a stream of strings — each string is the next chunk of response
+    /// text. The caller (controller) wraps them into SSE events.
     pub async fn chat_stream(
         &self,
         messages: Vec<ChatMessage>,
@@ -78,8 +78,8 @@ impl LlmClient {
             return Err(format!("ollama returned status {}", resp.status()));
         }
 
-        // Ollama стримит NDJSON: одна JSON-строка на чанк.
-        // bytes_stream() даёт сырые байты, которые мы разбираем по строкам.
+        // Ollama streams NDJSON: one JSON line per chunk.
+        // bytes_stream() yields raw bytes, which we split into lines.
         let stream = resp.bytes_stream().flat_map(|chunk| {
             let lines: Vec<Result<String, String>> = match chunk {
                 Ok(bytes) => String::from_utf8_lossy(&bytes)

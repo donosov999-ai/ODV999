@@ -25,7 +25,7 @@ export default function ChatPage() {
   const [busy, setBusy] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
-  // Старт: грузим персонажа и открываем диалог
+  // On mount: load the character and open a conversation
   useEffect(() => {
     (async () => {
       const ch = await getCharacter(characterId);

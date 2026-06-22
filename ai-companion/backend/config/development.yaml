@@ -1,4 +1,4 @@
-# Loco — конфигурация окружения development
+# Loco — development environment configuration
 logger:
   enable: true
   pretty_backtrace: true
@@ -21,12 +21,12 @@ database:
   dangerously_truncate: false
   dangerously_recreate: false
 
-# Кастомные настройки приложения (читаются в коде через ctx.config.settings)
+# Custom app settings (read in code via ctx.config.settings)
 settings:
   jwt_secret: "{{ get_env(name="JWT_SECRET", default="change-me-to-a-long-random-secret") }}"
   ollama_url: "{{ get_env(name="OLLAMA_URL", default="http://localhost:11434") }}"
   ollama_model: "{{ get_env(name="OLLAMA_MODEL", default="llama3.1:8b") }}"
   comfyui_url: "{{ get_env(name="COMFYUI_URL", default="http://localhost:8188") }}"
-  # Сколько последних сообщений диалога подкладывать в контекст модели
+  # How many of the latest conversation messages to feed into the model context
   history_window: 20
 </content>

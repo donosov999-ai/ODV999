@@ -22,8 +22,8 @@ services:
     volumes:
       - redisdata:/data
 
-  # LLM-движок для чата. Бесплатный, self-hosted.
-  # После старта скачать модель:
+  # LLM engine for chat. Free, self-hosted.
+  # After startup, pull a model:
   #   docker compose exec ollama ollama pull llama3.1:8b
   ollama:
     image: ollama/ollama:latest
@@ -31,7 +31,7 @@ services:
       - "11434:11434"
     volumes:
       - ollamadata:/root/.ollama
-    # Для GPU раскомментируйте (нужен nvidia-container-toolkit):
+    # For GPU, uncomment (requires nvidia-container-toolkit):
     # deploy:
     #   resources:
     #     reservations:
@@ -40,8 +40,8 @@ services:
     #           count: all
     #           capabilities: [gpu]
 
-  # ComfyUI для генерации картинок — опционально.
-  # Не включён по умолчанию (тяжёлый, нужен GPU). Раскомментируйте при необходимости.
+  # ComfyUI for image generation — optional.
+  # Not enabled by default (heavy, needs a GPU). Uncomment if needed.
   # comfyui:
   #   image: yanwk/comfyui-boot:latest
   #   ports:

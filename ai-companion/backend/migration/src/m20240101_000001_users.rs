@@ -17,7 +17,7 @@ impl MigrationTrait for Migration {
                     .col(string(Users::PasswordHash))
                     .col(string(Users::DisplayName))
                     .col(string_len(Users::Role, 32).default("user"))
-                    // TODO(legal): возрастная верификация перед доступом к 18+ контенту
+                    // TODO(legal): age verification before access to 18+ content
                     .col(boolean(Users::AgeVerified).default(false))
                     .col(
                         timestamp_with_time_zone(Users::CreatedAt)

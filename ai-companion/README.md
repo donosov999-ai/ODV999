@@ -1,80 +1,82 @@
 # AI Companion
 
-Каркас платформы AI-компаньонов (тип Candy.ai / Fanvue): пользователь
-общается с AI-персонажами, у каждого своя «личность», память и (опционально)
-генерация изображений.
+🌐 **English** · [Русский](./README.ru.md)
 
-Стек: **Loco (Rust)** на бэкенде + **Next.js (React)** на фронте. AI-слой —
-бесплатные open-source движки: **Ollama** для чата и **ComfyUI** для картинок.
+Starter scaffold for an AI-companion platform (Candy.ai / Fanvue style): users
+chat with AI characters, each with its own "personality", memory, and
+(optionally) image generation.
 
-> ⚠️ Это стартовый каркас (skeleton), а не готовый к продакшену продукт.
-> Перед запуском обязательно прочитайте раздел «Юридические требования» ниже.
+Stack: **Loco (Rust)** backend + **Next.js (React)** frontend. The AI layer uses
+free open-source engines: **Ollama** for chat and **ComfyUI** for images.
 
-## Архитектура
+> ⚠️ This is a starter scaffold (skeleton), not a production-ready product.
+> Before launching, read the "Legal requirements" section below.
+
+## Architecture
 
 ```
 ┌──────────────────────────────────────────────┐
-│  Next.js (React) — фронтенд                    │
-│   - каталог персонажей                         │
-│   - окно чата (стриминг ответов)               │
-│   - кабинет / подписка                         │
+│  Next.js (React) — frontend                    │
+│   - character catalog                          │
+│   - chat window (streamed responses)           │
+│   - account / subscription                     │
 └───────────────┬───────────────────────────────┘
-                │ REST + SSE (стриминг)
+                │ REST + SSE (streaming)
 ┌───────────────▼───────────────────────────────┐
-│  Loco (Rust) — бэкенд                           │
+│  Loco (Rust) — backend                          │
 │   - auth (JWT)                                  │
-│   - персонажи, диалоги, сообщения              │
-│   - сборка промпта (персона + память)          │
-│   - проксирование стрима из Ollama             │
+│   - characters, conversations, messages        │
+│   - prompt assembly (persona + memory)         │
+│   - proxies the stream from Ollama             │
 └───────┬────────────────────┬───────────────────┘
         │                    │
 ┌───────▼────────┐  ┌────────▼─────────┐  ┌──────────────┐
 │ PostgreSQL     │  │ Ollama (LLM)     │  │ ComfyUI (img)│
-│ users/chars/   │  │ чат-модель       │  │ генерация    │
-│ conversations  │  │ (бесплатно,      │  │ картинок     │
-│ /messages      │  │  self-hosted)    │  │ (опционально)│
+│ users/chars/   │  │ chat model       │  │ image        │
+│ conversations  │  │ (free,           │  │ generation   │
+│ /messages      │  │  self-hosted)    │  │ (optional)   │
 └────────────────┘  └──────────────────┘  └──────────────┘
 ```
 
-Подробнее — см. [ARCHITECTURE.md](./ARCHITECTURE.md).
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for details.
 
-## Структура
+## Layout
 
 ```
 ai-companion/
 ├── README.md
 ├── ARCHITECTURE.md
-├── docker-compose.yml      # Postgres + Redis + Ollama (+ ComfyUI опц.)
+├── docker-compose.yml      # Postgres + Redis + Ollama (+ ComfyUI optional)
 ├── .env.example
 ├── backend/                # Loco (Rust)
 │   ├── Cargo.toml
 │   ├── config/
-│   ├── migration/          # схема БД
+│   ├── migration/          # database schema
 │   └── src/
 │       ├── controllers/    # auth, characters, chat
 │       ├── models/         # user, character, conversation, message
-│       ├── services/       # llm.rs — клиент Ollama
+│       ├── services/       # llm.rs — Ollama client
 │       └── ...
 └── frontend/               # Next.js
     ├── package.json
     └── src/
-        ├── app/            # страницы (каталог, чат)
-        └── lib/            # api-клиент
+        ├── app/            # pages (catalog, chat)
+        └── lib/            # api client
 ```
 
-## Быстрый старт (dev)
+## Quick start (dev)
 
 ```bash
-# 1. Поднять инфраструктуру (Postgres, Redis, Ollama)
+# 1. Bring up infrastructure (Postgres, Redis, Ollama)
 cp .env.example .env
 docker compose up -d
 
-# 2. Скачать модель в Ollama (один раз)
+# 2. Pull a model into Ollama (one time)
 docker compose exec ollama ollama pull llama3.1:8b
 
 # 3. Backend (Loco)
 cd backend
-cargo loco db migrate     # применить миграции
+cargo loco db migrate     # apply migrations
 cargo loco start          # http://localhost:5150
 
 # 4. Frontend (Next.js)
@@ -83,49 +85,57 @@ npm install
 npm run dev                # http://localhost:3000
 ```
 
-## Создать демо-персонажа и проверить чат
+## Create a demo character and try the chat
 
 ```bash
-# создать персонажа
+# create a character
 curl -X POST http://localhost:5150/api/characters \
   -H 'Content-Type: application/json' \
-  -d '{"name":"Луна","persona":"дружелюбная и любопытная собеседница, любит астрономию","greeting":"Привет! Я Луна ✨","style":"тёплый, с эмодзи"}'
+  -d '{"name":"Luna","persona":"a friendly, curious companion who loves astronomy","greeting":"Hi! I am Luna ✨","style":"warm, with emojis"}'
 
-# открыть каталог во фронте
+# open the catalog in the frontend
 open http://localhost:3000
 ```
 
-Дальше кликни персонажа в каталоге — откроется чат со стримингом ответов из Ollama.
+Then click a character in the catalog — the chat opens with streamed responses
+from Ollama.
 
-## Юридические требования (обязательно перед запуском)
+## Legal requirements (mandatory before launch)
 
-Платформа с AI-персонажами 18+ обязана иметь:
+An 18+ AI-character platform must have:
 
-1. **Верификация возраста** пользователей (Yoti / Incode и т.п.) — во многих
-   странах это требование закона, а не опция.
-2. **Маркировка AI-контента** — сгенерированное должно быть помечено как AI.
-3. **Запрет дипфейков реальных людей** без согласия — в ряде стран это уголовка.
-4. **Модерация** генерируемого контента (текст и изображения).
-5. **Платёжный процессинг для adult** — Stripe/PayPal запрещают 18+; нужны
-   CCBill / Segpay / Verotel.
+1. **Age verification** for users (Yoti / Incode, etc.) — in many countries this
+   is a legal requirement, not an option.
+2. **AI-content labeling** — generated content must be marked as AI.
+3. **Ban on deepfakes of real people** without consent — a criminal offense in
+   several jurisdictions.
+4. **Moderation** of generated content (text and images).
+5. **Adult payment processing** — Stripe/PayPal forbid 18+; use CCBill / Segpay /
+   Verotel.
 
-Заглушки/места под эти требования помечены в коде комментариями `// TODO(legal)`.
+Stubs/placeholders for these requirements are marked in the code with
+`// TODO(legal)` comments.
 
-## Что уже есть в каркасе
+## What the scaffold already includes
 
-- ✅ Схема БД: users, characters, conversations, messages
-- ✅ JWT-аутентификация (регистрация/логин)
-- ✅ CRUD персонажей + публичный каталог
-- ✅ Чат: сборка промпта из персоны + истории, стриминг ответа из Ollama (SSE)
-- ✅ Next.js: каталог персонажей и окно чата со стримингом
-- ✅ docker-compose с Postgres / Redis / Ollama
+- ✅ DB schema: users, characters, conversations, messages
+- ✅ JWT authentication (register/login)
+- ✅ Character CRUD + public catalog
+- ✅ Chat: builds prompt from persona + history, streams the Ollama response (SSE)
+- ✅ Next.js: character catalog and chat window with streaming
+- ✅ docker-compose with Postgres / Redis / Ollama
 
-## Что нужно доделать (вне каркаса)
+## What still needs doing (out of scope for the scaffold)
 
-- Возрастная верификация и модерация (см. `// TODO(legal)`)
-- Подписки / токены + adult-платёжка
-- Генерация изображений через ComfyUI
-- Долгосрочная память персонажа (vector store)
-- Голос (TTS), rate-limiting, антифрод
+- Age verification and moderation (see `// TODO(legal)`)
+- Subscriptions / tokens + adult payment processor
+- Image generation via ComfyUI
+- Long-term character memory (vector store)
+- Voice (TTS), rate-limiting, anti-fraud
+
+## Note on UI language
+
+Backend code and comments are in English. The frontend UI strings are currently
+in Russian (product content). For an international audience, move these strings
+into an i18n layer (e.g. `next-intl`) rather than hardcoding them.
 </content>
-</invoke>

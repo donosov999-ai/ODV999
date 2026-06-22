@@ -40,7 +40,7 @@ impl Hooks for App {
     }
 
     fn register_tasks(_tasks: &mut Tasks) {
-        // Здесь регистрируются CLI-таски (например, сидинг персонажей).
+        // CLI tasks are registered here (e.g. seeding characters).
     }
 
     async fn truncate(ctx: &AppContext) -> Result<()> {
@@ -52,7 +52,7 @@ impl Hooks for App {
     }
 
     async fn seed(_ctx: &AppContext, _base: &std::path::Path) -> Result<()> {
-        // TODO: засеять несколько демо-персонажей.
+        // TODO: seed a few demo characters.
         Ok(())
     }
 }

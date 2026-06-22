@@ -1,13 +1,13 @@
-//! Чат с AI-персонажем.
+//! Chat with an AI character.
 //!
-//! Поток:
-//!   1. сохраняем сообщение пользователя
-//!   2. собираем промпт: system(persona) + последние N сообщений из БД
-//!   3. стримим ответ из Ollama клиенту через SSE
-//!   4. по завершении сохраняем ответ ассистента
+//! Flow:
+//!   1. save the user message
+//!   2. assemble the prompt: system(persona) + last N messages from the DB
+//!   3. stream the Ollama response to the client via SSE
+//!   4. on completion, save the assistant response
 //!
-//! TODO(legal): перед допуском к 18+ персонажу проверять user.age_verified
-//! TODO(legal): модерация ввода и вывода (текст) до сохранения/отправки
+//! TODO(legal): check user.age_verified before allowing access to an 18+ character
+//! TODO(legal): moderate input and output (text) before saving/sending
 
 use axum::{
     extract::Path,
@@ -28,24 +28,24 @@ pub struct SendMessage {
     pub content: String,
 }
 
-/// Собирает system-промпт из персоны персонажа.
+/// Builds the system prompt from the character's persona.
 fn build_system_prompt(character: &characters::Model) -> String {
-    let mut p = format!("Ты — {}. {}", character.name, character.persona);
+    let mut p = format!("You are {}. {}", character.name, character.persona);
     if let Some(style) = &character.style {
-        p.push_str(&format!("\nСтиль общения: {style}."));
+        p.push_str(&format!("\nConversation style: {style}."));
     }
-    p.push_str("\nВсегда оставайся в образе. Не упоминай, что ты ИИ.");
+    p.push_str("\nAlways stay in character. Do not mention that you are an AI.");
     p
 }
 
-/// POST /api/chat/:conversation_id — отправить сообщение и получить стрим-ответ.
+/// POST /api/chat/:conversation_id — send a message and get a streamed response.
 #[debug_handler]
 async fn send(
     State(ctx): State<AppContext>,
     Path(conversation_id): Path<i32>,
     Json(params): Json<SendMessage>,
 ) -> Result<Sse<impl Stream<Item = std::result::Result<Event, Infallible>>>> {
-    // 1. Найти диалог и персонажа
+    // 1. Find the conversation and character
     let conversation = conversations::Entity::find_by_id(conversation_id)
         .one(&ctx.db)
         .await?
@@ -59,7 +59,7 @@ async fn send(
     // TODO(legal): if character.nsfw && !user.age_verified { return Err(...) }
     // TODO(legal): moderate(&params.content)?
 
-    // 2. Сохранить сообщение пользователя
+    // 2. Save the user message
     messages::ActiveModel {
         conversation_id: Set(conversation_id),
         role: Set("user".to_string()),
@@ -69,7 +69,7 @@ async fn send(
     .insert(&ctx.db)
     .await?;
 
-    // 3. Собрать историю (последние N сообщений)
+    // 3. Gather history (last N messages)
     let history_window: u64 = ctx
         .config
         .settings
@@ -84,9 +84,9 @@ async fn send(
         .limit(history_window)
         .all(&ctx.db)
         .await?;
-    recent.reverse(); // обратно в хронологический порядок
+    recent.reverse(); // back to chronological order
 
-    // 4. Сформировать запрос к модели
+    // 4. Build the request to the model
     let mut llm_messages = vec![ChatMessage {
         role: "system".to_string(),
         content: build_system_prompt(&character),
@@ -96,7 +96,7 @@ async fn send(
         content: m.content,
     }));
 
-    // 5. Подключиться к Ollama
+    // 5. Connect to Ollama
     let settings = ctx.config.settings.clone().unwrap_or_default();
     let ollama_url = settings
         .get("ollama_url")
@@ -115,7 +115,7 @@ async fn send(
         .await
         .map_err(|e| Error::Message(e))?;
 
-    // Накапливаем полный ответ, чтобы сохранить его в БД после стрима.
+    // Accumulate the full response so we can save it to the DB after streaming.
     let full = Arc::new(Mutex::new(String::new()));
     let full_for_save = full.clone();
     let db = ctx.db.clone();
@@ -129,7 +129,7 @@ async fn send(
             Ok(Event::default().data(token))
         })
         .chain(futures_util::stream::once(async move {
-            // 6. Сохранить ответ ассистента
+            // 6. Save the assistant response
             let answer = full_for_save.lock().map(|g| g.clone()).unwrap_or_default();
             if !answer.is_empty() {
                 let _ = messages::ActiveModel {

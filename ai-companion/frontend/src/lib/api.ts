@@ -1,4 +1,4 @@
-// Тонкий клиент к бэкенду Loco.
+// Thin client for the Loco backend.
 
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5150";
@@ -41,8 +41,8 @@ export async function startConversation(
 }
 
 /**
- * Отправляет сообщение и стримит ответ модели через SSE.
- * onToken вызывается на каждый кусок текста; onDone — по завершении.
+ * Sends a message and streams the model response via SSE.
+ * onToken is called for each text chunk; onDone — on completion.
  */
 export async function sendMessageStream(
   conversationId: number,
@@ -69,7 +69,7 @@ export async function sendMessageStream(
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
 
-    // SSE-кадры разделены пустой строкой
+    // SSE frames are separated by a blank line
     const frames = buffer.split("\n\n");
     buffer = frames.pop() ?? "";
 

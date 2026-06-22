@@ -9,13 +9,13 @@ pub struct Model {
     pub pid: Uuid,
     pub owner_id: Option<i32>,
     pub name: String,
-    /// Описание характера — основа system-промпта.
+    /// Character description — the basis of the system prompt.
     pub persona: String,
     pub greeting: Option<String>,
     pub style: Option<String>,
     pub avatar_url: Option<String>,
     pub is_public: bool,
-    /// TODO(legal): маркировка обязательна — персонаж сгенерирован ИИ.
+    /// TODO(legal): labeling is mandatory — the character is AI-generated.
     pub is_ai_generated: bool,
     pub nsfw: bool,
     pub created_at: DateTimeWithTimeZone,

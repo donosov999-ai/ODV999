@@ -1,4 +1,4 @@
-//! Персонажи: публичный каталог, создание, старт диалога.
+//! Characters: public catalog, creation, starting a conversation.
 
 use loco_rs::prelude::*;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, QueryOrder, Set};
@@ -24,7 +24,7 @@ pub struct ConversationStarted {
     pub greeting: Option<String>,
 }
 
-/// GET /api/characters — публичный каталог.
+/// GET /api/characters — public catalog.
 #[debug_handler]
 async fn list(State(ctx): State<AppContext>) -> Result<Response> {
     let items = characters::Entity::find()
@@ -35,7 +35,7 @@ async fn list(State(ctx): State<AppContext>) -> Result<Response> {
     format::json(items)
 }
 
-/// GET /api/characters/:id — один персонаж.
+/// GET /api/characters/:id — a single character.
 #[debug_handler]
 async fn show(State(ctx): State<AppContext>, Path(id): Path<i32>) -> Result<Response> {
     let character = characters::Entity::find_by_id(id)
@@ -45,8 +45,8 @@ async fn show(State(ctx): State<AppContext>, Path(id): Path<i32>) -> Result<Resp
     format::json(character)
 }
 
-/// POST /api/characters — создать персонажа.
-/// TODO(auth): привязывать owner_id к текущему пользователю из JWT.
+/// POST /api/characters — create a character.
+/// TODO(auth): bind owner_id to the current user from the JWT.
 #[debug_handler]
 async fn create(
     State(ctx): State<AppContext>,
@@ -60,7 +60,7 @@ async fn create(
         style: Set(params.style),
         avatar_url: Set(params.avatar_url),
         is_public: Set(true),
-        is_ai_generated: Set(true), // TODO(legal): маркировка AI-контента
+        is_ai_generated: Set(true), // TODO(legal): AI-content labeling
         nsfw: Set(params.nsfw),
         ..Default::default()
     }
@@ -69,8 +69,8 @@ async fn create(
     format::json(character)
 }
 
-/// POST /api/characters/:id/conversations — начать диалог с персонажем.
-/// TODO(auth): брать user_id из JWT вместо заглушки.
+/// POST /api/characters/:id/conversations — start a conversation with a character.
+/// TODO(auth): take user_id from the JWT instead of the stub.
 #[debug_handler]
 async fn start_conversation(
     State(ctx): State<AppContext>,
@@ -81,7 +81,7 @@ async fn start_conversation(
         .await?
         .ok_or_else(|| Error::NotFound)?;
 
-    // TODO(auth): user_id из текущего пользователя
+    // TODO(auth): user_id from the current user
     let user_id = 1;
 
     let conversation = conversations::ActiveModel {

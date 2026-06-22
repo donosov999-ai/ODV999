@@ -17,13 +17,13 @@ impl MigrationTrait for Migration {
                     .col(uuid(Characters::Pid))
                     .col(integer_null(Characters::OwnerId))
                     .col(string(Characters::Name))
-                    // persona — описание характера, на его основе строится system-промпт
+                    // persona — character description; the system prompt is built from it
                     .col(text(Characters::Persona))
                     .col(text_null(Characters::Greeting))
                     .col(string_null(Characters::Style))
                     .col(string_null(Characters::AvatarUrl))
                     .col(boolean(Characters::IsPublic).default(true))
-                    // TODO(legal): маркировка AI-контента обязательна
+                    // TODO(legal): AI-content labeling is mandatory
                     .col(boolean(Characters::IsAiGenerated).default(true))
                     .col(boolean(Characters::Nsfw).default(false))
                     .col(

@@ -13,7 +13,7 @@ pub struct Model {
     pub password_hash: String,
     pub display_name: String,
     pub role: String,
-    /// TODO(legal): доступ к 18+ контенту только при age_verified = true
+    /// TODO(legal): allow 18+ content only when age_verified = true
     pub age_verified: bool,
     pub created_at: DateTimeWithTimeZone,
     pub updated_at: DateTimeWithTimeZone,
