@@ -36,4 +36,3 @@ validator = { version = "0.18", features = ["derive"] }
 [dev-dependencies]
 loco-rs = { version = "0.13", features = ["testing"] }
 serial_test = "3"
-</content>

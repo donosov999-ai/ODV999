@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { listCharacters } from "@/lib/api";
+import { listCharacters, type Character } from "@/lib/api";
 
 export default async function CatalogPage() {
-  let characters = [];
+  let characters: Character[] = [];
   let error: string | null = null;
 
   try {
@@ -39,4 +39,3 @@ export default async function CatalogPage() {
     </main>
   );
 }
-</content>

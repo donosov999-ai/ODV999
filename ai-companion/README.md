@@ -138,4 +138,3 @@ Stubs/placeholders for these requirements are marked in the code with
 Backend code and comments are in English. The frontend UI strings are currently
 in Russian (product content). For an international audience, move these strings
 into an i18n layer (e.g. `next-intl`) rather than hardcoding them.
-</content>

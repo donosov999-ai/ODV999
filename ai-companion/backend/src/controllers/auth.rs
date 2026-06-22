@@ -132,4 +132,3 @@ pub fn routes() -> Routes {
         .add("/register", post(register))
         .add("/login", post(login))
 }
-</content>

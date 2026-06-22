@@ -44,4 +44,3 @@ impl Related<super::characters::Entity> for Entity {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
-</content>

@@ -102,4 +102,3 @@ export default function ChatPage() {
     </main>
   );
 }
-</content>

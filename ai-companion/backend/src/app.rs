@@ -56,4 +56,3 @@ impl Hooks for App {
         Ok(())
     }
 }
-</content>

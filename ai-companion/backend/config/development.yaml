@@ -29,4 +29,3 @@ settings:
   comfyui_url: "{{ get_env(name="COMFYUI_URL", default="http://localhost:8188") }}"
   # How many of the latest conversation messages to feed into the model context
   history_window: 20
-</content>

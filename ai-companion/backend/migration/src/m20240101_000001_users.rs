@@ -52,4 +52,3 @@ pub enum Users {
     CreatedAt,
     UpdatedAt,
 }
-</content>

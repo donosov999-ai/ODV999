@@ -152,4 +152,3 @@ pub fn routes() -> Routes {
         .prefix("/api/chat")
         .add("/{conversation_id}", post(send))
 }
-</content>

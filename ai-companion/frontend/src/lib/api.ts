@@ -89,4 +89,3 @@ export async function sendMessageStream(
   }
   onDone();
 }
-</content>

@@ -107,4 +107,3 @@ pub fn routes() -> Routes {
         .add("/{id}", get(show))
         .add("/{id}/conversations", post(start_conversation))
 }
-</content>

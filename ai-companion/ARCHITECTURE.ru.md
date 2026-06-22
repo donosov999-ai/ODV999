@@ -104,4 +104,3 @@ Always stay in character. Do not mention that you are an AI.
 - маркировка сгенерированного контента
 - запрет генерации образов реальных людей без согласия
 - логи согласий и аудита
-</content>

@@ -104,4 +104,3 @@ Spots in the code are marked with `// TODO(legal)`:
 - labeling of generated content
 - ban on generating likenesses of real people without consent
 - consent and audit logs
-</content>

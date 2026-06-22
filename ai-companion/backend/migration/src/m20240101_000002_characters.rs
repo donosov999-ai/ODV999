@@ -70,4 +70,3 @@ pub enum Characters {
     CreatedAt,
     UpdatedAt,
 }
-</content>
