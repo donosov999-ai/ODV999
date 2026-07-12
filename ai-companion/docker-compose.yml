@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER:-companion}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-companion}
+      POSTGRES_DB: ${DB_NAME:-companion_dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-companion}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+  # LLM engine for chat. Free, self-hosted.
+  # After startup, pull a model:
+  #   docker compose exec ollama ollama pull llama3.1:8b
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollamadata:/root/.ollama
+    # For GPU, uncomment (requires nvidia-container-toolkit):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # ComfyUI for image generation — optional.
+  # Not enabled by default (heavy, needs a GPU). Uncomment if needed.
+  # comfyui:
+  #   image: yanwk/comfyui-boot:latest
+  #   ports:
+  #     - "8188:8188"
+  #   volumes:
+  #     - comfyuidata:/root
+
+volumes:
+  pgdata:
+  redisdata:
+  ollamadata:
+  # comfyuidata:

@@ -1,0 +1,15 @@
+# Rust
+backend/target/
+**/*.rs.bk
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/next-env.d.ts
+
+# Env
+.env
+
+# Misc
+.DS_Store
